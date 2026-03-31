@@ -71,22 +71,28 @@ function shiftShade(color, amount) {
 function getGradientStops(color) {
   const presetStops = {
     'var(--accent-blue)': [
-      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.34 },
-      { offset: '18%', color: 'var(--accent-blue)', opacity: 0.88 },
-      { offset: '72%', color: 'var(--accent-blue)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.38 },
+      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.94 },
+      { offset: '20%', color: 'var(--accent-violet)', opacity: 0.42 },
+      { offset: '38%', color: 'var(--accent-blue)', opacity: 1 },
+      { offset: '62%', color: 'var(--accent-blue)', opacity: 1 },
+      { offset: '80%', color: 'var(--accent-pink)', opacity: 0.4 },
+      { offset: '100%', color: 'var(--accent-blue)', opacity: 0.94 },
     ],
     'var(--accent-pink)': [
-      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.32 },
-      { offset: '20%', color: 'var(--accent-pink)', opacity: 0.88 },
-      { offset: '72%', color: 'var(--accent-pink)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-blue)', opacity: 0.34 },
+      { offset: '0%', color: 'var(--accent-pink)', opacity: 0.94 },
+      { offset: '18%', color: 'var(--accent-violet)', opacity: 0.38 },
+      { offset: '38%', color: 'var(--accent-pink)', opacity: 1 },
+      { offset: '62%', color: 'var(--accent-pink)', opacity: 1 },
+      { offset: '82%', color: 'var(--accent-blue)', opacity: 0.34 },
+      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.94 },
     ],
     'var(--accent-violet)': [
-      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.32 },
-      { offset: '18%', color: 'var(--accent-violet)', opacity: 0.88 },
-      { offset: '72%', color: 'var(--accent-violet)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.36 },
+      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.94 },
+      { offset: '18%', color: 'var(--accent-blue)', opacity: 0.34 },
+      { offset: '38%', color: 'var(--accent-violet)', opacity: 1 },
+      { offset: '62%', color: 'var(--accent-violet)', opacity: 1 },
+      { offset: '82%', color: 'var(--accent-pink)', opacity: 0.38 },
+      { offset: '100%', color: 'var(--accent-violet)', opacity: 0.94 },
     ],
   }
 

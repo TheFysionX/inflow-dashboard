@@ -489,7 +489,7 @@ p {
 
 .sidebar-toggle:hover {
   color: var(--accent-blue);
-  transform: scale(1.08);
+  transform: scale(1.75);
   filter: drop-shadow(0 0 18px rgba(116, 199, 255, 0.24));
 }
 

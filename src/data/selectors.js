@@ -1000,8 +1000,8 @@ function getAttentionItems(records) {
         || (replyGapHours >= 72
           ? `No reply for ${Math.max(1, Math.round(replyGapHours / 24))} days`
           : stageAgeDays >= 4
-            ? `${STAGE_LABELS[record.thread.currentStage]} stage needs a nudge`
-            : 'Momentum is slowing down')
+            ? `${STAGE_LABELS[record.thread.currentStage]} requires attention`
+            : `${STAGE_LABELS[record.thread.currentStage]} follow-up is due`)
 
       return {
         leadName: record.lead.displayName,
@@ -1065,11 +1065,6 @@ function buildFunnelSeries(dailyFacts, window) {
     {
       stage: STAGE_LABELS.desired,
       value: sumDailyField(dailyFacts, window, 'desired_entries'),
-      routePath: '/pipeline',
-    },
-    {
-      stage: STAGE_LABELS.objection,
-      value: sumDailyField(dailyFacts, window, 'objection_entries'),
       routePath: '/pipeline',
     },
     {

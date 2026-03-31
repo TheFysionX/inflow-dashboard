@@ -93,7 +93,7 @@ function ActivePieShape(props) {
   )
 }
 
-const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#79beff', '#b993ff', '#f49be3']
+const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#b993ff', '#f49be3']
 
 export default function OverviewPage() {
   const navigate = useNavigate()
@@ -536,6 +536,22 @@ export default function OverviewPage() {
           >
             {overviewCustomizerOpen ? 'Hide overview controls' : 'Customize overview'}
           </button>
+          <button
+            aria-label={
+              overviewUseCompactNumbers
+                ? 'Switch to full number format'
+                : 'Switch to compact number format'
+            }
+            aria-pressed={overviewUseCompactNumbers}
+            className={`overview-display-toggle-button overview-display-toggle-button--toolbar ${
+              overviewUseCompactNumbers ? 'is-compact' : 'is-full'
+            }`}
+            onClick={() => setOverviewUseCompactNumbers(!overviewUseCompactNumbers)}
+            type="button"
+          >
+            <span>1K</span>
+            <span>1,000</span>
+          </button>
           {overviewCustomizerOpen ? (
             <>
               <button
@@ -578,21 +594,6 @@ export default function OverviewPage() {
                 <div>
                   <p className="sidebar-caption">Overview controls</p>
                   <h3>Select which metrics and graphs the homepage shows</h3>
-                </div>
-                <div className="overview-display-toggle">
-                  <span>Number format</span>
-                  <button
-                    aria-pressed={overviewUseCompactNumbers}
-                    className={`overview-display-toggle-button ${
-                      overviewUseCompactNumbers ? 'is-compact' : 'is-full'
-                    }`}
-                    onClick={() =>
-                      setOverviewUseCompactNumbers(!overviewUseCompactNumbers)}
-                    type="button"
-                  >
-                    <span>1K</span>
-                    <span>1,000</span>
-                  </button>
                 </div>
               </div>
 

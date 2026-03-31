@@ -39,28 +39,28 @@ export const overviewSupplement = {
       callTime: '2026-04-13T20:30:00.000Z',
     },
     L10118: {
-      enteredStageAt: '2026-03-28T15:00:00.000Z',
-      lastActivityAt: '2026-03-27T18:30:00.000Z',
-      attentionNote: 'No reply for 4 days',
+      enteredStageAt: '2026-03-26T15:00:00.000Z',
+      lastActivityAt: '2026-03-26T18:30:00.000Z',
+      attentionNote: 'No reply for 5 days',
     },
     L10129: {
-      enteredStageAt: '2026-03-29T17:00:00.000Z',
-      lastActivityAt: '2026-03-28T16:15:00.000Z',
+      enteredStageAt: '2026-03-27T17:00:00.000Z',
+      lastActivityAt: '2026-03-27T16:15:00.000Z',
       attentionNote: 'Qualification follow-up is overdue',
     },
     L10225: {
-      enteredStageAt: '2026-03-30T17:30:00.000Z',
-      lastActivityAt: '2026-03-29T19:10:00.000Z',
-      attentionNote: 'Opening thread has gone quiet',
+      enteredStageAt: '2026-03-28T17:30:00.000Z',
+      lastActivityAt: '2026-03-28T19:10:00.000Z',
+      attentionNote: 'Opening follow-up is overdue',
     },
     L10266: {
-      enteredStageAt: '2026-03-30T16:20:00.000Z',
+      enteredStageAt: '2026-03-29T16:20:00.000Z',
       lastActivityAt: '2026-03-29T22:00:00.000Z',
       attentionNote: 'Current-stage lead needs a fit check',
     },
     L10272: {
-      enteredStageAt: '2026-03-29T18:00:00.000Z',
-      lastActivityAt: '2026-03-28T20:45:00.000Z',
+      enteredStageAt: '2026-03-30T18:00:00.000Z',
+      lastActivityAt: '2026-03-30T20:45:00.000Z',
       attentionNote: 'Desired-stage lead has stalled on next step',
     },
     L10335: {
@@ -74,9 +74,9 @@ export const overviewSupplement = {
       attentionNote: 'Fresh opening lead needs a first follow-up',
     },
     L10373: {
-      enteredStageAt: '2026-03-31T15:40:00.000Z',
-      lastActivityAt: '2026-03-30T20:35:00.000Z',
-      attentionNote: 'Desired-stage lead has not replied yet',
+      enteredStageAt: '2026-03-31T12:40:00.000Z',
+      lastActivityAt: '2026-03-31T01:35:00.000Z',
+      attentionNote: 'Desired-stage follow-up is due',
     },
   },
 }

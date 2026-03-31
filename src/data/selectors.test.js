@@ -24,7 +24,7 @@ describe('getOverviewModel', () => {
     expect(overview.summary.primaryMetric.numericValue).toBeGreaterThan(0)
     expect(conversionRate?.valueMeta.numericValue).toBeGreaterThan(4)
     expect(conversionRate?.valueMeta.numericValue).toBeLessThan(8)
-    expect(overview.funnelSeries).toHaveLength(6)
+    expect(overview.funnelSeries).toHaveLength(5)
     expect(overview.funnelSeries.at(-1)?.value).toBeLessThanOrEqual(
       overview.funnelSeries.at(-2)?.value ?? 0,
     )
@@ -90,11 +90,13 @@ describe('getOverviewModel', () => {
     const overview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '30D')
     const attentionDays = overview.needsAttention.map((item) => Number.parseInt(item.stageAge, 10))
     const relativeTimes = overview.upcomingCalls.map((item) => item.relativeTime)
+    const attentionNotes = overview.needsAttention.map((item) => item.note)
 
     expect(attentionDays.length).toBeGreaterThan(0)
     expect(attentionDays.every((value) => value >= 1 && value <= 5)).toBe(true)
     expect(attentionDays).toEqual([...attentionDays].sort((left, right) => left - right))
     expect(new Set(relativeTimes).size).toBeGreaterThan(2)
+    expect(attentionNotes).not.toContain('Momentum is slowing down')
   })
 
   it('builds a varied funnel instead of flattening every late stage', () => {
@@ -105,6 +107,6 @@ describe('getOverviewModel', () => {
     expect(overview.funnelSeries.at(-1)?.value).toBeLessThanOrEqual(
       overview.funnelSeries.at(-2)?.value ?? 0,
     )
-    expect(overview.funnelSeries[3]?.value).not.toBe(overview.funnelSeries[4]?.value)
+    expect(overview.funnelSeries[2]?.value).not.toBe(overview.funnelSeries[3]?.value)
   })
 })

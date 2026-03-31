@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
@@ -14,6 +14,7 @@ import ProfileMenu from './ProfileMenu'
 export default function Topbar() {
   const location = useLocation()
   const { rangeSelection, setCustomRange, setRangePreset } = useDashboard()
+  const prefersReducedMotion = useReducedMotion()
   const [searchOpen, setSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const searchRef = useRef(null)
@@ -45,19 +46,22 @@ export default function Topbar() {
       navigationItems[0],
     [location.pathname],
   )
+  const shouldCenterHeader = location.pathname === '/overview' && isScrolled
 
   return (
     <header
-      className={`topbar ${
-        location.pathname === '/overview' && isScrolled ? 'is-scrolled' : ''
-      }`}
+      className={`topbar ${shouldCenterHeader ? 'is-scrolled' : ''}`}
     >
-      <div className="topbar-page">
+      <motion.div
+        animate={prefersReducedMotion ? undefined : { x: shouldCenterHeader ? 96 : 0 }}
+        className="topbar-page"
+        transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div>
           <p className="sidebar-caption">{brandConfig.subtitle}</p>
           <h1>{currentPage.label}</h1>
         </div>
-      </div>
+      </motion.div>
 
       <div className="topbar-tools">
         <div className="topbar-search-cluster" ref={searchRef}>

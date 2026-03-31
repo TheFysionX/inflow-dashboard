@@ -16,13 +16,33 @@ export default function ProfileMenu() {
     function handlePointerDown(event) {
       if (!menuRef.current?.contains(event.target)) {
         setOpen(false)
-        setConfirmingSignOut(false)
       }
     }
 
     window.addEventListener('pointerdown', handlePointerDown)
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [])
+
+  useEffect(() => {
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setConfirmingSignOut(false)
+      }
+    }
+
+    if (!confirmingSignOut) {
+      return undefined
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [confirmingSignOut])
 
   function handleSignOut() {
     logout()
@@ -34,16 +54,7 @@ export default function ProfileMenu() {
       <button
         aria-expanded={open}
         className="profile-button"
-        onClick={() =>
-          setOpen((current) => {
-            const nextOpen = !current
-
-            if (!nextOpen) {
-              setConfirmingSignOut(false)
-            }
-
-            return nextOpen
-          })}
+        onClick={() => setOpen((current) => !current)}
         type="button"
       >
         <div className="avatar-badge">IN</div>
@@ -67,45 +78,61 @@ export default function ProfileMenu() {
               <span>Signed in as</span>
               <strong>{demoCredentials.email}</strong>
             </div>
-            {confirmingSignOut ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="profile-signout-confirm"
-                initial={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="profile-signout-confirm-copy">
-                  <strong>Confirm sign out</strong>
-                  <span>You’ll return to the sign-in screen.</span>
-                </div>
-                <div className="profile-signout-confirm-actions">
-                  <button
-                    className="ghost-button button-small"
-                    onClick={() => setConfirmingSignOut(false)}
-                    type="button"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="secondary-button button-small"
-                    onClick={handleSignOut}
-                    type="button"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.button
-                className="profile-dropdown-row"
-                onClick={() => setConfirmingSignOut(true)}
-                type="button"
-                whileTap={{ scale: 0.985 }}
-              >
-                <span>Sign out</span>
-                <ChevronIcon direction="right" size={14} />
-              </motion.button>
-            )}
+            <motion.button
+              className="profile-dropdown-row"
+              onClick={() => {
+                setOpen(false)
+                setConfirmingSignOut(true)
+              }}
+              type="button"
+              whileTap={{ scale: 0.985 }}
+            >
+              <span>Sign out</span>
+              <ChevronIcon direction="right" size={14} />
+            </motion.button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false}>
+        {confirmingSignOut ? (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="modal-overlay"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            onClick={() => setConfirmingSignOut(false)}
+          >
+            <motion.div
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="modal-panel modal-panel--signout"
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              onClick={(event) => event.stopPropagation()}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="modal-panel-copy">
+                <p className="sidebar-caption">Session</p>
+                <h3>Confirm sign out</h3>
+                <p>You'll return to the sign-in screen for the demo dashboard.</p>
+              </div>
+              <div className="modal-panel-actions">
+                <button
+                  className="ghost-button button-small"
+                  onClick={() => setConfirmingSignOut(false)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="secondary-button button-small"
+                  onClick={handleSignOut}
+                  type="button"
+                >
+                  Sign out
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

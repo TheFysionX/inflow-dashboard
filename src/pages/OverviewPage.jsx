@@ -259,7 +259,7 @@ export default function OverviewPage() {
                     style={{
                       '--funnel-layer-color': funnelColors[funnelIndex] ?? funnelColors.at(-1),
                       '--funnel-layer-width': `${width}%`,
-                      zIndex: isActive ? 12 : overview.funnelSeries.length - funnelIndex,
+                      zIndex: isActive ? 12 : funnelIndex + 1,
                     }}
                     type="button"
                   >
@@ -285,19 +285,8 @@ export default function OverviewPage() {
                 <>
                   <span>{activeFunnel.stage}</span>
                   <strong>{activeFunnel.value}</strong>
-                  <small>
-                    {openingValue
-                      ? `${Math.round((activeFunnel.value / openingValue) * 100)}% of opening`
-                      : 'No opening baseline'}
-                  </small>
                 </>
-              ) : (
-                <>
-                  <span>Hover a stage</span>
-                  <strong>{openingValue}</strong>
-                  <small>Opening baseline</small>
-                </>
-              )}
+              ) : null}
             </div>
           </div>
         </ChartPanel>

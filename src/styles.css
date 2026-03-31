@@ -470,7 +470,7 @@ p {
 
 .sidebar-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px;
+  grid-template-columns: minmax(0, 1fr) 68px;
   min-height: 0;
 }
 
@@ -500,7 +500,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 10px;
+  padding-right: 4px;
 }
 
 .sidebar-toggle {

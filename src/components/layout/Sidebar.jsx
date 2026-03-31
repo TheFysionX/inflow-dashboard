@@ -83,7 +83,7 @@ export default function Sidebar() {
             onClick={toggleSidebar}
             type="button"
           >
-            <ChevronIcon direction={sidebarExpanded ? 'left' : 'right'} size={36} />
+            <ChevronIcon direction={sidebarExpanded ? 'left' : 'right'} size={64} />
           </button>
         </div>
       </div>

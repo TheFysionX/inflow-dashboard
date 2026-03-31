@@ -68,36 +68,60 @@ function shiftShade(color, amount) {
   })
 }
 
-function getGradientStops(color) {
+function createSeed(input) {
+  return Array.from(String(input)).reduce(
+    (seed, character) => ((seed * 31) + character.charCodeAt(0)) % 2147483647,
+    17,
+  )
+}
+
+function createSeededRandom(seedValue) {
+  let seed = seedValue || 1
+
+  return () => {
+    seed = (seed * 48271) % 2147483647
+    return seed / 2147483647
+  }
+}
+
+function getGradientStops(color, lineKey) {
+  const random = createSeededRandom(createSeed(lineKey))
+  const accentWindows = {
+    early: 10 + (random() * 18),
+    midA: 26 + (random() * 18),
+    midB: 54 + (random() * 16),
+    late: 74 + (random() * 14),
+  }
+
   const presetStops = {
-    'var(--accent-blue)': [
-      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.94 },
-      { offset: '20%', color: 'var(--accent-violet)', opacity: 0.42 },
-      { offset: '38%', color: 'var(--accent-blue)', opacity: 1 },
-      { offset: '62%', color: 'var(--accent-blue)', opacity: 1 },
-      { offset: '80%', color: 'var(--accent-pink)', opacity: 0.4 },
+    'var(--accent-blue)': () => [
+      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.96 },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 0.28 + (random() * 0.18) },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 1 },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 0.24 + (random() * 0.16) },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 1 },
       { offset: '100%', color: 'var(--accent-blue)', opacity: 0.94 },
     ],
-    'var(--accent-pink)': [
-      { offset: '0%', color: 'var(--accent-pink)', opacity: 0.94 },
-      { offset: '18%', color: 'var(--accent-violet)', opacity: 0.38 },
-      { offset: '38%', color: 'var(--accent-pink)', opacity: 1 },
-      { offset: '62%', color: 'var(--accent-pink)', opacity: 1 },
-      { offset: '82%', color: 'var(--accent-blue)', opacity: 0.34 },
+    'var(--accent-pink)': () => [
+      { offset: '0%', color: 'var(--accent-pink)', opacity: 0.96 },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 0.26 + (random() * 0.16) },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 1 },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 0.22 + (random() * 0.14) },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 1 },
       { offset: '100%', color: 'var(--accent-pink)', opacity: 0.94 },
     ],
-    'var(--accent-violet)': [
-      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.94 },
-      { offset: '18%', color: 'var(--accent-blue)', opacity: 0.34 },
-      { offset: '38%', color: 'var(--accent-violet)', opacity: 1 },
-      { offset: '62%', color: 'var(--accent-violet)', opacity: 1 },
-      { offset: '82%', color: 'var(--accent-pink)', opacity: 0.38 },
+    'var(--accent-violet)': () => [
+      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.96 },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 0.24 + (random() * 0.16) },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 1 },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 0.26 + (random() * 0.16) },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 1 },
       { offset: '100%', color: 'var(--accent-violet)', opacity: 0.94 },
     ],
   }
 
   if (presetStops[color]) {
-    return presetStops[color]
+    return presetStops[color]()
   }
 
   if (typeof color === 'string' && color.startsWith('#')) {
@@ -163,7 +187,7 @@ export default function TraceLineChart({
     () => `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
     [lineKey],
   )
-  const gradientStops = useMemo(() => getGradientStops(color), [color])
+  const gradientStops = useMemo(() => getGradientStops(color, lineKey), [color, lineKey])
 
   return (
     <div className="trace-chart-shell">

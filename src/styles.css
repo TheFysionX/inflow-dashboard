@@ -484,12 +484,13 @@ p {
   border-radius: 18px;
   color: var(--color-text-soft);
   background: transparent;
-  transition: background 180ms ease, color 180ms ease;
+  transition: color 180ms ease, transform 180ms ease, filter 180ms ease;
 }
 
 .sidebar-toggle:hover {
-  color: #ffffff;
-  background: linear-gradient(180deg, rgba(143, 109, 255, 0.12), rgba(116, 199, 255, 0.05));
+  color: var(--accent-blue);
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 18px rgba(116, 199, 255, 0.24));
 }
 
 .sidebar-brand-lockup {

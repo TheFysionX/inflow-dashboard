@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { demoDataset } from './demoData'
-import { getClientRecords, getOverviewModel } from './selectors'
+import {
+  getClientRecords,
+  getLeadDetailModel,
+  getLeadsModel,
+  getOverviewModel,
+  getPipelineModel,
+} from './selectors'
 import { buildCustomRangeSelection } from '../lib/rangeSelection'
 
 describe('getClientRecords', () => {
@@ -108,5 +114,45 @@ describe('getOverviewModel', () => {
       overview.funnelSeries.at(-2)?.value ?? 0,
     )
     expect(overview.funnelSeries[2]?.value).not.toBe(overview.funnelSeries[3]?.value)
+  })
+})
+
+describe('operational core selectors', () => {
+  it('builds the pipeline page model from normalized records', () => {
+    const pipeline = getPipelineModel(demoDataset, demoDataset.clients[0].id, '30D')
+    const distributed = pipeline.stageDistribution.reduce((sum, item) => sum + item.value, 0)
+
+    expect(pipeline.alerts).toHaveLength(3)
+    expect(pipeline.stageMovement.links).toHaveLength(4)
+    expect(pipeline.avgTimeInStage).toHaveLength(5)
+    expect(pipeline.completionRate).toHaveLength(4)
+    expect(pipeline.rows.length).toBeGreaterThan(20)
+    expect(distributed).toBe(pipeline.rows.length)
+  })
+
+  it('builds a leads CRM model with filterable breakdowns', () => {
+    const leads = getLeadsModel(demoDataset, demoDataset.clients[0].id, '30D')
+
+    expect(leads.summaryCards).toHaveLength(4)
+    expect(leads.rows.length).toBeGreaterThan(20)
+    expect(leads.qualityMix.length).toBeGreaterThan(0)
+    expect(leads.goalMix.length).toBeGreaterThan(0)
+    expect(leads.experienceMix.length).toBeGreaterThan(0)
+    expect(leads.commitmentMix.length).toBeGreaterThan(0)
+    expect(leads.filterOptions.stages.length).toBeGreaterThan(0)
+    expect(leads.filterOptions.goalTypes.length).toBeGreaterThan(0)
+  })
+
+  it('returns a client-safe lead detail model for the shared drawer', () => {
+    const leads = getLeadsModel(demoDataset, demoDataset.clients[0].id, '30D')
+    const detail = getLeadDetailModel(demoDataset, demoDataset.clients[0].id, leads.rows[0]?.id)
+    const serialized = JSON.stringify(detail)
+
+    expect(detail?.facts.length).toBeGreaterThan(5)
+    expect(detail?.timeline.length).toBeGreaterThan(2)
+    expect(detail?.transcriptPreview).toHaveLength(3)
+    expect(serialized).not.toContain('route_id')
+    expect(serialized).not.toContain('selected_question_id')
+    expect(serialized).not.toContain('additional_search_scope')
   })
 })

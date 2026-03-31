@@ -1487,3 +1487,767 @@ export function getOverviewModel(
     rangeLabel: window.label,
   }
 }
+
+const stageTones = {
+  opening: 'info',
+  current: 'info',
+  desired: 'positive',
+  objection: 'warning',
+  book: 'positive',
+  confirmed: 'positive',
+}
+
+const stageColors = {
+  opening: '#8f6dff',
+  current: '#7c87ff',
+  desired: '#73a1ff',
+  objection: '#f49be3',
+  book: '#8be7c2',
+  confirmed: '#74c7ff',
+}
+
+const leadStatusCatalog = {
+  active: { label: 'Active', tone: 'info' },
+  needs_attention: { label: 'Needs attention', tone: 'warning' },
+  scheduled: { label: 'Scheduled', tone: 'positive' },
+  closed: { label: 'Closed', tone: 'neutral' },
+}
+
+const qualificationCatalog = {
+  qualified: { label: 'Qualified', tone: 'positive', color: qualificationColors.qualified },
+  unqualified: { label: 'Unqualified', tone: 'danger', color: qualificationColors.unqualified },
+  unclear: { label: 'Unclear', tone: 'info', color: qualificationColors.unclear },
+}
+
+const goalColors = {
+  side_income: '#8f6dff',
+  replace_income: '#74c7ff',
+  consistency: '#f49be3',
+  skill_building: '#8be7c2',
+  lifestyle_goal: '#b6a1ff',
+  other: '#89b8ff',
+}
+
+const experienceColors = {
+  beginner: '#8f6dff',
+  some_experience: '#74c7ff',
+  experienced: '#f49be3',
+}
+
+const commitmentColors = {
+  high: '#8be7c2',
+  medium: '#74c7ff',
+  low: '#ffb8e6',
+  unclear: '#89b8ff',
+}
+
+function humanizeValue(value) {
+  if (!value) {
+    return 'Unclear'
+  }
+
+  return String(value)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function formatShortDate(dateValue) {
+  if (!dateValue) {
+    return 'Not scheduled'
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(toDateTime(dateValue))
+}
+
+function getDaysSince(dateValue) {
+  if (!dateValue) {
+    return 0
+  }
+
+  return Math.max(
+    1,
+    Math.round((REFERENCE_NOW.getTime() - toDateTime(dateValue).getTime()) / DAY),
+  )
+}
+
+function getHoursSince(dateValue) {
+  if (!dateValue) {
+    return 0
+  }
+
+  return Math.max(
+    1,
+    Math.round((REFERENCE_NOW.getTime() - toDateTime(dateValue).getTime()) / HOUR),
+  )
+}
+
+function getLeadStatusMeta(status) {
+  return leadStatusCatalog[status] ?? leadStatusCatalog.active
+}
+
+function getQualificationMeta(qualification) {
+  return qualificationCatalog[qualification] ?? qualificationCatalog.unclear
+}
+
+function getBookingStatusMeta(record) {
+  if (record.bookingEvent.attendedCall) {
+    return { label: 'Attended', tone: 'positive', rank: 0 }
+  }
+
+  if (record.bookingEvent.noShow) {
+    return { label: 'No-show', tone: 'danger', rank: 1 }
+  }
+
+  if (record.confirmedTime && toDateTime(record.confirmedTime) > REFERENCE_NOW) {
+    return { label: 'Confirmed', tone: 'positive', rank: 2 }
+  }
+
+  if (record.bookingEvent.proposedTime) {
+    return { label: 'Proposed', tone: 'info', rank: 3 }
+  }
+
+  if (record.bookingIntent === 'yes') {
+    return { label: 'Intent: yes', tone: 'positive', rank: 4 }
+  }
+
+  if (record.bookingIntent === 'maybe') {
+    return { label: 'Intent: maybe', tone: 'warning', rank: 5 }
+  }
+
+  return { label: 'No booking', tone: 'neutral', rank: 6 }
+}
+
+function getPriorityMeta(record) {
+  const stageAgeDays = getDaysSince(record.thread.enteredStageAt)
+  const replyGapHours = getHoursSince(record.thread.lastMessageAt)
+
+  if (
+    record.lead.status === 'needs_attention' &&
+    (record.qualification === 'qualified' || record.bookingIntent === 'yes')
+  ) {
+    return { label: 'Urgent', tone: 'danger', rank: 0 }
+  }
+
+  if (record.lead.status === 'needs_attention' || stageAgeDays >= 6 || replyGapHours >= 96) {
+    return { label: 'High', tone: 'warning', rank: 1 }
+  }
+
+  if (
+    record.bookingIntent === 'yes' ||
+    (record.confirmedTime && toDateTime(record.confirmedTime) > REFERENCE_NOW)
+  ) {
+    return { label: 'Active', tone: 'positive', rank: 2 }
+  }
+
+  if (record.qualification === 'qualified') {
+    return { label: 'Watch', tone: 'info', rank: 3 }
+  }
+
+  return { label: 'Routine', tone: 'neutral', rank: 4 }
+}
+
+function getWindowRecords(records, window) {
+  if (window.selection.mode === 'custom' && window.days <= 0) {
+    return []
+  }
+
+  if (window.selection.mode !== 'custom' && window.selection.preset === 'All Time') {
+    return records
+  }
+
+  return records.filter((record) => {
+    const candidates = [
+      record.lead.createdAt,
+      record.thread.lastMessageAt,
+      record.thread.enteredStageAt,
+      record.confirmedTime,
+      record.callTime,
+    ]
+
+    return candidates.some((value) => isWithinWindow(value, window))
+  })
+}
+
+function sortOptionValues(values) {
+  return [...values].sort((left, right) => left.label.localeCompare(right.label))
+}
+
+function collectOptionCounts(rows, valueKey, labelKey) {
+  const counts = new Map()
+
+  rows.forEach((row) => {
+    const value = row[valueKey]
+
+    if (!value || value === 'none') {
+      return
+    }
+
+    const entry = counts.get(value) ?? {
+      value,
+      label: labelKey ? row[labelKey] : humanizeValue(value),
+      count: 0,
+    }
+
+    entry.count += 1
+    counts.set(value, entry)
+  })
+
+  return sortOptionValues(Array.from(counts.values()))
+}
+
+function buildLeadRow(record) {
+  const stageKey = record.thread.currentStage
+  const stageLabel = STAGE_LABELS[stageKey] ?? humanizeValue(stageKey)
+  const stageAgeDays = getDaysSince(record.thread.enteredStageAt)
+  const qualificationMeta = getQualificationMeta(record.qualification)
+  const bookingStatus = getBookingStatusMeta(record)
+  const status = getLeadStatusMeta(record.lead.status)
+  const priority = getPriorityMeta(record)
+  const objectionLabel = record.objectionType === 'none'
+    ? 'None'
+    : objectionLabels[record.objectionType] ?? humanizeValue(record.objectionType)
+
+  return {
+    id: record.lead.id,
+    displayName: record.lead.displayName,
+    source: humanizeValue(record.lead.source),
+    createdAt: record.lead.createdAt,
+    createdLabel: formatShortDate(record.lead.createdAt),
+    stageKey,
+    stageLabel,
+    stageTone: stageTones[stageKey] ?? 'neutral',
+    stageColor: stageColors[stageKey] ?? '#89b8ff',
+    stageAgeDays,
+    stageAgeLabel: formatStageAge(record.thread.enteredStageAt),
+    lastActivityAt: record.thread.lastMessageAt,
+    lastActivityLabel: formatRelativeTime(record.thread.lastMessageAt),
+    lastActivityDetail: formatDateTime(record.thread.lastMessageAt),
+    qualificationKey: record.qualification,
+    qualificationLabel: qualificationMeta.label,
+    qualificationTone: qualificationMeta.tone,
+    qualificationColor: qualificationMeta.color,
+    bookingIntentKey: record.bookingIntent,
+    bookingIntentLabel: humanizeValue(record.bookingIntent),
+    bookingStatusLabel: bookingStatus.label,
+    bookingStatusTone: bookingStatus.tone,
+    bookingStatusRank: bookingStatus.rank,
+    confirmedTime: record.confirmedTime,
+    confirmedLabel: record.confirmedTime ? formatDateTime(record.confirmedTime) : 'Not scheduled',
+    objectionKey: record.objectionType,
+    objectionLabel,
+    experienceKey: record.latestSnapshot.leadProfileJson.experience_level || 'unclear',
+    experienceLabel: humanizeValue(record.latestSnapshot.leadProfileJson.experience_level),
+    workRoleKey: record.latestSnapshot.leadProfileJson.work_role || 'unclear',
+    workRoleLabel: humanizeValue(record.latestSnapshot.leadProfileJson.work_role),
+    commitmentKey: record.latestSnapshot.leadProfileJson.commitment_level || 'unclear',
+    commitmentLabel: humanizeValue(record.latestSnapshot.leadProfileJson.commitment_level),
+    goalKey: record.latestSnapshot.leadProfileJson.goal_type || 'other',
+    goalLabel: humanizeValue(record.latestSnapshot.leadProfileJson.goal_type || 'other'),
+    statusLabel: status.label,
+    statusTone: status.tone,
+    priorityLabel: priority.label,
+    priorityTone: priority.tone,
+    priorityRank: priority.rank,
+    routePath: '/leads',
+    record,
+  }
+}
+
+function buildLeadFacts(record) {
+  const profile = record.latestSnapshot.leadProfileJson
+
+  return [
+    { label: 'Experience', value: humanizeValue(profile.experience_level) },
+    { label: 'Work role', value: humanizeValue(profile.work_role) },
+    { label: 'Commitment', value: humanizeValue(profile.commitment_level) },
+    { label: 'Goal type', value: humanizeValue(profile.goal_type) },
+    { label: 'Funding', value: humanizeValue(profile.funding_ability) },
+    {
+      label: 'Target outcome',
+      value: profile.target_outcome_value ? `$${Number(profile.target_outcome_value).toLocaleString('en-US')}` : 'Not captured',
+    },
+    {
+      label: 'Gap to target',
+      value: profile.current_gap_to_target ? `$${Number(profile.current_gap_to_target).toLocaleString('en-US')}` : 'Not captured',
+    },
+    { label: 'Qualification', value: humanizeValue(profile.qualification_signal) },
+    { label: 'Objection', value: humanizeValue(profile.objection_type === 'none' ? 'none' : profile.objection_type) },
+  ]
+}
+
+function buildLeadTimeline(record) {
+  const leadFact = record.leadFact
+  const timeline = [
+    {
+      key: 'created',
+      label: 'Lead created',
+      date: leadFact.created_date,
+      tone: 'info',
+      detail: humanizeValue(leadFact.source_channel),
+    },
+    {
+      key: 'opening',
+      label: 'Opening',
+      date: leadFact.opening_date || leadFact.created_date,
+      tone: 'info',
+      detail: 'First contact landed',
+    },
+    {
+      key: 'current',
+      label: 'Current state',
+      date: leadFact.current_date,
+      tone: 'info',
+      detail: 'Context and baseline were clarified',
+    },
+    {
+      key: 'desired',
+      label: 'Desired state',
+      date: leadFact.desired_date,
+      tone: 'positive',
+      detail: 'Target outcome and goals were discussed',
+    },
+    {
+      key: 'objection',
+      label: 'Objection',
+      date: leadFact.objection_date,
+      tone: 'warning',
+      detail: leadFact.objection_type
+        ? `${humanizeValue(normalizeObjectionType(leadFact.objection_type))} blocker surfaced`
+        : 'A blocker surfaced',
+    },
+    {
+      key: 'book',
+      label: 'Booking intent',
+      date: leadFact.book_date,
+      tone: 'positive',
+      detail: 'Call timing moved into scheduling',
+    },
+    {
+      key: 'confirmed',
+      label: 'Call confirmed',
+      date: leadFact.confirmed_date,
+      tone: 'positive',
+      detail: 'Calendar slot was confirmed',
+    },
+    {
+      key: 'call',
+      label: 'Call held',
+      date: leadFact.call_date,
+      tone: leadFact.show_status === 'no_show' ? 'danger' : 'positive',
+      detail: leadFact.show_status === 'no_show' ? 'Lead did not attend' : 'Call took place',
+    },
+    {
+      key: 'close',
+      label: 'Outcome logged',
+      date: leadFact.close_date,
+      tone: leadFact.final_status === 'won' ? 'positive' : 'neutral',
+      detail: humanizeValue(leadFact.final_status || 'closed'),
+    },
+  ]
+
+  return timeline
+    .filter((item) => item.date)
+    .map((item) => ({
+      ...item,
+      dateLabel: formatShortDate(item.date),
+      sortValue: toDateTime(item.date).getTime(),
+    }))
+    .sort((left, right) => left.sortValue - right.sortValue)
+}
+
+function buildTranscriptPreview(record) {
+  const role = humanizeValue(record.latestSnapshot.leadProfileJson.work_role).toLowerCase()
+  const goal = humanizeValue(record.latestSnapshot.leadProfileJson.goal_type).toLowerCase()
+  const currentStage = record.thread.currentStage
+  const objection = record.objectionType !== 'none'
+    ? humanizeValue(record.objectionType).toLowerCase()
+    : ''
+
+  return [
+    {
+      id: `${record.lead.id}-lead`,
+      sender: 'Lead',
+      tone: 'lead',
+      text: `I'm a ${role} looking for ${goal}, and I want to understand whether this can realistically work for me.`,
+    },
+    {
+      id: `${record.lead.id}-assistant-1`,
+      sender: 'Inflow AI',
+      tone: 'assistant',
+      text: currentStage === 'opening'
+        ? 'I can help map where you are now and what outcome you actually want before we talk about the next step.'
+        : currentStage === 'current'
+          ? 'Thanks for sharing the context. I want to narrow the gap between your current setup and the result you are aiming for.'
+          : currentStage === 'desired'
+            ? 'The goal is clear. The next move is making sure the plan and commitment level line up with the target outcome.'
+            : currentStage === 'objection'
+              ? `It sounds like ${objection || 'a blocker'} is the main hesitation, so I would address that directly before pushing for a booking.`
+              : 'We are close to a decision point, so the next step is getting the right time locked in.',
+    },
+    {
+      id: `${record.lead.id}-assistant-2`,
+      sender: 'Inflow AI',
+      tone: 'assistant',
+      text: record.bookingEvent.confirmedTime
+        ? `The conversation is now oriented around the confirmed call on ${formatShortDate(record.bookingEvent.confirmedTime)}.`
+        : record.bookingIntent === 'yes'
+          ? 'This lead has buying-in momentum, so the reply should be focused on timing and reducing booking friction.'
+          : 'The safest next reply is a concise follow-up that keeps momentum without exposing internal process language.',
+    },
+  ]
+}
+
+function buildLatestApprovedReply(record) {
+  const stage = record.thread.currentStage
+
+  if (stage === 'opening') {
+    return 'Open with one clear question that anchors on the lead’s current situation and what result they want next.'
+  }
+
+  if (stage === 'current') {
+    return 'Reflect their situation back in plain language, then move into the gap between current reality and target outcome.'
+  }
+
+  if (stage === 'desired') {
+    return 'Confirm the desired outcome, quantify what matters, and test whether their commitment matches the target.'
+  }
+
+  if (stage === 'objection') {
+    return 'Name the blocker directly, resolve the concern with proof or framing, and then return to the booking path.'
+  }
+
+  return 'Use a scheduling-first reply that removes timezone friction and gives a clean path to confirmation.'
+}
+
+function buildNextStepSuggestion(record) {
+  if (record.bookingEvent.confirmedTime && toDateTime(record.bookingEvent.confirmedTime) > REFERENCE_NOW) {
+    return 'Send a short confirmation touchpoint and keep the thread warm until the scheduled call.'
+  }
+
+  if (record.bookingIntent === 'yes') {
+    return 'Prioritize this lead for immediate scheduling follow-up and give a tighter time-choice prompt.'
+  }
+
+  if (record.thread.currentStage === 'objection') {
+    return 'Resolve the blocker before asking for a booking again.'
+  }
+
+  if (record.lead.status === 'needs_attention') {
+    return 'Re-open the thread with a concise follow-up tied to the last known goal or objection.'
+  }
+
+  return 'Advance the conversation one stage by asking the clearest next-stage question only.'
+}
+
+function buildLeadDetailSummary(row) {
+  return [
+    { label: 'Stage', value: row.stageLabel, tone: row.stageTone },
+    { label: 'Stage age', value: row.stageAgeLabel, tone: 'neutral' },
+    { label: 'Booking', value: row.bookingStatusLabel, tone: row.bookingStatusTone },
+    { label: 'Priority', value: row.priorityLabel, tone: row.priorityTone },
+  ]
+}
+
+function buildLeadDetailModelFromRecord(record) {
+  const row = buildLeadRow(record)
+
+  return {
+    id: row.id,
+    displayName: row.displayName,
+    source: row.source,
+    createdLabel: row.createdLabel,
+    stage: { label: row.stageLabel, tone: row.stageTone, age: row.stageAgeLabel },
+    status: { label: row.statusLabel, tone: row.statusTone },
+    qualification: { label: row.qualificationLabel, tone: row.qualificationTone },
+    bookingStatus: { label: row.bookingStatusLabel, tone: row.bookingStatusTone },
+    priority: { label: row.priorityLabel, tone: row.priorityTone },
+    summaryCards: buildLeadDetailSummary(row),
+    facts: buildLeadFacts(record),
+    timeline: buildLeadTimeline(record),
+    transcriptPreview: buildTranscriptPreview(record),
+    latestApprovedReply: buildLatestApprovedReply(record),
+    nextStepSuggestion: buildNextStepSuggestion(record),
+  }
+}
+
+function buildStageDistribution(rows) {
+  const total = rows.length || 1
+
+  return STAGE_ORDER.map((stage) => {
+    const value = rows.filter((row) => row.stageKey === stage).length
+    return {
+      key: stage,
+      label: STAGE_LABELS[stage],
+      value,
+      share: (value / total) * 100,
+      color: stageColors[stage],
+      tone: stageTones[stage],
+    }
+  })
+}
+
+function buildStageMovement(dailyFacts, window) {
+  const opening = sumDailyField(dailyFacts, window, 'opening_entries')
+  const current = sumDailyField(dailyFacts, window, 'current_entries')
+  const desired = sumDailyField(dailyFacts, window, 'desired_entries')
+  const objection = sumDailyField(dailyFacts, window, 'objection_entries')
+  const book = sumDailyField(dailyFacts, window, 'book_entries')
+  const confirmed = sumDailyField(dailyFacts, window, 'confirmed_calls')
+
+  return {
+    nodes: [
+      { key: 'opening', label: 'Opening', value: opening, color: stageColors.opening },
+      { key: 'current', label: 'Current', value: current, color: stageColors.current },
+      { key: 'desired', label: 'Desired', value: desired, color: stageColors.desired },
+      { key: 'book', label: 'Book', value: book, color: stageColors.book },
+      { key: 'confirmed', label: 'Confirmed', value: confirmed, color: stageColors.confirmed },
+    ],
+    links: [
+      {
+        key: 'opening-current',
+        label: 'Opening to Current',
+        value: current,
+        rate: opening ? (current / opening) * 100 : 0,
+      },
+      {
+        key: 'current-desired',
+        label: 'Current to Desired',
+        value: desired,
+        rate: current ? (desired / current) * 100 : 0,
+      },
+      {
+        key: 'desired-book',
+        label: 'Desired to Book',
+        value: book,
+        rate: desired ? (book / desired) * 100 : 0,
+      },
+      {
+        key: 'book-confirmed',
+        label: 'Book to Confirmed',
+        value: Math.min(confirmed, book),
+        rate: book ? (Math.min(confirmed, book) / book) * 100 : 0,
+      },
+    ],
+    objectionDetour: {
+      label: 'Objection detour',
+      value: objection,
+      rate: desired ? (objection / desired) * 100 : 0,
+    },
+  }
+}
+
+function buildAverageTimeInStage(rows) {
+  return STAGE_ORDER.map((stage) => {
+    const stageRows = rows.filter((row) => row.stageKey === stage)
+
+    return {
+      key: stage,
+      label: STAGE_LABELS[stage],
+      value: average(stageRows.map((row) => row.stageAgeDays)),
+      color: stageColors[stage],
+    }
+  })
+}
+
+function buildCompletionRate(dailyFacts, window) {
+  const opening = sumDailyField(dailyFacts, window, 'opening_entries')
+  const current = sumDailyField(dailyFacts, window, 'current_entries')
+  const desired = sumDailyField(dailyFacts, window, 'desired_entries')
+  const book = sumDailyField(dailyFacts, window, 'book_entries')
+  const confirmed = Math.min(sumDailyField(dailyFacts, window, 'confirmed_calls'), book)
+
+  return [
+    {
+      key: 'opening-current',
+      label: 'Opening to Current',
+      value: opening ? (current / opening) * 100 : 0,
+      color: stageColors.current,
+    },
+    {
+      key: 'current-desired',
+      label: 'Current to Desired',
+      value: current ? (desired / current) * 100 : 0,
+      color: stageColors.desired,
+    },
+    {
+      key: 'desired-book',
+      label: 'Desired to Book',
+      value: desired ? (book / desired) * 100 : 0,
+      color: stageColors.book,
+    },
+    {
+      key: 'book-confirmed',
+      label: 'Book to Confirmed',
+      value: book ? (confirmed / book) * 100 : 0,
+      color: stageColors.confirmed,
+    },
+  ]
+}
+
+function buildPipelineAlerts(rows, avgTimeInStage) {
+  const stageNeedsAttention = STAGE_ORDER.map((stage) => ({
+    stage,
+    count: rows.filter(
+      (row) => row.stageKey === stage && row.statusLabel === 'Needs attention',
+    ).length,
+  }))
+  const bottleneck = [...avgTimeInStage].sort((left, right) => right.value - left.value)[0]
+  const drift = [...stageNeedsAttention].sort((left, right) => right.count - left.count)[0]
+  const fastMovers = rows
+    .filter((row) => row.record.stageRank >= 2)
+    .filter((row) => getDaysSince(row.createdAt) <= 14)
+    .slice(0, 4)
+
+  return [
+    {
+      key: 'bottleneck',
+      label: 'Bottleneck',
+      value: bottleneck?.label ?? 'Opening',
+      detail: `${Math.round(bottleneck?.value ?? 0)} days average dwell`,
+      tone: 'warning',
+    },
+    {
+      key: 'fast-movers',
+      label: 'Fast movers',
+      value: `${fastMovers.length}`,
+      detail: fastMovers.length
+        ? fastMovers.map((row) => row.displayName).join(', ')
+        : 'No rapid movers in range',
+      tone: 'positive',
+    },
+    {
+      key: 'stage-drift',
+      label: 'Stage drift',
+      value: STAGE_LABELS[drift?.stage ?? 'opening'],
+      detail: `${drift?.count ?? 0} leads need intervention there`,
+      tone: drift?.count ? 'danger' : 'info',
+    },
+  ]
+}
+
+function buildBreakdownSeries(rows, valueKey, labelKey, colors) {
+  const counts = new Map()
+
+  rows.forEach((row) => {
+    const value = row[valueKey] || 'other'
+    const label = labelKey ? row[labelKey] : humanizeValue(value)
+    const count = counts.get(value) ?? {
+      key: value,
+      name: label,
+      value: 0,
+      color: colors?.[value] ?? '#89b8ff',
+    }
+
+    count.value += 1
+    counts.set(value, count)
+  })
+
+  return Array.from(counts.values()).sort((left, right) => right.value - left.value)
+}
+
+function buildLeadPageSummary(rows) {
+  const qualified = rows.filter((row) => row.qualificationKey === 'qualified').length
+  const booked = rows.filter((row) => row.bookingStatusLabel === 'Confirmed').length
+  const attention = rows.filter((row) => row.statusLabel === 'Needs attention').length
+  const urgent = rows.filter((row) => row.priorityLabel === 'Urgent').length
+
+  return [
+    { key: 'records', label: 'Leads in view', value: rows.length, detail: 'Records matching the current range', tone: 'info' },
+    { key: 'qualified', label: 'Qualified', value: qualified, detail: `${rows.length ? formatPercent((qualified / rows.length) * 100, 0) : '0%' } of visible leads`, tone: 'positive' },
+    { key: 'booked', label: 'Confirmed', value: booked, detail: 'Call confirmations in visible set', tone: 'positive' },
+    { key: 'attention', label: 'Needs attention', value: attention + urgent, detail: 'High-priority follow-up opportunities', tone: 'warning' },
+  ]
+}
+
+function sortRowsByOperationalPriority(rows) {
+  return [...rows].sort((left, right) => {
+    if (left.priorityRank !== right.priorityRank) {
+      return left.priorityRank - right.priorityRank
+    }
+
+    if (left.stageAgeDays !== right.stageAgeDays) {
+      return right.stageAgeDays - left.stageAgeDays
+    }
+
+    return new Date(right.lastActivityAt) - new Date(left.lastActivityAt)
+  })
+}
+
+export function getLeadDetailModel(dataset, clientId, leadId) {
+  if (!leadId) {
+    return null
+  }
+
+  const record = getClientRecords(dataset, clientId).find((item) => item.lead.id === leadId)
+
+  if (!record) {
+    return null
+  }
+
+  return buildLeadDetailModelFromRecord(record)
+}
+
+export function getPipelineModel(
+  dataset,
+  clientId,
+  rangeSelection = DEFAULT_DATE_RANGE,
+) {
+  const records = getClientRecords(dataset, clientId)
+  const dailyFacts = getDailyFacts(dataset, clientId)
+  const window = resolveWindow(rangeSelection)
+  const visibleRecords = getWindowRecords(records, window)
+  const rows = sortRowsByOperationalPriority(visibleRecords.map(buildLeadRow))
+  const avgTimeInStage = buildAverageTimeInStage(rows)
+
+  return {
+    alerts: buildPipelineAlerts(rows, avgTimeInStage),
+    stageDistribution: buildStageDistribution(rows),
+    stageMovement: buildStageMovement(dailyFacts, window),
+    avgTimeInStage,
+    completionRate: buildCompletionRate(dailyFacts, window),
+    rows,
+    filterOptions: {
+      stages: collectOptionCounts(rows, 'stageKey', 'stageLabel'),
+      qualifications: collectOptionCounts(rows, 'qualificationKey', 'qualificationLabel'),
+      objections: collectOptionCounts(rows, 'objectionKey', 'objectionLabel'),
+      bookingStatuses: collectOptionCounts(rows, 'bookingStatusLabel'),
+    },
+    rangeLabel: window.label,
+    rangeKey: window.key,
+  }
+}
+
+export function getLeadsModel(
+  dataset,
+  clientId,
+  rangeSelection = DEFAULT_DATE_RANGE,
+) {
+  const records = getClientRecords(dataset, clientId)
+  const window = resolveWindow(rangeSelection)
+  const visibleRecords = getWindowRecords(records, window)
+  const rows = sortRowsByOperationalPriority(visibleRecords.map(buildLeadRow))
+
+  return {
+    summaryCards: buildLeadPageSummary(rows),
+    rows,
+    qualityMix: buildBreakdownSeries(rows, 'qualificationKey', 'qualificationLabel', qualificationColors),
+    goalMix: buildBreakdownSeries(rows, 'goalKey', 'goalLabel', goalColors),
+    experienceMix: buildBreakdownSeries(rows, 'experienceKey', 'experienceLabel', experienceColors),
+    commitmentMix: buildBreakdownSeries(rows, 'commitmentKey', 'commitmentLabel', commitmentColors),
+    filterOptions: {
+      stages: collectOptionCounts(rows, 'stageKey', 'stageLabel'),
+      qualifications: collectOptionCounts(rows, 'qualificationKey', 'qualificationLabel'),
+      bookingIntents: collectOptionCounts(rows, 'bookingIntentKey', 'bookingIntentLabel'),
+      objections: collectOptionCounts(rows, 'objectionKey', 'objectionLabel'),
+      experienceLevels: collectOptionCounts(rows, 'experienceKey', 'experienceLabel'),
+      goalTypes: collectOptionCounts(rows, 'goalKey', 'goalLabel'),
+    },
+    rangeLabel: window.label,
+    rangeKey: window.key,
+  }
+}

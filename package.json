@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.15.0",
     "lottie-react": "^2.4.1",

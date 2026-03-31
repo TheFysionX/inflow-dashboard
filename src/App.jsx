@@ -2,8 +2,10 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DashboardLayout from './components/layout/DashboardLayout'
 import { AppProvider, useDashboard } from './context/AppContext'
 import { navigationItems } from './config/navigation'
+import LeadsPage from './pages/LeadsPage'
 import LoginPage from './pages/LoginPage'
 import OverviewPage from './pages/OverviewPage'
+import PipelinePage from './pages/PipelinePage'
 import PlaceholderPage from './pages/PlaceholderPage'
 
 function ProtectedApp() {
@@ -39,8 +41,10 @@ function DashboardRoutes() {
       <Route element={<LoginRoute />} path="/login" />
       <Route element={<ProtectedApp />} path="/">
         <Route element={<OverviewPage />} path="overview" />
+        <Route element={<PipelinePage />} path="pipeline" />
+        <Route element={<LeadsPage />} path="leads" />
         {navigationItems
-          .filter((item) => item.path !== '/overview')
+          .filter((item) => !['/overview', '/pipeline', '/leads'].includes(item.path))
           .map((item) => (
             <Route
               element={<PlaceholderPage routePath={item.path} />}

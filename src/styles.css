@@ -1531,6 +1531,7 @@ p {
   color: #ffffff;
   background: linear-gradient(135deg, color-mix(in srgb, var(--funnel-layer-color) 92%, white 8%), color-mix(in srgb, var(--funnel-layer-color) 70%, rgba(255, 255, 255, 0.12) 30%));
   box-shadow: 0 12px 24px color-mix(in srgb, var(--funnel-layer-color) 22%, transparent);
+  transform-origin: left center;
   transform: translateY(-50%);
   transition:
     transform 240ms ease,
@@ -1551,6 +1552,10 @@ p {
     0 16px 30px color-mix(in srgb, var(--funnel-layer-color) 30%, transparent),
     0 0 0 1px rgba(255, 255, 255, 0.08);
   transform: translateY(-50%) translateZ(0) scale(1.015);
+}
+
+.funnel-key-layer.is-active.is-opening {
+  transform: translateY(-50%) translateZ(0);
 }
 
 .funnel-key-layer-label {

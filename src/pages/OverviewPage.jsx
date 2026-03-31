@@ -257,6 +257,8 @@ export default function OverviewPage() {
                     className={`funnel-key-layer ${
                       isActive ? 'is-active' : ''
                     } ${
+                      funnelIndex === 0 ? 'is-opening' : ''
+                    } ${
                       activeFunnelIndex !== null && !isActive ? 'is-muted' : ''
                     }`}
                     key={item.stage}

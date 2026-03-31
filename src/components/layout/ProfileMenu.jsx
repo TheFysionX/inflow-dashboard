@@ -1,0 +1,73 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { brandConfig, demoCredentials } from '../../config/navigation'
+import { useDashboard } from '../../context/AppContext'
+import { ChevronIcon } from '../ui/Icons'
+
+export default function ProfileMenu() {
+  const navigate = useNavigate()
+  const { logout } = useDashboard()
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    return () => window.removeEventListener('pointerdown', handlePointerDown)
+  }, [])
+
+  function handleSignOut() {
+    logout()
+    navigate('/login')
+  }
+
+  return (
+    <div className="profile-menu" ref={menuRef}>
+      <button
+        aria-expanded={open}
+        className="profile-button"
+        onClick={() => setOpen((current) => !current)}
+        type="button"
+      >
+        <div className="avatar-badge">IN</div>
+        <div className="profile-button-copy">
+          <strong>{brandConfig.name}</strong>
+          <span>{demoCredentials.email}</span>
+        </div>
+        <ChevronIcon direction={open ? 'up' : 'down'} size={16} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="profile-dropdown"
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="profile-dropdown-info">
+              <span>Signed in as</span>
+              <strong>{demoCredentials.email}</strong>
+            </div>
+            <motion.button
+              className="profile-dropdown-row"
+              onClick={handleSignOut}
+              type="button"
+              whileTap={{ scale: 0.985 }}
+            >
+              <span>Sign out</span>
+              <ChevronIcon direction="right" size={14} />
+            </motion.button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  )
+}

@@ -92,31 +92,60 @@ function getGradientStops(color, lineKey) {
     midB: 54 + (random() * 16),
     late: 74 + (random() * 14),
   }
+  const lightPalette = {
+    blue: '#8bd7ff',
+    pink: '#ffc2ef',
+    violet: '#b6a1ff',
+  }
 
   const presetStops = {
     'var(--accent-blue)': () => [
-      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.96 },
-      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 0.28 + (random() * 0.18) },
-      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 1 },
-      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 0.24 + (random() * 0.16) },
-      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-blue)', opacity: 0.94 },
+      { offset: '0%', color: lightPalette.blue, opacity: 0.98 },
+      {
+        offset: `${accentWindows.early.toFixed(1)}%`,
+        color: lightPalette.violet,
+        opacity: 0.9 + (random() * 0.08),
+      },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.blue, opacity: 1 },
+      {
+        offset: `${accentWindows.midB.toFixed(1)}%`,
+        color: lightPalette.pink,
+        opacity: 0.88 + (random() * 0.08),
+      },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.blue, opacity: 1 },
+      { offset: '100%', color: lightPalette.blue, opacity: 0.98 },
     ],
     'var(--accent-pink)': () => [
-      { offset: '0%', color: 'var(--accent-pink)', opacity: 0.96 },
-      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 0.26 + (random() * 0.16) },
-      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 1 },
-      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 0.22 + (random() * 0.14) },
-      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.94 },
+      { offset: '0%', color: lightPalette.pink, opacity: 0.98 },
+      {
+        offset: `${accentWindows.early.toFixed(1)}%`,
+        color: lightPalette.violet,
+        opacity: 0.88 + (random() * 0.08),
+      },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.pink, opacity: 1 },
+      {
+        offset: `${accentWindows.midB.toFixed(1)}%`,
+        color: lightPalette.blue,
+        opacity: 0.9 + (random() * 0.07),
+      },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.pink, opacity: 1 },
+      { offset: '100%', color: lightPalette.pink, opacity: 0.98 },
     ],
     'var(--accent-violet)': () => [
-      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.96 },
-      { offset: `${accentWindows.early.toFixed(1)}%`, color: 'var(--accent-blue)', opacity: 0.24 + (random() * 0.16) },
-      { offset: `${accentWindows.midA.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 1 },
-      { offset: `${accentWindows.midB.toFixed(1)}%`, color: 'var(--accent-pink)', opacity: 0.26 + (random() * 0.16) },
-      { offset: `${accentWindows.late.toFixed(1)}%`, color: 'var(--accent-violet)', opacity: 1 },
-      { offset: '100%', color: 'var(--accent-violet)', opacity: 0.94 },
+      { offset: '0%', color: lightPalette.violet, opacity: 0.98 },
+      {
+        offset: `${accentWindows.early.toFixed(1)}%`,
+        color: lightPalette.blue,
+        opacity: 0.88 + (random() * 0.08),
+      },
+      { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.violet, opacity: 1 },
+      {
+        offset: `${accentWindows.midB.toFixed(1)}%`,
+        color: lightPalette.pink,
+        opacity: 0.88 + (random() * 0.08),
+      },
+      { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.violet, opacity: 1 },
+      { offset: '100%', color: lightPalette.violet, opacity: 0.98 },
     ],
   }
 
@@ -126,9 +155,9 @@ function getGradientStops(color, lineKey) {
 
   if (typeof color === 'string' && color.startsWith('#')) {
     return [
-      { offset: '0%', color: shiftShade(color, -24), opacity: 0.9 },
+      { offset: '0%', color: shiftShade(color, 14), opacity: 0.96 },
       { offset: '50%', color, opacity: 1 },
-      { offset: '100%', color: shiftShade(color, 26), opacity: 0.96 },
+      { offset: '100%', color: shiftShade(color, 28), opacity: 0.98 },
     ]
   }
 

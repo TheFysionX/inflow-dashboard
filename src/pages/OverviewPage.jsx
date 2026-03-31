@@ -173,6 +173,8 @@ export default function OverviewPage() {
     const widgetStyle = { '--overview-span': layoutItem.span }
 
     if (widgetKey === 'funnel') {
+      const activeFunnel =
+        activeFunnelIndex === null ? null : overview.funnelSeries[activeFunnelIndex]
       const openingValue = overview.funnelSeries[0]?.value ?? 0
 
       return (

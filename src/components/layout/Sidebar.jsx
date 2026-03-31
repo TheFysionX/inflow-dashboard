@@ -17,7 +17,7 @@ export default function Sidebar() {
     if (sidebarExpanded) {
       timeoutId = window.setTimeout(() => {
         setLabelsVisible(true)
-      }, 220)
+      }, 150)
     } else {
       setLabelsVisible(false)
     }
@@ -34,7 +34,7 @@ export default function Sidebar() {
       }
       className={`sidebar ${sidebarExpanded ? 'is-expanded' : 'is-collapsed'}`}
       initial={prefersReducedMotion ? false : { opacity: 0, x: -24, width: 152 }}
-      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="sidebar-header">
         <div className="sidebar-brand-lockup">

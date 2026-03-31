@@ -168,6 +168,37 @@ function getGradientStops(color, lineKey) {
   ]
 }
 
+function getHoverDotStops(color) {
+  const palette = {
+    blue: '#8bd7ff',
+    pink: '#ffc2ef',
+    violet: '#b6a1ff',
+  }
+
+  const presetStops = {
+    'var(--accent-blue)': [
+      { offset: '0%', color: palette.violet, opacity: 1 },
+      { offset: '58%', color: palette.pink, opacity: 0.98 },
+      { offset: '100%', color: palette.blue, opacity: 0.78 },
+    ],
+    'var(--accent-pink)': [
+      { offset: '0%', color: palette.blue, opacity: 0.98 },
+      { offset: '58%', color: palette.violet, opacity: 1 },
+      { offset: '100%', color: palette.pink, opacity: 0.76 },
+    ],
+    'var(--accent-violet)': [
+      { offset: '0%', color: palette.blue, opacity: 1 },
+      { offset: '58%', color: palette.pink, opacity: 0.98 },
+      { offset: '100%', color: palette.violet, opacity: 0.78 },
+    ],
+  }
+
+  return presetStops[color] ?? [
+    { offset: '0%', color, opacity: 1 },
+    { offset: '100%', color, opacity: 0.82 },
+  ]
+}
+
 export default function TraceLineChart({
   data,
   color,
@@ -216,7 +247,12 @@ export default function TraceLineChart({
     () => `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
     [lineKey],
   )
+  const hoverGradientId = useMemo(
+    () => `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
+    [lineKey],
+  )
   const gradientStops = useMemo(() => getGradientStops(color, lineKey), [color, lineKey])
+  const hoverDotStops = useMemo(() => getHoverDotStops(color), [color])
 
   return (
     <div className="trace-chart-shell">
@@ -241,6 +277,16 @@ export default function TraceLineChart({
               />
             ))}
           </linearGradient>
+          <radialGradient id={hoverGradientId} cx="35%" cy="35%" r="75%">
+            {hoverDotStops.map((stop) => (
+              <stop
+                key={`${hoverGradientId}-${stop.offset}`}
+                offset={stop.offset}
+                stopColor={stop.color}
+                stopOpacity={stop.opacity}
+              />
+            ))}
+          </radialGradient>
         </defs>
 
         {axisValues.map((axisValue, index) => {
@@ -305,7 +351,8 @@ export default function TraceLineChart({
             className="trace-chart-hover-indicator"
             cx={displayedPoint.x}
             cy={displayedPoint.y}
-            fill={color}
+            fill={`url(#${hoverGradientId})`}
+            pointerEvents="none"
             r="4.2"
           />
         ) : null}

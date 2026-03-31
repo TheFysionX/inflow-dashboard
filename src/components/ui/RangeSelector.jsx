@@ -9,6 +9,8 @@ import {
   RANGE_PRESET_LABELS,
 } from '../../lib/rangeSelection'
 
+const MAX_RANGE_DATE = new Date('2026-03-31T00:00:00')
+
 export default function RangeSelector({
   options,
   value,
@@ -42,7 +44,10 @@ export default function RangeSelector({
         from: new Date(`${normalizedValue.startDate}T00:00:00`),
         to: new Date(`${normalizedValue.endDate}T00:00:00`),
       })
+      return
     }
+
+    setDraftRange({ from: undefined, to: undefined })
   }, [normalizedValue.endDate, normalizedValue.mode, normalizedValue.startDate])
 
   const currentLabel = normalizedValue.label
@@ -76,6 +81,7 @@ export default function RangeSelector({
                   initial={{ opacity: 0, x: -8 }}
                   key={option}
                   onClick={() => {
+                    setDraftRange({ from: undefined, to: undefined })
                     onPresetChange(option)
                     setCalendarOpen(false)
                     setOpen(false)
@@ -125,6 +131,7 @@ export default function RangeSelector({
                   <div className="range-calendar">
                     <DayPicker
                       defaultMonth={draftRange.from}
+                      disabled={{ after: MAX_RANGE_DATE }}
                       mode="range"
                       numberOfMonths={2}
                       onSelect={(nextRange) => {

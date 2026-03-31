@@ -95,6 +95,14 @@ function ActivePieShape(props) {
 
 const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#b993ff', '#f49be3']
 
+function getFunnelStageShare(value, baseline) {
+  if (!baseline) {
+    return 0
+  }
+
+  return Math.max(0, Math.min(100, (value / baseline) * 100))
+}
+
 export default function OverviewPage() {
   const navigate = useNavigate()
   const {
@@ -167,6 +175,7 @@ export default function OverviewPage() {
     if (widgetKey === 'funnel') {
       const activeFunnel =
         activeFunnelIndex === null ? null : overview.funnelSeries[activeFunnelIndex]
+      const openingValue = overview.funnelSeries[0]?.value ?? 0
 
       return (
         <ChartPanel
@@ -226,23 +235,70 @@ export default function OverviewPage() {
               </Funnel>
             </FunnelChart>
           </ResponsiveContainer>
-          <div className="legend-inline">
-            {overview.funnelSeries.map((item, funnelIndex) => (
-              <button
-                className={
-                  funnelIndex === activeFunnelIndex
-                    ? 'legend-inline-item is-active'
-                    : 'legend-inline-item'
-                }
-                key={item.stage}
-                onMouseEnter={() => setActiveFunnelIndex(funnelIndex)}
-                onMouseLeave={() => setActiveFunnelIndex(null)}
-                type="button"
-              >
-                <span>{item.stage}</span>
-                <strong>{item.value}</strong>
-              </button>
-            ))}
+          <div className="funnel-key-shell">
+            <div
+              className={`funnel-key-stack ${
+                activeFunnelIndex !== null ? 'has-active-stage' : ''
+              }`}
+            >
+              {overview.funnelSeries.map((item, funnelIndex) => {
+                const width = getFunnelStageShare(item.value, openingValue)
+                const isActive = funnelIndex === activeFunnelIndex
+                const showInlineLabel = funnelIndex !== 0 && isActive && width >= 26
+
+                return (
+                  <button
+                    className={`funnel-key-layer ${
+                      isActive ? 'is-active' : ''
+                    } ${
+                      activeFunnelIndex !== null && !isActive ? 'is-muted' : ''
+                    }`}
+                    key={item.stage}
+                    onMouseEnter={() => setActiveFunnelIndex(funnelIndex)}
+                    onMouseLeave={() => setActiveFunnelIndex(null)}
+                    style={{
+                      '--funnel-layer-color': funnelColors[funnelIndex] ?? funnelColors.at(-1),
+                      '--funnel-layer-width': `${width}%`,
+                      zIndex: isActive ? 12 : overview.funnelSeries.length - funnelIndex,
+                    }}
+                    type="button"
+                  >
+                    {showInlineLabel ? (
+                      <span className="funnel-key-layer-label">
+                        {item.stage}
+                        <strong>{item.value}</strong>
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div
+              className={`funnel-key-detail ${
+                activeFunnel ? 'is-visible' : ''
+              } ${
+                activeFunnelIndex === 0 ? 'is-opening' : ''
+              }`}
+            >
+              {activeFunnel ? (
+                <>
+                  <span>{activeFunnel.stage}</span>
+                  <strong>{activeFunnel.value}</strong>
+                  <small>
+                    {openingValue
+                      ? `${Math.round((activeFunnel.value / openingValue) * 100)}% of opening`
+                      : 'No opening baseline'}
+                  </small>
+                </>
+              ) : (
+                <>
+                  <span>Hover a stage</span>
+                  <strong>{openingValue}</strong>
+                  <small>Opening baseline</small>
+                </>
+              )}
+            </div>
           </div>
         </ChartPanel>
       )

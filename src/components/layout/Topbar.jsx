@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
@@ -14,9 +14,7 @@ import ProfileMenu from './ProfileMenu'
 export default function Topbar() {
   const location = useLocation()
   const { rangeSelection, setCustomRange, setRangePreset } = useDashboard()
-  const prefersReducedMotion = useReducedMotion()
   const [searchOpen, setSearchOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -30,38 +28,21 @@ export default function Topbar() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [])
 
-  useEffect(() => {
-    function handleScroll() {
-      setIsScrolled(window.scrollY > 42)
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   const currentPage = useMemo(
     () =>
       navigationItems.find((item) => item.path === location.pathname) ??
       navigationItems[0],
     [location.pathname],
   )
-  const shouldCenterHeader = location.pathname === '/overview' && isScrolled
 
   return (
-    <header
-      className={`topbar ${shouldCenterHeader ? 'is-scrolled' : ''}`}
-    >
-      <motion.div
-        animate={prefersReducedMotion ? undefined : { x: shouldCenterHeader ? 96 : 0 }}
-        className="topbar-page"
-        transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
-      >
+    <header className="topbar">
+      <div className="topbar-page">
         <div>
           <p className="sidebar-caption">{brandConfig.subtitle}</p>
           <h1>{currentPage.label}</h1>
         </div>
-      </motion.div>
+      </div>
 
       <div className="topbar-tools">
         <div className="topbar-search-cluster" ref={searchRef}>

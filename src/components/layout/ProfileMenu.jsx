@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { brandConfig, demoCredentials } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
@@ -49,6 +50,50 @@ export default function ProfileMenu() {
     navigate('/login')
   }
 
+  const signOutModal = confirmingSignOut ? createPortal(
+    <AnimatePresence initial={false}>
+      <motion.div
+        animate={{ opacity: 1 }}
+        className="modal-overlay"
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+        onClick={() => setConfirmingSignOut(false)}
+      >
+        <motion.div
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="modal-panel modal-panel--signout"
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
+          onClick={(event) => event.stopPropagation()}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="modal-panel-copy">
+            <p className="sidebar-caption">Session</p>
+            <h3>Confirm sign out</h3>
+            <p>You'll return to the sign-in screen for the demo dashboard.</p>
+          </div>
+          <div className="modal-panel-actions">
+            <button
+              className="ghost-button button-small"
+              onClick={() => setConfirmingSignOut(false)}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="danger-button button-small"
+              onClick={handleSignOut}
+              type="button"
+            >
+              Sign out
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body,
+  ) : null
+
   return (
     <div className="profile-menu" ref={menuRef}>
       <button
@@ -93,49 +138,7 @@ export default function ProfileMenu() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-
-      <AnimatePresence initial={false}>
-        {confirmingSignOut ? (
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="modal-overlay"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
-            onClick={() => setConfirmingSignOut(false)}
-          >
-            <motion.div
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="modal-panel modal-panel--signout"
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              onClick={(event) => event.stopPropagation()}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="modal-panel-copy">
-                <p className="sidebar-caption">Session</p>
-                <h3>Confirm sign out</h3>
-                <p>You'll return to the sign-in screen for the demo dashboard.</p>
-              </div>
-              <div className="modal-panel-actions">
-                <button
-                  className="ghost-button button-small"
-                  onClick={() => setConfirmingSignOut(false)}
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  className="secondary-button button-small"
-                  onClick={handleSignOut}
-                  type="button"
-                >
-                  Sign out
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {signOutModal}
     </div>
   )
 }

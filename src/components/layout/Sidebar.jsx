@@ -30,10 +30,10 @@ export default function Sidebar() {
       animate={
         prefersReducedMotion
           ? undefined
-          : { opacity: 1, x: 0, width: sidebarExpanded ? 324 : 132 }
+          : { opacity: 1, x: 0, width: sidebarExpanded ? 344 : 152 }
       }
       className={`sidebar ${sidebarExpanded ? 'is-expanded' : 'is-collapsed'}`}
-      initial={prefersReducedMotion ? false : { opacity: 0, x: -24, width: 132 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, x: -24, width: 152 }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="sidebar-header">

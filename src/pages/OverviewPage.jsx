@@ -671,7 +671,11 @@ export default function OverviewPage() {
           </StatusPill>
           <strong>
             <AnimatedNumber
-              className={`summary-primary-number summary-primary-number--${overview.summary.primaryMetric.delta.tone}`}
+              className={`summary-primary-number ${
+                overview.summary.primaryMetric.label === 'Booked calls'
+                  ? 'summary-primary-number--booked'
+                  : `summary-primary-number--${overview.summary.primaryMetric.delta.tone}`
+              }`}
               compact={overviewUseCompactNumbers}
               value={overview.summary.primaryMetric.numericValue}
             />

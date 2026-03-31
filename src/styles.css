@@ -470,7 +470,8 @@ p {
 
 .sidebar-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 68px;
+  grid-template-columns: minmax(0, 1fr) 60px;
+  column-gap: 6px;
   min-height: 0;
 }
 
@@ -500,7 +501,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 4px;
+  padding-right: 0;
 }
 
 .sidebar-toggle {
@@ -627,6 +628,21 @@ p {
 .sidebar-link-copy.is-visible {
   max-width: 180px;
   opacity: 1;
+}
+
+.sidebar.is-collapsed .sidebar-panel {
+  padding: 8px 8px 24px 12px;
+}
+
+.sidebar.is-collapsed .sidebar-link {
+  grid-template-columns: 48px;
+  gap: 0;
+  justify-items: start;
+  padding: 8px;
+}
+
+.sidebar.is-collapsed .sidebar-link-copy {
+  display: none;
 }
 
 .sidebar-link strong {

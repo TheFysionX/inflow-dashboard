@@ -9,12 +9,14 @@ export default function ProfileMenu() {
   const navigate = useNavigate()
   const { logout } = useDashboard()
   const [open, setOpen] = useState(false)
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
     function handlePointerDown(event) {
       if (!menuRef.current?.contains(event.target)) {
         setOpen(false)
+        setConfirmingSignOut(false)
       }
     }
 
@@ -32,7 +34,16 @@ export default function ProfileMenu() {
       <button
         aria-expanded={open}
         className="profile-button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() =>
+          setOpen((current) => {
+            const nextOpen = !current
+
+            if (!nextOpen) {
+              setConfirmingSignOut(false)
+            }
+
+            return nextOpen
+          })}
         type="button"
       >
         <div className="avatar-badge">IN</div>
@@ -56,15 +67,45 @@ export default function ProfileMenu() {
               <span>Signed in as</span>
               <strong>{demoCredentials.email}</strong>
             </div>
-            <motion.button
-              className="profile-dropdown-row"
-              onClick={handleSignOut}
-              type="button"
-              whileTap={{ scale: 0.985 }}
-            >
-              <span>Sign out</span>
-              <ChevronIcon direction="right" size={14} />
-            </motion.button>
+            {confirmingSignOut ? (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="profile-signout-confirm"
+                initial={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="profile-signout-confirm-copy">
+                  <strong>Confirm sign out</strong>
+                  <span>You’ll return to the sign-in screen.</span>
+                </div>
+                <div className="profile-signout-confirm-actions">
+                  <button
+                    className="ghost-button button-small"
+                    onClick={() => setConfirmingSignOut(false)}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="secondary-button button-small"
+                    onClick={handleSignOut}
+                    type="button"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.button
+                className="profile-dropdown-row"
+                onClick={() => setConfirmingSignOut(true)}
+                type="button"
+                whileTap={{ scale: 0.985 }}
+              >
+                <span>Sign out</span>
+                <ChevronIcon direction="right" size={14} />
+              </motion.button>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>

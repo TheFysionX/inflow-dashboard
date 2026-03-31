@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import inflowLogo from '../../assets/inflow-logo.png'
-import { navigationItems } from '../../config/navigation'
+import { brandConfig, navigationItems } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
 import { ChevronIcon, NavIcon } from '../ui/Icons'
 
@@ -37,8 +37,22 @@ export default function Sidebar() {
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="sidebar-header">
-        <div className="sidebar-brand-mark">
-          <img alt="Inflow" src={inflowLogo} />
+        <div className="sidebar-brand-lockup">
+          <div className="sidebar-brand-mark">
+            <img alt="Inflow" src={inflowLogo} />
+          </div>
+          <motion.div
+            animate={prefersReducedMotion
+              ? undefined
+              : labelsVisible
+                ? { opacity: 1, x: 0, maxWidth: 180 }
+                : { opacity: 0, x: -8, maxWidth: 0 }}
+            className={`sidebar-brand-copy ${labelsVisible ? 'is-visible' : ''}`}
+            initial={false}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <strong>{brandConfig.name}</strong>
+          </motion.div>
         </div>
       </div>
 
@@ -81,7 +95,7 @@ export default function Sidebar() {
             onClick={toggleSidebar}
             type="button"
           >
-            <ChevronIcon direction={sidebarExpanded ? 'left' : 'right'} size={24} />
+            <ChevronIcon direction={sidebarExpanded ? 'left' : 'right'} size={36} />
           </button>
         </div>
       </div>

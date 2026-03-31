@@ -15,6 +15,7 @@ export default function Topbar() {
   const location = useLocation()
   const { rangeSelection, setCustomRange, setRangePreset } = useDashboard()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -28,6 +29,16 @@ export default function Topbar() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [])
 
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(window.scrollY > 42)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const currentPage = useMemo(
     () =>
       navigationItems.find((item) => item.path === location.pathname) ??
@@ -36,7 +47,11 @@ export default function Topbar() {
   )
 
   return (
-    <header className="topbar">
+    <header
+      className={`topbar ${
+        location.pathname === '/overview' && isScrolled ? 'is-scrolled' : ''
+      }`}
+    >
       <div className="topbar-page">
         <div>
           <p className="sidebar-caption">{brandConfig.subtitle}</p>
@@ -49,7 +64,7 @@ export default function Topbar() {
           <AnimatePresence initial={false} mode="wait">
             {searchOpen ? (
               <motion.div
-                animate={{ opacity: 1, width: 456 }}
+                animate={{ opacity: 1, width: 548 }}
                 className="topbar-search is-open"
                 exit={{ opacity: 0, width: 48 }}
                 initial={{ opacity: 0, width: 48 }}
@@ -60,7 +75,7 @@ export default function Topbar() {
                   <SearchIcon size={16} />
                 </span>
                 <motion.input
-                  animate={{ opacity: 1, width: 344 }}
+                  animate={{ opacity: 1, width: 424 }}
                   aria-label="Search"
                   autoFocus
                   initial={{ opacity: 0, width: 0 }}
@@ -71,7 +86,7 @@ export default function Topbar() {
                   }}
                   placeholder="Search leads or bookings"
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  type="search"
+                  type="text"
                 />
                 <button
                   aria-label="Close search"

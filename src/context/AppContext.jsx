@@ -20,7 +20,7 @@ import {
 } from '../lib/rangeSelection'
 
 const DashboardContext = createContext(null)
-const SESSION_KEY = 'inflow.dashboard.session.v6'
+const SESSION_KEY = 'inflow.dashboard.session.v7'
 
 function getDefaultSession() {
   return {
@@ -30,6 +30,7 @@ function getDefaultSession() {
     sidebarExpanded: false,
     overviewMetricSlots: [...DEFAULT_OVERVIEW_METRIC_SLOTS],
     overviewCustomizerOpen: false,
+    overviewUseCompactNumbers: true,
     overviewWidgetSlots: [...DEFAULT_OVERVIEW_WIDGET_SLOTS],
   }
 }
@@ -174,6 +175,15 @@ export function AppProvider({ children }) {
       })
     }
 
+    const setOverviewUseCompactNumbers = (overviewUseCompactNumbers) => {
+      startTransition(() => {
+        setSession((current) => ({
+          ...current,
+          overviewUseCompactNumbers,
+        }))
+      })
+    }
+
     const setOverviewWidgetSlot = (slotIndex, widgetKey) => {
       startTransition(() => {
         setSession((current) => {
@@ -212,6 +222,7 @@ export function AppProvider({ children }) {
       setCustomRange,
       setOverviewCustomizerOpen,
       setOverviewMetricSlot,
+      setOverviewUseCompactNumbers,
       setOverviewWidgetSlot,
       setRangePreset,
       setSidebarExpanded,

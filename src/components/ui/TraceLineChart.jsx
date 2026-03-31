@@ -123,7 +123,7 @@ export default function TraceLineChart({
           stroke={color}
           strokeLinecap="round"
           strokeWidth="4"
-          transition={{ duration: 2.35, ease: [0.3, 0.92, 0.33, 1] }}
+          transition={{ duration: 2.55, ease: [0.18, 0.82, 0.3, 1] }}
         />
 
         {points.map((point, index) => {
@@ -159,7 +159,7 @@ export default function TraceLineChart({
             animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1, 1.9, 2.4] }}
             initial={{ opacity: 0, scale: 0.4 }}
             key={`pulse-${lineKey}`}
-            transition={{ duration: 1.05, delay: 1.9, ease: 'easeOut' }}
+            transition={{ duration: 1.05, delay: 2.08, ease: 'easeOut' }}
           >
             <circle
               cx={endPoint.x}

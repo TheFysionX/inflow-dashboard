@@ -11,6 +11,7 @@ export default function KpiCard({
   delta,
   index = 0,
   onClick,
+  useCompactNumbers = true,
 }) {
   const prefersReducedMotion = useReducedMotion()
 
@@ -39,7 +40,7 @@ export default function KpiCard({
         <div className="kpi-value-row">
           <strong>
             <AnimatedNumber
-              compact={valueMeta?.compact}
+              compact={valueMeta?.compact && useCompactNumbers}
               decimals={valueMeta?.decimals}
               prefix={valueMeta?.prefix}
               suffix={valueMeta?.suffix}

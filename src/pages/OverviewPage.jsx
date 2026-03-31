@@ -103,11 +103,13 @@ export default function OverviewPage() {
     rangeSelection,
     overviewMetricSlots,
     overviewCustomizerOpen,
+    overviewUseCompactNumbers,
     overviewWidgetSlots,
     resetOverviewMetricSlots,
     resetOverviewWidgetSlots,
     setOverviewCustomizerOpen,
     setOverviewMetricSlot,
+    setOverviewUseCompactNumbers,
     setOverviewWidgetSlot,
   } = useDashboard()
   const [activePieIndex, setActivePieIndex] = useState(null)
@@ -558,12 +560,12 @@ export default function OverviewPage() {
       <AnimatePresence initial={false}>
         {overviewCustomizerOpen ? (
           <motion.section
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ height: 'auto', opacity: 1, y: 0 }}
             className="surface-card overview-customizer"
-            exit={{ opacity: 0, y: -6 }}
-            initial={{ opacity: 0, y: -8 }}
-            layout="position"
-            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ height: 0, opacity: 0, y: -8 }}
+            initial={{ height: 0, opacity: 0, y: -8 }}
+            layout
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
           >
             <motion.div
               animate={{ opacity: 1, y: 0 }}
@@ -576,6 +578,21 @@ export default function OverviewPage() {
                 <div>
                   <p className="sidebar-caption">Overview controls</p>
                   <h3>Select which metrics and graphs the homepage shows</h3>
+                </div>
+                <div className="overview-display-toggle">
+                  <span>Number format</span>
+                  <button
+                    aria-pressed={overviewUseCompactNumbers}
+                    className={`overview-display-toggle-button ${
+                      overviewUseCompactNumbers ? 'is-compact' : 'is-full'
+                    }`}
+                    onClick={() =>
+                      setOverviewUseCompactNumbers(!overviewUseCompactNumbers)}
+                    type="button"
+                  >
+                    <span>1K</span>
+                    <span>1,000</span>
+                  </button>
                 </div>
               </div>
 
@@ -654,7 +671,7 @@ export default function OverviewPage() {
           <strong>
             <AnimatedNumber
               className={`summary-primary-number summary-primary-number--${overview.summary.primaryMetric.delta.tone}`}
-              compact
+              compact={overviewUseCompactNumbers}
               value={overview.summary.primaryMetric.numericValue}
             />
           </strong>
@@ -687,6 +704,7 @@ export default function OverviewPage() {
             key={`${kpi.key}-${index}`}
             label={kpi.label}
             onClick={() => navigate(kpi.routePath)}
+            useCompactNumbers={overviewUseCompactNumbers}
             valueMeta={kpi.valueMeta}
           />
         ))}

@@ -85,4 +85,26 @@ describe('getOverviewModel', () => {
     expect(overview.leadTrend.reduce((sum, item) => sum + item.value, 0)).toBeGreaterThan(0)
     expect(overview.bookingTrend.reduce((sum, item) => sum + item.value, 0)).toBeGreaterThan(0)
   })
+
+  it('keeps attention items recent and upcoming calls distributed', () => {
+    const overview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '30D')
+    const attentionDays = overview.needsAttention.map((item) => Number.parseInt(item.stageAge, 10))
+    const relativeTimes = overview.upcomingCalls.map((item) => item.relativeTime)
+
+    expect(attentionDays.length).toBeGreaterThan(0)
+    expect(attentionDays.every((value) => value >= 1 && value <= 5)).toBe(true)
+    expect(attentionDays).toEqual([...attentionDays].sort((left, right) => left - right))
+    expect(new Set(relativeTimes).size).toBeGreaterThan(2)
+  })
+
+  it('builds a varied funnel instead of flattening every late stage', () => {
+    const overview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '30D')
+    const funnelValues = overview.funnelSeries.map((item) => item.value)
+
+    expect(new Set(funnelValues).size).toBeGreaterThan(3)
+    expect(overview.funnelSeries.at(-1)?.value).toBeLessThanOrEqual(
+      overview.funnelSeries.at(-2)?.value ?? 0,
+    )
+    expect(overview.funnelSeries[3]?.value).not.toBe(overview.funnelSeries[4]?.value)
+  })
 })

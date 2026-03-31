@@ -74,6 +74,6 @@ export const overviewRangeOptions = [
 
 export const brandConfig = {
   name: 'Inflow AI',
-  subtitle: 'Inflow Dashboard',
+  subtitle: 'Demo Dashboard',
   supportEmail: 'demo@inflowai.net',
 }

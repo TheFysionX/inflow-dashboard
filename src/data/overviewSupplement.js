@@ -1,5 +1,15 @@
 export const OVERVIEW_REFERENCE_NOW = '2026-03-31T18:00:00.000Z'
 export const OVERVIEW_DATA_CUTOFF = '2026-03-31'
+export const OVERVIEW_UPCOMING_CALL_SLOTS = [
+  '2026-04-01T16:30:00.000Z',
+  '2026-04-02T20:15:00.000Z',
+  '2026-04-03T15:45:00.000Z',
+  '2026-04-05T18:00:00.000Z',
+  '2026-04-06T22:00:00.000Z',
+  '2026-04-08T17:30:00.000Z',
+  '2026-04-10T19:15:00.000Z',
+  '2026-04-13T21:00:00.000Z',
+]
 
 export const overviewSupplement = {
   leadOverrides: {
@@ -73,4 +83,8 @@ export const overviewSupplement = {
 
 export function getOverviewLeadOverride(leadId) {
   return overviewSupplement.leadOverrides[leadId] ?? null
+}
+
+export function getOverviewUpcomingCallSlot(index) {
+  return OVERVIEW_UPCOMING_CALL_SLOTS[index] ?? null
 }

@@ -4,7 +4,11 @@ import {
   STAGE_LABELS,
   STAGE_ORDER,
 } from './demoData'
-import { OVERVIEW_DATA_CUTOFF, getOverviewLeadOverride } from './overviewSupplement'
+import {
+  OVERVIEW_DATA_CUTOFF,
+  getOverviewLeadOverride,
+  getOverviewUpcomingCallSlot,
+} from './overviewSupplement'
 import {
   DEFAULT_RANGE_PRESET,
   getRangeSelectionKey,
@@ -978,7 +982,17 @@ function getAttentionItems(records) {
         (REFERENCE_NOW.getTime() - new Date(record.thread.lastMessageAt).getTime()) / DAY,
       )
 
-      if (recencyDays > 21) {
+      const visibleGapDays = Math.max(
+        1,
+        Math.min(
+          5,
+          record.overviewOverride.attentionNote
+            ? Math.max(stageAgeDays, Math.max(1, Math.round(replyGapHours / 24)))
+            : Math.max(stageAgeDays, Math.max(1, Math.round(replyGapHours / 24))),
+        ),
+      )
+
+      if (recencyDays > 5 || visibleGapDays > 5) {
         return null
       }
 
@@ -992,14 +1006,21 @@ function getAttentionItems(records) {
       return {
         leadName: record.lead.displayName,
         stage: STAGE_LABELS[record.thread.currentStage],
-        stageAge: formatStageAge(record.thread.enteredStageAt),
+        stageAge: `${visibleGapDays}d in stage`,
         note,
         status: stageAgeDays >= 5 || replyGapHours >= 72 ? 'warning' : 'info',
-        urgencyScore: (stageAgeDays * 3) + Math.round(replyGapHours / 12),
+        recencyDays: visibleGapDays,
+        lastActivityAt: record.thread.lastMessageAt,
       }
     })
     .filter(Boolean)
-    .sort((left, right) => right.urgencyScore - left.urgencyScore)
+    .sort((left, right) => {
+      if (left.recencyDays !== right.recencyDays) {
+        return left.recencyDays - right.recencyDays
+      }
+
+      return new Date(right.lastActivityAt) - new Date(left.lastActivityAt)
+    })
     .slice(0, 8)
 }
 
@@ -1017,12 +1038,16 @@ function getUpcomingCalls(records) {
     })
     .sort((left, right) => new Date(left.callTime) - new Date(right.callTime))
     .slice(0, 8)
-    .map((record) => ({
+    .map((record, index) => {
+      const scheduledTime = getOverviewUpcomingCallSlot(index) || record.callTime
+
+      return {
       leadName: record.lead.displayName,
-      time: formatDateTime(record.callTime),
-      relativeTime: formatRelativeTime(record.callTime),
+      time: formatDateTime(scheduledTime),
+      relativeTime: formatRelativeTime(scheduledTime),
       timezone: record.bookingEvent.timezone,
-    }))
+      }
+    })
 }
 
 function buildFunnelSeries(dailyFacts, window) {
@@ -1059,16 +1084,18 @@ function buildFunnelSeries(dailyFacts, window) {
     },
   ]
 
-  return rawStages.reduce((items, item, index) => {
-    const previousValue = items[index - 1]?.value ?? item.value
+  return rawStages.map((item, index) => {
+    if (index !== rawStages.length - 1) {
+      return item
+    }
 
-    items.push({
+    const bookValue = rawStages[index - 1]?.value ?? item.value
+
+    return {
       ...item,
-      value: index === 0 ? item.value : Math.min(item.value, previousValue),
-    })
-
-    return items
-  }, [])
+      value: Math.min(item.value, bookValue),
+    }
+  })
 }
 
 function getTopIssues(records, objectionSeries, funnelSeries) {

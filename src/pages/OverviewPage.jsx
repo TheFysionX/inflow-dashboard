@@ -241,6 +241,12 @@ export default function OverviewPage() {
                 activeFunnelIndex !== null ? 'has-active-stage' : ''
               }`}
             >
+              <div
+                aria-hidden="true"
+                className={`funnel-key-baseline ${
+                  activeFunnelIndex !== null ? 'is-visible' : ''
+                }`}
+              />
               {overview.funnelSeries.map((item, funnelIndex) => {
                 const width = getFunnelStageShare(item.value, openingValue)
                 const isActive = funnelIndex === activeFunnelIndex

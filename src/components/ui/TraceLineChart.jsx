@@ -30,6 +30,85 @@ function formatAxisValue(value) {
   }).format(value)
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function hexToRgb(color) {
+  const normalized = color.replace('#', '')
+
+  if (!/^[\da-f]{6}$/i.test(normalized)) {
+    return null
+  }
+
+  return {
+    r: Number.parseInt(normalized.slice(0, 2), 16),
+    g: Number.parseInt(normalized.slice(2, 4), 16),
+    b: Number.parseInt(normalized.slice(4, 6), 16),
+  }
+}
+
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b]
+    .map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0'))
+    .join('')}`
+}
+
+function shiftShade(color, amount) {
+  const rgb = hexToRgb(color)
+
+  if (!rgb) {
+    return color
+  }
+
+  return rgbToHex({
+    r: rgb.r + amount,
+    g: rgb.g + amount,
+    b: rgb.b + amount,
+  })
+}
+
+function getGradientStops(color) {
+  const presetStops = {
+    'var(--accent-blue)': [
+      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.34 },
+      { offset: '18%', color: 'var(--accent-blue)', opacity: 0.88 },
+      { offset: '72%', color: 'var(--accent-blue)', opacity: 1 },
+      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.38 },
+    ],
+    'var(--accent-pink)': [
+      { offset: '0%', color: 'var(--accent-violet)', opacity: 0.32 },
+      { offset: '20%', color: 'var(--accent-pink)', opacity: 0.88 },
+      { offset: '72%', color: 'var(--accent-pink)', opacity: 1 },
+      { offset: '100%', color: 'var(--accent-blue)', opacity: 0.34 },
+    ],
+    'var(--accent-violet)': [
+      { offset: '0%', color: 'var(--accent-blue)', opacity: 0.32 },
+      { offset: '18%', color: 'var(--accent-violet)', opacity: 0.88 },
+      { offset: '72%', color: 'var(--accent-violet)', opacity: 1 },
+      { offset: '100%', color: 'var(--accent-pink)', opacity: 0.36 },
+    ],
+  }
+
+  if (presetStops[color]) {
+    return presetStops[color]
+  }
+
+  if (typeof color === 'string' && color.startsWith('#')) {
+    return [
+      { offset: '0%', color: shiftShade(color, -24), opacity: 0.9 },
+      { offset: '50%', color, opacity: 1 },
+      { offset: '100%', color: shiftShade(color, 26), opacity: 0.96 },
+    ]
+  }
+
+  return [
+    { offset: '0%', color, opacity: 0.94 },
+    { offset: '50%', color, opacity: 1 },
+    { offset: '100%', color, opacity: 0.96 },
+  ]
+}
+
 export default function TraceLineChart({
   data,
   color,
@@ -74,6 +153,11 @@ export default function TraceLineChart({
   const displayedPoint =
     activeIndex === null ? points.at(-1) : points[activeIndex]
   const endPoint = points.at(-1)
+  const gradientId = useMemo(
+    () => `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
+    [lineKey],
+  )
+  const gradientStops = useMemo(() => getGradientStops(color), [color])
 
   return (
     <div className="trace-chart-shell">
@@ -87,6 +171,19 @@ export default function TraceLineChart({
         preserveAspectRatio="none"
         viewBox={`0 0 ${width} ${chartHeight}`}
       >
+        <defs>
+          <linearGradient id={gradientId} x1="0%" x2="100%" y1="0%" y2="0%">
+            {gradientStops.map((stop) => (
+              <stop
+                key={`${gradientId}-${stop.offset}`}
+                offset={stop.offset}
+                stopColor={stop.color}
+                stopOpacity={stop.opacity}
+              />
+            ))}
+          </linearGradient>
+        </defs>
+
         {axisValues.map((axisValue, index) => {
           const y =
             padding.top +
@@ -120,7 +217,7 @@ export default function TraceLineChart({
           fill="none"
           initial={{ pathLength: 0, opacity: 0.72 }}
           key={`path-${lineKey}`}
-          stroke={color}
+          stroke={`url(#${gradientId})`}
           strokeLinecap="round"
           strokeWidth="4"
           transition={{ duration: 2.55, ease: [0.18, 0.82, 0.3, 1] }}

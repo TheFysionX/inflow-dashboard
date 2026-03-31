@@ -173,8 +173,6 @@ export default function OverviewPage() {
     const widgetStyle = { '--overview-span': layoutItem.span }
 
     if (widgetKey === 'funnel') {
-      const activeFunnel =
-        activeFunnelIndex === null ? null : overview.funnelSeries[activeFunnelIndex]
       const openingValue = overview.funnelSeries[0]?.value ?? 0
 
       return (
@@ -244,7 +242,7 @@ export default function OverviewPage() {
               {overview.funnelSeries.map((item, funnelIndex) => {
                 const width = getFunnelStageShare(item.value, openingValue)
                 const isActive = funnelIndex === activeFunnelIndex
-                const showInlineLabel = funnelIndex !== 0 && isActive && width >= 26
+                const showInlineLabel = isActive && width >= 20
 
                 return (
                   <button
@@ -272,21 +270,6 @@ export default function OverviewPage() {
                   </button>
                 )
               })}
-            </div>
-
-            <div
-              className={`funnel-key-detail ${
-                activeFunnel ? 'is-visible' : ''
-              } ${
-                activeFunnelIndex === 0 ? 'is-opening' : ''
-              }`}
-            >
-              {activeFunnel ? (
-                <>
-                  <span>{activeFunnel.stage}</span>
-                  <strong>{activeFunnel.value}</strong>
-                </>
-              ) : null}
             </div>
           </div>
         </ChartPanel>

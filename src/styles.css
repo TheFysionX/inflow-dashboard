@@ -1470,10 +1470,7 @@ p {
 }
 
 .funnel-key-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 132px;
-  gap: 16px;
-  align-items: center;
+  display: block;
   margin-top: 14px;
 }
 
@@ -1508,8 +1505,8 @@ p {
 }
 
 .funnel-key-stack.has-active-stage .funnel-key-layer.is-muted {
-  opacity: 0.38;
-  filter: blur(1.2px);
+  opacity: 0;
+  filter: none;
 }
 
 .funnel-key-layer.is-active {
@@ -1532,28 +1529,6 @@ p {
 
 .funnel-key-layer-label strong {
   font-size: 0.82rem;
-}
-
-.funnel-key-detail {
-  display: grid;
-  gap: 4px;
-  min-height: 54px;
-  align-content: center;
-  padding: 0 4px 0 0;
-  text-align: right;
-}
-
-.funnel-key-detail span,
-.funnel-key-detail small {
-  color: var(--color-text-muted);
-}
-
-.funnel-key-detail strong {
-  font-size: 1.05rem;
-}
-
-.funnel-key-detail.is-visible span {
-  color: var(--color-text-soft);
 }
 
 .legend-inline--stack {

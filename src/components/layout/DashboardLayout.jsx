@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useDashboard } from '../../context/AppContext'
+import { scrollToSearchTarget } from '../../lib/searchNavigation'
 import useScrollbarGradients from '../../lib/useScrollbarGradients'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
@@ -18,6 +19,16 @@ export default function DashboardLayout() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     contentRef.current?.scrollTo?.({ top: 0, left: 0, behavior: 'auto' })
   }, [location.pathname])
+
+  useEffect(() => {
+    const hash = location.hash.replace(/^#/, '')
+
+    if (!hash) {
+      return
+    }
+
+    scrollToSearchTarget(hash)
+  }, [location.hash, location.pathname])
 
   return (
     <div

@@ -276,7 +276,7 @@ export default function ConversationsPage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="kpi-grid kpi-grid--five">
+      <section className="kpi-grid kpi-grid--five search-jump-target" id="conversations-summary">
         {conversations.summaryCards.map((card, index) => (
           <KpiCard
             detail={card.detail}
@@ -296,6 +296,7 @@ export default function ConversationsPage() {
           badge={conversations.rangeLabel}
           className="overview-widget"
           index={0}
+          sectionId="conversations-volume"
           style={{ '--overview-span': 12 }}
           subtitle="Inbound vs outbound activity"
           title="Conversation volume"
@@ -322,6 +323,7 @@ export default function ConversationsPage() {
           badge={conversations.rangeLabel}
           className="overview-widget overview-widget--compact conversations-pie-panel"
           index={0}
+          sectionId="conversations-outcomes"
           subtitle="How visible threads resolve in this window"
           title="Thread outcomes"
         >
@@ -356,6 +358,7 @@ export default function ConversationsPage() {
           badge={conversations.rangeLabel}
           className="overview-widget overview-widget--compact conversations-pie-panel"
           index={1}
+          sectionId="conversations-close-reasons"
           subtitle="Why threads stop or resolve"
           title="Thread close reasons"
         >
@@ -389,7 +392,7 @@ export default function ConversationsPage() {
         </ChartPanel>
       </section>
 
-      <section className="surface-card conversation-workspace-shell">
+      <section className="surface-card conversation-workspace-shell search-jump-target" id="conversations-workspace">
         <div className="conversation-workspace-header">
           <div>
             <p className="sidebar-caption">Conversation queue</p>

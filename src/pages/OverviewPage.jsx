@@ -323,6 +323,7 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/pipeline')}
+          sectionId="overview-funnel"
           style={widgetStyle}
           subtitle="Pipeline progression"
           title="Lead journey funnel"
@@ -436,6 +437,7 @@ export default function OverviewPage() {
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/leads')}
           onToolAction={() => toggleTrendSetting('leadTrend')}
+          sectionId="overview-lead-trend"
           style={widgetStyle}
           subtitle="New lead intake"
           toolIcon={<SettingsIcon size={16} />}
@@ -473,6 +475,7 @@ export default function OverviewPage() {
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/bookings')}
           onToolAction={() => toggleTrendSetting('bookingTrend')}
+          sectionId="overview-booking-trend"
           style={widgetStyle}
           subtitle="Confirmed bookings"
           toolIcon={<SettingsIcon size={16} />}
@@ -510,6 +513,7 @@ export default function OverviewPage() {
           className={`overview-panel overview-widget ${widgetClassName}`}
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
+          sectionId="overview-qualification-breakdown"
           style={widgetStyle}
           subtitle="Lead qualification"
           title="Qualification breakdown"
@@ -574,6 +578,7 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/objections')}
+          sectionId="overview-objection-distribution"
           style={widgetStyle}
           subtitle="Resistance patterns"
           title="Objection distribution"
@@ -623,6 +628,7 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}`}
           onAction={() => navigate('/pipeline')}
+          sectionId="overview-needs-attention"
           style={widgetStyle}
           subtitle="Operational watchlist"
           title="Needs attention"
@@ -662,6 +668,7 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}`}
           onAction={() => navigate('/bookings')}
+          sectionId="overview-upcoming-calls"
           style={widgetStyle}
           subtitle="Scheduling"
           title="Upcoming calls"
@@ -697,6 +704,7 @@ export default function OverviewPage() {
         className={`overview-panel overview-widget ${widgetClassName}`}
         index={slotIndex}
         key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
+        sectionId="overview-top-issues"
         style={widgetStyle}
         subtitle="What is hurting momentum"
         title="Top issues"
@@ -867,7 +875,7 @@ export default function OverviewPage() {
         ) : null}
       </AnimatePresence>
 
-      <motion.section className="surface-card overview-summary" layout>
+      <motion.section className="surface-card overview-summary search-jump-target" id="overview-summary" layout>
         <div className="overview-summary-copy">
           <p className="sidebar-caption">{overview.summary.title}</p>
           <StatusPill tone={overview.summary.primaryMetric.delta.tone}>
@@ -904,7 +912,7 @@ export default function OverviewPage() {
         </motion.section>
       ) : null}
 
-      <motion.section className="kpi-grid" layout>
+      <motion.section className="kpi-grid search-jump-target" id="overview-kpis" layout>
         {overview.kpis.map((kpi, index) => (
           <KpiCard
             detail={kpi.detail}

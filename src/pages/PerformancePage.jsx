@@ -162,7 +162,7 @@ export default function PerformancePage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="kpi-grid">
+      <section className="kpi-grid search-jump-target" id="performance-summary">
         {performance.summaryCards.map((card, index) => (
           <KpiCard
             detail={card.detail}
@@ -181,6 +181,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--compact conversations-pie-panel objections-pie-panel"
           index={0}
+          sectionId="performance-verdict"
           style={{ '--overview-span': 4 }}
           subtitle="How reviewed replies resolved"
           title="Verdict distribution"
@@ -231,6 +232,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="performance-review-trend"
           style={{ '--overview-span': 8 }}
           subtitle="Weighted review quality"
           title="Review score trend"
@@ -251,6 +253,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="performance-quality-stage"
           style={{ '--overview-span': 6 }}
           subtitle="Where reply quality is strongest right now"
           title="Quality by stage"
@@ -285,6 +288,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="performance-pressure"
           style={{ '--overview-span': 6 }}
           subtitle="Where reviewed load is actually producing intervention pressure"
           title="Guardrail pressure snapshot"
@@ -340,6 +344,7 @@ export default function PerformancePage() {
           badge={`${performance.coachingQueue.length} in queue`}
           className="overview-widget overview-widget--column"
           index={0}
+          sectionId="performance-coaching"
           style={{ '--overview-span': 4 }}
           subtitle="Reviewed threads needing a second pass"
           title="Coaching queue"
@@ -380,6 +385,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--column"
           index={1}
+          sectionId="performance-corrections"
           style={{ '--overview-span': 4 }}
           subtitle="What QA is correcting most often"
           title="Top correction themes"
@@ -410,6 +416,7 @@ export default function PerformancePage() {
           badge={performance.rangeLabel}
           className="overview-widget overview-widget--column"
           index={2}
+          sectionId="performance-strongest"
           style={{ '--overview-span': 4 }}
           subtitle="The cleanest-performing segment right now"
           title="Strongest segment"

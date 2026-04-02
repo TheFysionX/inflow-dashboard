@@ -4,6 +4,7 @@ export default function ChartPanel({
   title,
   subtitle,
   badge,
+  sectionId,
   actionLabel,
   onAction,
   toolLabel,
@@ -19,7 +20,9 @@ export default function ChartPanel({
   return (
     <motion.article
       animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-      className={`surface-card chart-panel ${className}`.trim()}
+      className={`surface-card chart-panel ${sectionId ? 'search-jump-target' : ''} ${className}`.trim()}
+      data-search-section={sectionId || undefined}
+      id={sectionId}
       initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
       layout
       style={style}

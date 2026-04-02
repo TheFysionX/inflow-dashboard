@@ -210,7 +210,7 @@ export default function BookingsPage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="kpi-grid">
+      <section className="kpi-grid search-jump-target" id="bookings-summary">
         {bookings.summaryCards.map((card, index) => (
           <KpiCard
             detail={card.detail}
@@ -228,6 +228,7 @@ export default function BookingsPage() {
           badge={bookings.rangeLabel}
           className="overview-widget overview-widget--wide overview-panel overview-panel--funnel"
           index={0}
+          sectionId="bookings-funnel"
           style={{ '--overview-span': 6 }}
           subtitle="Proposed slots through attended calls"
           title="Booking funnel"
@@ -244,6 +245,7 @@ export default function BookingsPage() {
           badge={bookings.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="bookings-confirmed-trend"
           style={{ '--overview-span': 6 }}
           subtitle="Confirmed booking volume"
           title="Confirmed calls over time"
@@ -263,6 +265,7 @@ export default function BookingsPage() {
           badge={bookings.rangeLabel}
           className="overview-widget overview-widget--compact conversations-pie-panel"
           index={0}
+          sectionId="bookings-attendance"
           style={{ '--overview-span': 4 }}
           subtitle="What happened to completed bookings"
           title="No-show vs attended"
@@ -309,6 +312,7 @@ export default function BookingsPage() {
           badge="Next 14 days"
           className="overview-widget overview-widget--compact"
           index={1}
+          sectionId="bookings-upcoming"
           style={{ '--overview-span': 4 }}
           subtitle="Calls already on the calendar"
           title="Upcoming bookings"
@@ -349,6 +353,7 @@ export default function BookingsPage() {
           badge={bookings.atRiskDelta.value}
           className="overview-widget overview-widget--compact"
           index={2}
+          sectionId="bookings-at-risk"
           style={{ '--overview-span': 4 }}
           subtitle="Bookings that need intervention"
           title="At-risk bookings"
@@ -387,6 +392,7 @@ export default function BookingsPage() {
           badge={bookings.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="bookings-friction"
           style={{ '--overview-span': 12 }}
           subtitle="What is slowing confirmations right now"
           title="Scheduling friction summary"

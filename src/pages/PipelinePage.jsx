@@ -338,7 +338,7 @@ export default function PipelinePage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="surface-card filter-toolbar-panel filter-toolbar-panel--bare filter-toolbar-panel--spacious pipeline-filter-toolbar-panel">
+      <section className="surface-card filter-toolbar-panel filter-toolbar-panel--bare filter-toolbar-panel--spacious pipeline-filter-toolbar-panel search-jump-target" id="pipeline-filters">
         <div className="filter-toolbar filter-toolbar--inline">
           <FilterChips
             allLabel="All stages"
@@ -377,7 +377,7 @@ export default function PipelinePage() {
         </div>
       </section>
 
-      <section className="summary-card-grid">
+      <section className="summary-card-grid search-jump-target" id="pipeline-summary">
         {summaryCards.map((card) => (
           <article className="surface-card summary-card" key={card.key}>
             <p className="sidebar-caption">{card.label}</p>
@@ -393,6 +393,7 @@ export default function PipelinePage() {
         <ChartPanel
           badge={pipeline.rangeLabel}
           className="overview-widget overview-widget--wide"
+          sectionId="pipeline-stage-distribution"
           subtitle="Where visible leads are currently sitting"
           title="Stage distribution"
         >
@@ -402,6 +403,7 @@ export default function PipelinePage() {
         <ChartPanel
           badge={pipeline.rangeLabel}
           className="overview-widget overview-widget--wide overview-panel overview-panel--funnel"
+          sectionId="pipeline-funnel"
           subtitle="Pipeline progression"
           title="Lead journey funnel"
         >
@@ -418,6 +420,7 @@ export default function PipelinePage() {
         <ChartPanel
           badge={pipeline.rangeLabel}
           className="overview-widget overview-widget--wide pipeline-chart-panel"
+          sectionId="pipeline-response-gap"
           subtitle="Average latency before the next touch"
           title="Response gap by stage"
         >
@@ -441,6 +444,7 @@ export default function PipelinePage() {
         <ChartPanel
           badge={pipeline.rangeLabel}
           className="overview-widget overview-widget--wide pipeline-chart-panel"
+          sectionId="pipeline-completion"
           subtitle="Step-by-step advancement"
           title="Stage completion path"
         >
@@ -448,7 +452,7 @@ export default function PipelinePage() {
         </ChartPanel>
       </section>
 
-      <section className="summary-card-grid summary-card-grid--signals">
+      <section className="summary-card-grid summary-card-grid--signals search-jump-target" id="pipeline-signals">
         {pipeline.alerts.map((item) => (
           <article className="surface-card summary-card summary-card--compact" key={item.key}>
             <div className="summary-card-header">

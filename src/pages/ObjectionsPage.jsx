@@ -143,7 +143,7 @@ export default function ObjectionsPage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="kpi-grid">
+      <section className="kpi-grid search-jump-target" id="objections-summary">
         {objections.summaryCards.map((card, index) => (
           <KpiCard
             detail={card.detail}
@@ -161,6 +161,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="objections-trend"
           style={{ '--overview-span': 8 }}
           subtitle="Explicit blocker volume across the selected range"
           title="Objection trend over time"
@@ -178,6 +179,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--compact conversations-pie-panel objections-pie-panel"
           index={1}
+          sectionId="objections-distribution"
           style={{ '--overview-span': 4 }}
           subtitle="Which blockers show up most often"
           title="Objection distribution"
@@ -230,6 +232,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="objections-dropoff"
           style={{ '--overview-span': 6 }}
           subtitle="Where conversations slow down after resistance appears"
           title="Drop-off by stage"
@@ -262,6 +265,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="objections-recovery"
           style={{ '--overview-span': 6 }}
           subtitle="Which blockers still convert into scheduling"
           title="Objection-to-booking recovery"
@@ -296,6 +300,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--compact"
           index={0}
+          sectionId="objections-top-blocker"
           style={{ '--overview-span': 4 }}
           subtitle="Main blocker in this window"
           title="Top blocker"
@@ -316,6 +321,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--compact"
           index={1}
+          sectionId="objections-expensive"
           style={{ '--overview-span': 4 }}
           subtitle="Where blocker value concentrates"
           title="Most expensive blocker"
@@ -338,6 +344,7 @@ export default function ObjectionsPage() {
           badge={objections.rangeLabel}
           className="overview-widget overview-widget--compact"
           index={2}
+          sectionId="objections-recovered"
           style={{ '--overview-span': 4 }}
           subtitle="Recovered blocker examples"
           title="Recovered objections"

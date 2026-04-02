@@ -206,7 +206,7 @@ export default function LeadsPage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <section className="summary-card-grid">
+      <section className="summary-card-grid search-jump-target" id="leads-summary">
         {leads.summaryCards.map((card) => (
           <article className="surface-card summary-card" key={card.key}>
             <p className="sidebar-caption">{card.label}</p>
@@ -222,6 +222,7 @@ export default function LeadsPage() {
         <ChartPanel
           badge={leads.rangeLabel}
           className="overview-widget overview-widget--compact leads-chart-panel"
+          sectionId="leads-quality-mix"
           subtitle="Lead qualification"
           title="Lead quality mix"
         >
@@ -247,6 +248,7 @@ export default function LeadsPage() {
         <ChartPanel
           badge={leads.rangeLabel}
           className="overview-widget overview-widget--compact leads-chart-panel"
+          sectionId="leads-goal-mix"
           subtitle="What people want"
           title="Goal type mix"
         >
@@ -272,6 +274,7 @@ export default function LeadsPage() {
         <ChartPanel
           badge={leads.rangeLabel}
           className="overview-widget overview-widget--compact leads-chart-panel"
+          sectionId="leads-experience-mix"
           subtitle="Lead maturity"
           title="Experience mix"
         >
@@ -281,6 +284,7 @@ export default function LeadsPage() {
         <ChartPanel
           badge={leads.rangeLabel}
           className="overview-widget overview-widget--compact leads-chart-panel"
+          sectionId="leads-commitment-mix"
           subtitle="Readiness"
           title="Commitment mix"
         >
@@ -288,7 +292,7 @@ export default function LeadsPage() {
         </ChartPanel>
       </section>
 
-      <section className="surface-card data-table-panel">
+      <section className="surface-card data-table-panel search-jump-target" id="leads-database">
         <div className="data-table-panel-header">
           <div>
             <p className="sidebar-caption">Lead filters</p>

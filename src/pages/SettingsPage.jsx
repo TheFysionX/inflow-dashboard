@@ -75,6 +75,7 @@ export default function SettingsPage() {
           badge="Workspace"
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="settings-identity"
           style={{ '--overview-span': 5 }}
           subtitle="Brand and support details"
           title="Workspace identity"
@@ -107,6 +108,7 @@ export default function SettingsPage() {
           badge="Defaults"
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="settings-defaults"
           style={{ '--overview-span': 7 }}
           subtitle="What the workspace opens to"
           title="Dashboard defaults"
@@ -142,6 +144,7 @@ export default function SettingsPage() {
           badge={`${settings.overviewDefaults.metricSlots.length} KPI slots`}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="settings-overview-defaults"
           style={{ '--overview-span': 12 }}
           subtitle="Homepage defaults"
           title="Overview defaults"
@@ -202,6 +205,7 @@ export default function SettingsPage() {
           badge={settings.displayPreferences.useCompactNumbers ? 'Compact' : 'Full'}
           className="overview-widget overview-widget--wide"
           index={0}
+          sectionId="settings-display"
           style={{ '--overview-span': 6 }}
           subtitle="Sticky UI preference"
           title="Display preferences"
@@ -237,6 +241,7 @@ export default function SettingsPage() {
           badge="Session"
           className="overview-widget overview-widget--wide"
           index={1}
+          sectionId="settings-account"
           style={{ '--overview-span': 6 }}
           subtitle="Current demo account"
           title="Session and account"

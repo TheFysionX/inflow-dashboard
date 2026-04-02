@@ -126,7 +126,10 @@ function JourneyFunnel({ items, activeIndex, onActiveChange, rangeKey }) {
       </div>
 
       <div className="funnel-key-shell">
-        <div className={`funnel-key-stack ${activeIndex !== null ? 'has-active-stage' : ''}`}>
+        <div
+          className={`funnel-key-stack ${activeIndex !== null ? 'has-active-stage' : ''}`}
+          key={`pipeline-funnel-key-${rangeKey}`}
+        >
           <div
             aria-hidden="true"
             className={`funnel-key-baseline ${activeIndex !== null ? 'is-visible' : ''}`}
@@ -150,6 +153,7 @@ function JourneyFunnel({ items, activeIndex, onActiveChange, rangeKey }) {
                 onMouseLeave={() => onActiveChange(null)}
                 style={{
                   '--funnel-layer-color': funnelColors[index] ?? funnelColors.at(-1),
+                  '--funnel-layer-delay': `${0.16 + (index * 0.08)}s`,
                   '--funnel-layer-width': `${width}%`,
                   zIndex: isActive ? 12 : index + 1,
                 }}

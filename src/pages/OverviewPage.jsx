@@ -375,6 +375,7 @@ export default function OverviewPage() {
           </ResponsiveContainer>
           <div className="funnel-key-shell">
             <div
+              key={`funnel-key-${rangeKey}`}
               className={`funnel-key-stack ${
                 activeFunnelIndex !== null ? 'has-active-stage' : ''
               }`}
@@ -404,6 +405,7 @@ export default function OverviewPage() {
                     onMouseLeave={() => setActiveFunnelIndex(null)}
                     style={{
                       '--funnel-layer-color': funnelColors[funnelIndex] ?? funnelColors.at(-1),
+                      '--funnel-layer-delay': `${0.16 + (funnelIndex * 0.08)}s`,
                       '--funnel-layer-width': `${width}%`,
                       zIndex: isActive ? 12 : funnelIndex + 1,
                     }}

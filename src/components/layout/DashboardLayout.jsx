@@ -1,12 +1,20 @@
-import { Outlet } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useDashboard } from '../../context/AppContext'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 export default function DashboardLayout() {
   const { clients, activeClientId } = useDashboard()
+  const location = useLocation()
+  const contentRef = useRef(null)
   const activeClient =
     clients.find((client) => client.id === activeClientId) ?? clients[0]
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    contentRef.current?.scrollTo?.({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
 
   return (
     <div
@@ -20,7 +28,7 @@ export default function DashboardLayout() {
       <Sidebar />
       <div className="dashboard-main">
         <Topbar />
-        <div className="dashboard-content">
+        <div className="dashboard-content" ref={contentRef}>
           <Outlet />
         </div>
       </div>

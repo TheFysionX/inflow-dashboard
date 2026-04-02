@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { brandConfig, demoCredentials } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
-import { ChevronIcon } from '../ui/Icons'
+import { ChevronIcon, SettingsIcon } from '../ui/Icons'
+import SignOutConfirmModal from '../ui/SignOutConfirmModal'
 
 export default function ProfileMenu() {
   const navigate = useNavigate()
@@ -24,75 +24,10 @@ export default function ProfileMenu() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [])
 
-  useEffect(() => {
-    function handleEscape(event) {
-      if (event.key === 'Escape') {
-        setConfirmingSignOut(false)
-      }
-    }
-
-    if (!confirmingSignOut) {
-      return undefined
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', handleEscape)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleEscape)
-    }
-  }, [confirmingSignOut])
-
   function handleSignOut() {
     logout()
     navigate('/login')
   }
-
-  const signOutModal = confirmingSignOut ? createPortal(
-    <AnimatePresence initial={false}>
-      <motion.div
-        animate={{ opacity: 1 }}
-        className="modal-overlay"
-        exit={{ opacity: 0 }}
-        initial={{ opacity: 0 }}
-        onClick={() => setConfirmingSignOut(false)}
-      >
-        <motion.div
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="modal-panel modal-panel--signout"
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          initial={{ opacity: 0, y: 16, scale: 0.96 }}
-          onClick={(event) => event.stopPropagation()}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="modal-panel-copy">
-            <p className="sidebar-caption">Session</p>
-            <h3>Confirm sign out</h3>
-            <p>You'll return to the sign-in screen for the demo dashboard.</p>
-          </div>
-          <div className="modal-panel-actions">
-            <button
-              className="ghost-button button-small"
-              onClick={() => setConfirmingSignOut(false)}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="danger-button button-small"
-              onClick={handleSignOut}
-              type="button"
-            >
-              Sign out
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>,
-    document.body,
-  ) : null
 
   return (
     <div className="profile-menu" ref={menuRef}>
@@ -127,18 +62,39 @@ export default function ProfileMenu() {
               className="profile-dropdown-row"
               onClick={() => {
                 setOpen(false)
+                navigate('/settings')
+              }}
+              type="button"
+              whileTap={{ scale: 0.985 }}
+            >
+              <span className="profile-dropdown-row-copy">
+                <SettingsIcon size={15} />
+                <span>Settings</span>
+              </span>
+              <ChevronIcon direction="right" size={14} />
+            </motion.button>
+            <motion.button
+              className="profile-dropdown-row profile-dropdown-row--danger"
+              onClick={() => {
+                setOpen(false)
                 setConfirmingSignOut(true)
               }}
               type="button"
               whileTap={{ scale: 0.985 }}
             >
-              <span>Sign out</span>
+              <span className="profile-dropdown-row-copy">
+                <span>Sign out</span>
+              </span>
               <ChevronIcon direction="right" size={14} />
             </motion.button>
           </motion.div>
         ) : null}
       </AnimatePresence>
-      {signOutModal}
+      <SignOutConfirmModal
+        onClose={() => setConfirmingSignOut(false)}
+        onConfirm={handleSignOut}
+        open={confirmingSignOut}
+      />
     </div>
   )
 }

@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react'
 import {
-  Bar,
-  BarChart,
   Cell,
   Pie,
   PieChart,
+  PolarAngleAxis,
+  RadialBar,
+  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from 'recharts'
 import AnimatedPage from '../components/ui/AnimatedPage'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
@@ -39,8 +38,56 @@ function ChartTooltip({ active, payload, label }) {
   )
 }
 
+function MixLegend({ items }) {
+  return (
+    <div className="mix-legend">
+      {items.map((item) => (
+        <div className="mix-legend-item" key={item.key}>
+          <span className="mix-legend-swatch" style={{ '--mix-color': item.color }} />
+          <span>{item.name}</span>
+          <strong>{item.value}</strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RadialMix({ items }) {
+  const radialData = items.map((item, index) => ({
+    ...item,
+    fill: item.color,
+    max: Math.max(items[0]?.value ?? 0, item.value),
+    order: items.length - index,
+  }))
+
+  return (
+    <div className="radial-mix-shell">
+      <ResponsiveContainer height={220} width="100%">
+        <RadialBarChart
+          cx="50%"
+          cy="50%"
+          data={radialData}
+          endAngle={-270}
+          innerRadius="26%"
+          outerRadius="100%"
+          startAngle={90}
+        >
+          <PolarAngleAxis domain={[0, Math.max(...radialData.map((item) => item.max), 1)]} tick={false} type="number" />
+          <RadialBar
+            background={{ fill: 'rgba(143, 109, 255, 0.12)' }}
+            cornerRadius={14}
+            dataKey="value"
+          />
+          <Tooltip content={<ChartTooltip />} />
+        </RadialBarChart>
+      </ResponsiveContainer>
+      <MixLegend items={items} />
+    </div>
+  )
+}
+
 export default function LeadsPage() {
-  const { dataset, activeClientId, rangeSelection, overviewUseCompactNumbers } = useDashboard()
+  const { dataset, activeClientId, rangeSelection } = useDashboard()
   const [sorting, setSorting] = useState([
     { id: 'createdAt', desc: true },
   ])
@@ -164,26 +211,93 @@ export default function LeadsPage() {
           <article className="surface-card summary-card" key={card.key}>
             <p className="sidebar-caption">{card.label}</p>
             <strong className="summary-card-value">
-              <AnimatedNumber
-                compact={overviewUseCompactNumbers}
-                value={card.value}
-              />
+              <AnimatedNumber compact={false} value={card.value} />
             </strong>
             <p className="summary-card-detail">{card.detail}</p>
           </article>
         ))}
       </section>
 
-      <section className="surface-card filter-toolbar-panel">
+      <section className="overview-grid overview-grid--dynamic overview-grid--equal-height">
+        <ChartPanel
+          badge={leads.rangeLabel}
+          className="overview-widget overview-widget--compact leads-chart-panel"
+          subtitle="Lead qualification"
+          title="Lead quality mix"
+        >
+          <ResponsiveContainer height={200} width="100%">
+            <PieChart>
+              <Pie
+                data={leads.qualityMix}
+                dataKey="value"
+                innerRadius={42}
+                outerRadius={68}
+                paddingAngle={3}
+              >
+                {leads.qualityMix.map((entry) => (
+                  <Cell fill={entry.color} key={entry.key} />
+                ))}
+              </Pie>
+              <Tooltip content={<ChartTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <MixLegend items={leads.qualityMix} />
+        </ChartPanel>
+
+        <ChartPanel
+          badge={leads.rangeLabel}
+          className="overview-widget overview-widget--compact leads-chart-panel"
+          subtitle="What people want"
+          title="Goal type mix"
+        >
+          <ResponsiveContainer height={200} width="100%">
+            <PieChart>
+              <Pie
+                data={leads.goalMix}
+                dataKey="value"
+                innerRadius={38}
+                outerRadius={72}
+                paddingAngle={4}
+              >
+                {leads.goalMix.map((entry) => (
+                  <Cell fill={entry.color} key={entry.key} />
+                ))}
+              </Pie>
+              <Tooltip content={<ChartTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <MixLegend items={leads.goalMix} />
+        </ChartPanel>
+
+        <ChartPanel
+          badge={leads.rangeLabel}
+          className="overview-widget overview-widget--compact leads-chart-panel"
+          subtitle="Lead maturity"
+          title="Experience mix"
+        >
+          <RadialMix items={leads.experienceMix} />
+        </ChartPanel>
+
+        <ChartPanel
+          badge={leads.rangeLabel}
+          className="overview-widget overview-widget--compact leads-chart-panel"
+          subtitle="Readiness"
+          title="Commitment mix"
+        >
+          <RadialMix items={leads.commitmentMix} />
+        </ChartPanel>
+      </section>
+
+      <section className="surface-card data-table-panel">
         <div className="data-table-panel-header">
           <div>
             <p className="sidebar-caption">Lead filters</p>
             <h2>Lead database</h2>
           </div>
-          <StatusPill tone="info">{filteredRows.length} visible</StatusPill>
+          <StatusPill tone="info">{leads.rangeLabel}</StatusPill>
         </div>
 
-        <div className="filter-toolbar">
+        <div className="filter-toolbar filter-toolbar--inline filter-toolbar--attached">
           <FilterChips
             allLabel="All stages"
             label="Stage"
@@ -231,16 +345,6 @@ export default function LeadsPage() {
             value={filters.goal}
           />
         </div>
-      </section>
-
-      <section className="surface-card data-table-panel">
-        <div className="data-table-panel-header">
-          <div>
-            <p className="sidebar-caption">CRM table</p>
-            <h2>Leads in view</h2>
-          </div>
-          <StatusPill tone="info">{leads.rangeLabel}</StatusPill>
-        </div>
 
         <DataTable
           columns={columns}
@@ -252,92 +356,6 @@ export default function LeadsPage() {
           sorting={sorting}
           onSortingChange={setSorting}
         />
-      </section>
-
-      <section className="overview-grid overview-grid--dynamic">
-        <ChartPanel
-          badge={leads.rangeLabel}
-          className="overview-widget overview-widget--compact"
-          subtitle="Lead qualification"
-          title="Lead quality mix"
-        >
-          <ResponsiveContainer height={240} width="100%">
-            <PieChart>
-              <Pie
-                data={leads.qualityMix}
-                dataKey="value"
-                innerRadius={58}
-                outerRadius={88}
-                paddingAngle={3}
-              >
-                {leads.qualityMix.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Pie>
-              <Tooltip content={<ChartTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
-        <ChartPanel
-          badge="Goal mix"
-          className="overview-widget overview-widget--compact"
-          subtitle="What people want"
-          title="Goal type mix"
-        >
-          <ResponsiveContainer height={240} width="100%">
-            <BarChart data={leads.goalMix} margin={{ top: 8, right: 12, left: -20, bottom: 8 }}>
-              <XAxis dataKey="name" hide />
-              <YAxis width={96} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" radius={[10, 10, 10, 10]}>
-                {leads.goalMix.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
-        <ChartPanel
-          badge="Experience"
-          className="overview-widget overview-widget--compact"
-          subtitle="Lead maturity"
-          title="Experience mix"
-        >
-          <ResponsiveContainer height={240} width="100%">
-            <BarChart data={leads.experienceMix} margin={{ top: 8, right: 12, left: -20, bottom: 8 }}>
-              <XAxis dataKey="name" hide />
-              <YAxis width={96} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" radius={[10, 10, 10, 10]}>
-                {leads.experienceMix.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
-        <ChartPanel
-          badge="Commitment"
-          className="overview-widget overview-widget--compact"
-          subtitle="Readiness"
-          title="Commitment mix"
-        >
-          <ResponsiveContainer height={240} width="100%">
-            <BarChart data={leads.commitmentMix} margin={{ top: 8, right: 12, left: -20, bottom: 8 }}>
-              <XAxis dataKey="name" hide />
-              <YAxis width={96} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" radius={[10, 10, 10, 10]}>
-                {leads.commitmentMix.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
       </section>
 
       <LeadDetailDrawer

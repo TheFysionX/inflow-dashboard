@@ -6,6 +6,9 @@ export default function ChartPanel({
   badge,
   actionLabel,
   onAction,
+  toolLabel,
+  onToolAction,
+  toolIcon,
   children,
   className = '',
   index = 0,
@@ -36,6 +39,17 @@ export default function ChartPanel({
           {actionLabel ? (
             <button className="panel-link" onClick={onAction} type="button">
               {actionLabel}
+            </button>
+          ) : null}
+          {onToolAction ? (
+            <button
+              aria-label={toolLabel}
+              className="panel-icon-button"
+              onClick={onToolAction}
+              title={toolLabel}
+              type="button"
+            >
+              {toolIcon}
             </button>
           ) : null}
         </div>

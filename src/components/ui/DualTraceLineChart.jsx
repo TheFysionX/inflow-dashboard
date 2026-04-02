@@ -212,81 +212,41 @@ function getGradientStops(color, lineKey) {
   const presetStops = {
     'var(--accent-blue)': () => [
       { offset: '0%', color: lightPalette.blue, opacity: 0.98 },
-      {
-        offset: `${accentWindows.early.toFixed(1)}%`,
-        color: lightPalette.violet,
-        opacity: 0.9 + (random() * 0.08),
-      },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: lightPalette.violet, opacity: 0.95 },
       { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.blue, opacity: 1 },
-      {
-        offset: `${accentWindows.midB.toFixed(1)}%`,
-        color: lightPalette.pink,
-        opacity: 0.88 + (random() * 0.08),
-      },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: lightPalette.pink, opacity: 0.94 },
       { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.blue, opacity: 1 },
       { offset: '100%', color: lightPalette.blue, opacity: 0.98 },
     ],
     'var(--accent-pink)': () => [
       { offset: '0%', color: lightPalette.pink, opacity: 0.98 },
-      {
-        offset: `${accentWindows.early.toFixed(1)}%`,
-        color: lightPalette.violet,
-        opacity: 0.88 + (random() * 0.08),
-      },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: lightPalette.violet, opacity: 0.94 },
       { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.pink, opacity: 1 },
-      {
-        offset: `${accentWindows.midB.toFixed(1)}%`,
-        color: lightPalette.blue,
-        opacity: 0.9 + (random() * 0.07),
-      },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: lightPalette.blue, opacity: 0.93 },
       { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.pink, opacity: 1 },
       { offset: '100%', color: lightPalette.pink, opacity: 0.98 },
     ],
     'var(--accent-violet)': () => [
       { offset: '0%', color: lightPalette.violet, opacity: 0.98 },
-      {
-        offset: `${accentWindows.early.toFixed(1)}%`,
-        color: lightPalette.blue,
-        opacity: 0.88 + (random() * 0.08),
-      },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: lightPalette.blue, opacity: 0.94 },
       { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.violet, opacity: 1 },
-      {
-        offset: `${accentWindows.midB.toFixed(1)}%`,
-        color: lightPalette.pink,
-        opacity: 0.88 + (random() * 0.08),
-      },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: lightPalette.pink, opacity: 0.94 },
       { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.violet, opacity: 1 },
       { offset: '100%', color: lightPalette.violet, opacity: 0.98 },
     ],
     '#8be7c2': () => [
       { offset: '0%', color: lightPalette.green, opacity: 0.98 },
-      {
-        offset: `${accentWindows.early.toFixed(1)}%`,
-        color: lightPalette.blue,
-        opacity: 0.92 + (random() * 0.06),
-      },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: lightPalette.blue, opacity: 0.93 },
       { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.green, opacity: 1 },
-      {
-        offset: `${accentWindows.midB.toFixed(1)}%`,
-        color: lightPalette.pink,
-        opacity: 0.9 + (random() * 0.06),
-      },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: lightPalette.pink, opacity: 0.93 },
       { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.green, opacity: 1 },
       { offset: '100%', color: lightPalette.green, opacity: 0.98 },
     ],
     'var(--color-success)': () => [
       { offset: '0%', color: lightPalette.green, opacity: 0.98 },
-      {
-        offset: `${accentWindows.early.toFixed(1)}%`,
-        color: lightPalette.blue,
-        opacity: 0.92 + (random() * 0.06),
-      },
+      { offset: `${accentWindows.early.toFixed(1)}%`, color: lightPalette.blue, opacity: 0.93 },
       { offset: `${accentWindows.midA.toFixed(1)}%`, color: lightPalette.green, opacity: 1 },
-      {
-        offset: `${accentWindows.midB.toFixed(1)}%`,
-        color: lightPalette.pink,
-        opacity: 0.9 + (random() * 0.06),
-      },
+      { offset: `${accentWindows.midB.toFixed(1)}%`, color: lightPalette.pink, opacity: 0.93 },
       { offset: `${accentWindows.late.toFixed(1)}%`, color: lightPalette.green, opacity: 1 },
       { offset: '100%', color: lightPalette.green, opacity: 0.98 },
     ],
@@ -353,13 +313,12 @@ function getHoverDotStops(color) {
   ]
 }
 
-export default function TraceLineChart({
+export default function DualTraceLineChart({
   data,
-  color,
-  height = 260,
-  formatValue = (value) => formatAxisValue(typeof value === 'number' ? value : 0),
-  lineKey = 'default',
-  yTickCount = 5,
+  series,
+  height = 280,
+  lineKey = 'dual-trace',
+  yTickCount = 6,
   labelTargetCount = 6,
   axisFontSize = 10,
   labelFontSize = 10,
@@ -372,8 +331,11 @@ export default function TraceLineChart({
   const chartHeight = height
   const padding = { top: 18, right: 34, bottom: 34, left: 42 }
   const axisScale = useMemo(
-    () => buildAxisScale(data.map((item) => item.value), yTickCount),
-    [data, yTickCount],
+    () => buildAxisScale(
+      data.flatMap((item) => series.map((entry) => Number(item[entry.key] ?? 0))),
+      yTickCount,
+    ),
+    [data, series, yTickCount],
   )
   const { axisValues, max, min, range: yRange } = axisScale
 
@@ -400,18 +362,26 @@ export default function TraceLineChart({
 
     window.addEventListener('mouseup', handleMouseUp)
     return () => window.removeEventListener('mouseup', handleMouseUp)
-  }, [dragStartIndex])
+  }, [dragCurrentIndex, dragStartIndex])
 
-  const points = useMemo(
+  const pointMap = useMemo(
     () =>
-      data.map((item, index) => {
-        const x = plotGeometry.getX(index)
-        const y =
-          padding.top +
-          ((max - Number(item.value ?? 0)) * (chartHeight - padding.top - padding.bottom)) / yRange
+      series.map((entry) => ({
+        ...entry,
+        points: data.map((item, index) => {
+          const x = plotGeometry.getX(index)
+          const y =
+            padding.top +
+            ((max - Number(item[entry.key] ?? 0)) * (chartHeight - padding.top - padding.bottom)) / yRange
 
-        return { ...item, x, y }
-      }),
+          return {
+            x,
+            y,
+            label: item.label,
+            value: Number(item[entry.key] ?? 0),
+          }
+        }),
+      })),
     [
       chartHeight,
       data,
@@ -419,14 +389,16 @@ export default function TraceLineChart({
       padding.bottom,
       padding.top,
       plotGeometry,
+      series,
       yRange,
     ],
   )
-  const labelEvery = Math.max(1, Math.ceil(points.length / Math.max(labelTargetCount, 1)))
 
-  const path = buildSmoothPath(points)
-  const displayedPoint =
-    activeIndex === null ? points.at(-1) : points[activeIndex]
+  const labelEvery = Math.max(1, Math.ceil(data.length / Math.max(labelTargetCount, 1)))
+  const displayedLabel = activeIndex === null ? data.at(-1)?.label : data[activeIndex]?.label
+  const activePoints = activeIndex === null
+    ? pointMap.map((entry) => entry.points.at(-1))
+    : pointMap.map((entry) => entry.points[activeIndex])
   const effectiveSelection = dragStartIndex === null
     ? null
     : {
@@ -435,40 +407,39 @@ export default function TraceLineChart({
     }
   const compareStartIndex = dragStartIndex
   const compareEndIndex = dragCurrentIndex ?? dragStartIndex
-  const endPoint = points.at(-1)
-  const gradientId = useMemo(
-    () => `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
-    [lineKey],
-  )
-  const hoverGradientId = useMemo(
-    () => `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
-    [lineKey],
-  )
-  const gradientStops = useMemo(() => getGradientStops(color, lineKey), [color, lineKey])
-  const hoverDotStops = useMemo(() => getHoverDotStops(color), [color])
+
   const selectionSummary = useMemo(() => {
     if (compareStartIndex === null || compareEndIndex === null) {
       return null
     }
 
-    const startPoint = points[compareStartIndex]
-    const endSelectionPoint = points[compareEndIndex]
-    const delta = (endSelectionPoint?.value ?? 0) - (startPoint?.value ?? 0)
-    const percent = startPoint?.value
-      ? (delta / startPoint.value) * 100
-      : delta === 0
-        ? 0
-        : 100
-
     return {
-      startLabel: startPoint?.label,
-      endLabel: endSelectionPoint?.label,
-      delta,
-      percent,
-      tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+      startLabel: data[compareStartIndex]?.label,
+      endLabel: data[compareEndIndex]?.label,
+      series: pointMap.map((entry) => {
+        const startPoint = entry.points[compareStartIndex]
+        const endPoint = entry.points[compareEndIndex]
+        const delta = (endPoint?.value ?? 0) - (startPoint?.value ?? 0)
+        const percent = startPoint?.value
+          ? (delta / startPoint.value) * 100
+          : delta === 0
+            ? 0
+            : 100
+        const tone = delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'
+
+        return {
+          key: entry.key,
+          label: entry.label,
+          color: entry.color,
+          delta,
+          percent,
+          tone,
+        }
+      }),
     }
-  }, [compareEndIndex, compareStartIndex, points])
-  const selectionBand = effectiveSelection && points.length
+  }, [compareEndIndex, compareStartIndex, data, pointMap])
+
+  const selectionBand = effectiveSelection && pointMap[0]?.points.length
     ? (() => {
       const startBounds = plotGeometry.getBounds(effectiveSelection.start)
       const endBounds = plotGeometry.getBounds(effectiveSelection.end)
@@ -484,7 +455,7 @@ export default function TraceLineChart({
 
   return (
     <div className={`trace-chart-shell ${dragStartIndex !== null ? 'is-dragging' : ''}`}>
-      <div className="trace-chart-meta">
+      <div className="trace-chart-meta trace-chart-meta--dual">
         <strong>
           {selectionSummary
             ? (
@@ -494,19 +465,40 @@ export default function TraceLineChart({
                 <span>{selectionSummary.endLabel}</span>
               </span>
             )
-            : displayedPoint?.label}
+            : displayedLabel}
         </strong>
-        {selectionSummary ? (
-          <span className={`trace-chart-delta trace-chart-delta--${selectionSummary.tone}`}>
-            {`${selectionSummary.delta > 0 ? '+' : ''}${formatValue(selectionSummary.delta)}`}
-            {' '}
-            <small>
-              ({`${selectionSummary.percent > 0 ? '+' : ''}${Math.round(selectionSummary.percent * 10) / 10}%`})
-            </small>
-          </span>
-        ) : (
-          <span>{formatValue(displayedPoint?.value ?? 0)}</span>
-        )}
+        <div className="trace-chart-meta-series">
+          {(selectionSummary
+            ? selectionSummary.series
+            : pointMap.map((entry) => {
+              const activePoint = activeIndex === null
+                ? entry.points.at(-1)
+                : entry.points[activeIndex]
+
+              return {
+                key: entry.key,
+                label: entry.label,
+                color: entry.color,
+                value: activePoint?.value ?? 0,
+              }
+            })).map((entry) => (
+              <span className="trace-chart-series-pill" key={entry.key}>
+                <i style={{ '--trace-pill-color': entry.color }} />
+                <span>{entry.label}</span>
+                {selectionSummary ? (
+                  <span className={`trace-chart-delta trace-chart-delta--${entry.tone}`}>
+                    {`${entry.delta > 0 ? '+' : ''}${new Intl.NumberFormat('en-US').format(entry.delta)}`}
+                    {' '}
+                    <small>
+                      ({`${entry.percent > 0 ? '+' : ''}${Math.round(entry.percent * 10) / 10}%`})
+                    </small>
+                  </span>
+                ) : (
+                  <strong>{new Intl.NumberFormat('en-US').format(entry.value ?? 0)}</strong>
+                )}
+              </span>
+            ))}
+        </div>
       </div>
 
       <svg
@@ -515,26 +507,37 @@ export default function TraceLineChart({
         viewBox={`0 0 ${width} ${chartHeight}`}
       >
         <defs>
-          <linearGradient id={gradientId} x1="0%" x2="100%" y1="0%" y2="0%">
-            {gradientStops.map((stop) => (
-              <stop
-                key={`${gradientId}-${stop.offset}`}
-                offset={stop.offset}
-                stopColor={stop.color}
-                stopOpacity={stop.opacity}
-              />
-            ))}
-          </linearGradient>
-          <radialGradient id={hoverGradientId} cx="35%" cy="35%" r="75%">
-            {hoverDotStops.map((stop) => (
-              <stop
-                key={`${hoverGradientId}-${stop.offset}`}
-                offset={stop.offset}
-                stopColor={stop.color}
-                stopOpacity={stop.opacity}
-              />
-            ))}
-          </radialGradient>
+          {pointMap.map((entry) => {
+            const gradientId = `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
+            const hoverGradientId = `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
+            const gradientStops = getGradientStops(entry.color, `${lineKey}-${entry.key}`)
+            const hoverStops = getHoverDotStops(entry.color)
+
+            return (
+              <g key={entry.key}>
+                <linearGradient id={gradientId} x1="0%" x2="100%" y1="0%" y2="0%">
+                  {gradientStops.map((stop) => (
+                    <stop
+                      key={`${gradientId}-${stop.offset}`}
+                      offset={stop.offset}
+                      stopColor={stop.color}
+                      stopOpacity={stop.opacity}
+                    />
+                  ))}
+                </linearGradient>
+                <radialGradient id={hoverGradientId} cx="35%" cy="35%" r="75%">
+                  {hoverStops.map((stop) => (
+                    <stop
+                      key={`${hoverGradientId}-${stop.offset}`}
+                      offset={stop.offset}
+                      stopColor={stop.color}
+                      stopOpacity={stop.opacity}
+                    />
+                  ))}
+                </radialGradient>
+              </g>
+            )
+          })}
         </defs>
 
         {axisValues.map((axisValue, index) => {
@@ -575,28 +578,39 @@ export default function TraceLineChart({
           />
         ) : null}
 
-        <motion.path
-          animate={{ pathLength: 1, opacity: 1 }}
-          className="trace-chart-line"
-          d={path}
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0.72 }}
-          key={`path-${lineKey}`}
-          pointerEvents="none"
-          stroke={`url(#${gradientId})`}
-          strokeLinecap="round"
-          strokeWidth="3"
-          transition={{ duration: 2.55, ease: [0.18, 0.82, 0.3, 1] }}
-        />
+        {pointMap.map((entry, entryIndex) => {
+          const path = buildSmoothPath(entry.points)
+          const gradientId = `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
 
-        {points.map((point, index) => {
+          return (
+            <motion.path
+              animate={{ pathLength: 1, opacity: 1 }}
+              className="trace-chart-line"
+              d={path}
+              fill="none"
+              initial={{ pathLength: 0, opacity: 0.72 }}
+              key={`path-${lineKey}-${entry.key}`}
+              pointerEvents="none"
+              stroke={`url(#${gradientId})`}
+              strokeLinecap="round"
+              strokeWidth={entryIndex === 0 ? 2.35 : 2.1}
+              transition={{
+                duration: 2.4,
+                delay: entryIndex * 0.08,
+                ease: [0.18, 0.82, 0.3, 1],
+              }}
+            />
+          )
+        })}
+
+        {data.map((item, index) => {
           const bounds = plotGeometry.getBounds(index)
 
           return (
             <rect
               className="trace-chart-hit-area"
               height={chartHeight - padding.top - padding.bottom}
-              key={`${point.label}-${point.value}`}
+              key={`${item.label}-${index}`}
               onMouseDown={() => {
                 setDragStartIndex(index)
                 setDragCurrentIndex(index)
@@ -604,7 +618,6 @@ export default function TraceLineChart({
               }}
               onMouseEnter={() => {
                 setActiveIndex(index)
-
                 if (dragStartIndex !== null) {
                   setDragCurrentIndex(index)
                 }
@@ -626,40 +639,65 @@ export default function TraceLineChart({
           )
         })}
 
-        {activeIndex !== null && displayedPoint ? (
-          <circle
-            className="trace-chart-hover-indicator"
-            cx={displayedPoint.x}
-            cy={displayedPoint.y}
-            fill={`url(#${hoverGradientId})`}
+        {activeIndex !== null && activePoints.every(Boolean) ? (
+          <polyline
+            className="trace-chart-connector"
+            fill="none"
+            points={activePoints
+              .filter(Boolean)
+              .sort((left, right) => left.y - right.y)
+              .map((point) => `${point.x},${point.y}`)
+              .join(' ')}
             pointerEvents="none"
-            r="4.2"
-            stroke="rgba(255,255,255,0.9)"
-            strokeWidth="1.2"
           />
         ) : null}
 
-        {endPoint ? (
-          <motion.g
-            animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1, 1.9, 2.4] }}
-            initial={{ opacity: 0, scale: 0.4 }}
-            key={`pulse-${lineKey}`}
-            transition={{ duration: 1.05, delay: 2.08, ease: 'easeOut' }}
-          >
-            <circle
-              cx={endPoint.x}
-              cy={endPoint.y}
-              fill={color}
-              fillOpacity="0.08"
-              r="12"
-              stroke={color}
-              strokeOpacity="0.46"
-            />
-          </motion.g>
-        ) : null}
+        {activeIndex !== null
+          ? pointMap.map((entry) => {
+            const displayedPoint = entry.points[activeIndex]
+            const hoverGradientId = `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
 
-        {points.map((point, index) =>
-          index % labelEvery === 0 || index === points.length - 1 ? (
+            return displayedPoint ? (
+              <circle
+                className="trace-chart-hover-indicator"
+                cx={displayedPoint.x}
+                cy={displayedPoint.y}
+                fill={`url(#${hoverGradientId})`}
+                key={`hover-${entry.key}`}
+                pointerEvents="none"
+                r="4.2"
+                stroke="rgba(255,255,255,0.9)"
+                strokeWidth="1.2"
+              />
+            ) : null
+          })
+          : null}
+
+        {pointMap.map((entry) => {
+          const endPoint = entry.points.at(-1)
+
+          return endPoint ? (
+            <motion.g
+              animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1, 1.7, 2.1] }}
+              initial={{ opacity: 0, scale: 0.4 }}
+              key={`pulse-${lineKey}-${entry.key}`}
+              transition={{ duration: 1.02, delay: 1.95, ease: 'easeOut' }}
+            >
+              <circle
+                cx={endPoint.x}
+                cy={endPoint.y}
+                fill={entry.color}
+                fillOpacity="0.08"
+                r="11"
+                stroke={entry.color}
+                strokeOpacity="0.4"
+              />
+            </motion.g>
+          ) : null
+        })}
+
+        {pointMap[0]?.points.map((point, index) =>
+          index % labelEvery === 0 || index === pointMap[0].points.length - 1 ? (
             <text
               className="trace-chart-label"
               key={point.label}

@@ -3,38 +3,48 @@ import {
   Bar,
   BarChart,
   Cell,
+  Funnel,
+  FunnelChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import AnimatedPage from '../components/ui/AnimatedPage'
-import DataTable from '../components/ui/DataTable'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
+import ChartPanel from '../components/ui/ChartPanel'
 import FilterChips from '../components/ui/FilterChips'
-import LeadDetailDrawer from '../components/ui/LeadDetailDrawer'
 import StageBadge from '../components/ui/StageBadge'
 import StatusPill from '../components/ui/StatusPill'
-import ChartPanel from '../components/ui/ChartPanel'
 import { useDashboard } from '../context/AppContext'
-import {
-  getLeadDetailModel,
-  getPipelineModel,
-} from '../data/selectors'
+import { getPipelineModel } from '../data/selectors'
+
+const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#b993ff', '#f49be3']
+
+function getFunnelStageShare(value, baseline) {
+  if (!baseline) {
+    return 0
+  }
+
+  return Math.max(0, Math.min(100, (value / baseline) * 100))
+}
 
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) {
     return null
   }
 
+  const title = payload[0]?.payload?.label ?? label
+
   return (
     <div className="chart-tooltip">
-      <strong>{label}</strong>
+      <strong>{title}</strong>
       {payload.map((entry) => (
         <div className="chart-tooltip-row" key={`${entry.name}-${entry.value}`}>
           <span>{entry.name}</span>
           <strong>
             {typeof entry.value === 'number'
-              ? `${Math.round(entry.value * 10) / 10}${entry.name === 'Rate' ? '%' : ''}`
+              ? `${Math.round(entry.value * 10) / 10}${entry.name === 'Days' ? 'd' : entry.name === 'Rate' ? '%' : ''}`
               : entry.value}
           </strong>
         </div>
@@ -63,55 +73,205 @@ function StageDistribution({ items }) {
               }}
             />
           </div>
-          <small>{total ? `${Math.round(item.share)}% of visible leads` : 'No leads in range'}</small>
+          <small>{total ? `${Math.round(item.share)}% of filtered leads` : 'No leads in view'}</small>
         </div>
       ))}
     </div>
   )
 }
 
-function StageFlow({ movement }) {
+function JourneyFunnel({ items, activeIndex, onActiveChange, rangeKey }) {
+  const openingValue = items[0]?.value ?? 0
+
   return (
-    <div className="stage-flow">
-      <div className="stage-flow-row">
-        {movement.nodes.map((node, index) => (
-          <div className="stage-flow-step" key={node.key}>
-            <div
-              className="stage-flow-node"
-              style={{ '--stage-flow-color': node.color }}
+    <div className="pipeline-funnel-shell">
+      <div className="pipeline-funnel-chart">
+        <ResponsiveContainer height="100%" width="100%">
+          <FunnelChart>
+            <defs>
+              <filter id={`funnelGlow-pipeline-${rangeKey}`}>
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  floodColor="rgba(244, 155, 227, 0.46)"
+                  stdDeviation="10"
+                />
+              </filter>
+            </defs>
+            <Tooltip content={<ChartTooltip />} />
+            <Funnel
+              animationDuration={940}
+              data={items}
+              dataKey="value"
+              isAnimationActive
+              nameKey="label"
+              onMouseLeave={() => onActiveChange(null)}
+              stroke="rgba(255,255,255,0.1)"
             >
-              <span>{node.label}</span>
-              <strong>{node.value}</strong>
-            </div>
-            {index < movement.nodes.length - 1 ? (
-              <div className="stage-flow-connector">
-                <strong>{movement.links[index]?.value ?? 0}</strong>
-                <span>{Math.round(movement.links[index]?.rate ?? 0)}%</span>
-              </div>
-            ) : null}
-          </div>
-        ))}
+              {items.map((item, index) => (
+                <Cell
+                  cursor="pointer"
+                  fill={funnelColors[index] ?? funnelColors.at(-1)}
+                  fillOpacity={activeIndex === null || index === activeIndex ? 1 : 0.44}
+                  filter={index === activeIndex ? `url(#funnelGlow-pipeline-${rangeKey})` : undefined}
+                  key={item.key}
+                  onMouseEnter={() => onActiveChange(index)}
+                  stroke={index === activeIndex ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.08)'}
+                  strokeWidth={index === activeIndex ? 2 : 1}
+                />
+              ))}
+            </Funnel>
+          </FunnelChart>
+        </ResponsiveContainer>
       </div>
 
-      <div className="stage-flow-detour">
-        <span>{movement.objectionDetour.label}</span>
-        <strong>{movement.objectionDetour.value}</strong>
-        <small>{Math.round(movement.objectionDetour.rate)}% of desired-stage leads</small>
+      <div className="funnel-key-shell">
+        <div className={`funnel-key-stack ${activeIndex !== null ? 'has-active-stage' : ''}`}>
+          <div
+            aria-hidden="true"
+            className={`funnel-key-baseline ${activeIndex !== null ? 'is-visible' : ''}`}
+          />
+          {items.map((item, index) => {
+            const width = getFunnelStageShare(item.value, openingValue)
+            const isActive = index === activeIndex
+            const showInlineLabel = isActive && width >= 20
+
+            return (
+              <button
+                className={`funnel-key-layer ${
+                  isActive ? 'is-active' : ''
+                } ${
+                  index === 0 ? 'is-opening' : ''
+                } ${
+                  activeIndex !== null && !isActive ? 'is-muted' : ''
+                }`}
+                key={item.key}
+                onMouseEnter={() => onActiveChange(index)}
+                onMouseLeave={() => onActiveChange(null)}
+                style={{
+                  '--funnel-layer-color': funnelColors[index] ?? funnelColors.at(-1),
+                  '--funnel-layer-width': `${width}%`,
+                  zIndex: isActive ? 12 : index + 1,
+                }}
+                type="button"
+              >
+                {showInlineLabel ? (
+                  <span className="funnel-key-layer-label">
+                    {item.label}
+                    <strong>{item.value}</strong>
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
 }
 
+function CompletionCards({ items }) {
+  return (
+    <div className="completion-card-grid">
+      {items.map((item) => (
+        <article className="completion-card" key={item.key}>
+          <div
+            className="completion-card-ring"
+            style={{
+              '--completion-color': item.color,
+              '--completion-rate': `${Math.max(0, Math.min(100, item.value))}%`,
+            }}
+          >
+            <strong>{Math.round(item.value)}%</strong>
+          </div>
+          <div className="completion-card-copy">
+            <span>{item.label}</span>
+            <div>
+              <strong>{item.count}</strong>
+              <small>advanced</small>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function buildPipelineSummary(rows) {
+  const qualified = rows.filter((row) => row.qualificationKey === 'qualified').length
+  const needsAttention = rows.filter((row) => row.statusLabel === 'Needs attention').length
+  const confirmed = rows.filter((row) => row.bookingStatusLabel === 'Confirmed').length
+
+  return [
+    {
+      key: 'pipeline-leads',
+      label: 'Pipeline Leads',
+      value: rows.length,
+      detail: 'Leads visible after the current filters',
+    },
+    {
+      key: 'qualified-leads',
+      label: 'Qualified Leads',
+      value: qualified,
+      detail: rows.length ? `${Math.round((qualified / rows.length) * 100)}% of visible pipeline` : 'No visible leads',
+    },
+    {
+      key: 'needs-attention',
+      label: 'Needs Attention',
+      value: needsAttention,
+      detail: 'Threads that need a follow-up right now',
+    },
+    {
+      key: 'confirmed-calls',
+      label: 'Confirmed Calls',
+      value: confirmed,
+      detail: 'Calls already scheduled in this filtered set',
+    },
+  ]
+}
+
+function buildFilteredStageDistribution(rows) {
+  const total = rows.length || 1
+
+  return ['opening', 'current', 'desired', 'objection', 'book'].map((stageKey) => {
+    const stageRows = rows.filter((row) => row.stageKey === stageKey)
+    const sample = stageRows[0]
+
+    return {
+      key: stageKey,
+      label: sample?.stageLabel ?? stageKey,
+      value: stageRows.length,
+      share: (stageRows.length / total) * 100,
+      color: sample?.stageColor ?? '#89b8ff',
+      tone: sample?.stageTone ?? 'neutral',
+    }
+  })
+}
+
+function buildFilteredResponseGap(rows) {
+  return ['opening', 'current', 'desired', 'objection', 'book'].map((stageKey) => {
+    const stageRows = rows.filter((row) => row.stageKey === stageKey)
+    const sample = stageRows[0]
+    const totalMinutes = stageRows.reduce((sum, row) => sum + row.avgReplyLatencyMinutes, 0)
+
+    return {
+      key: stageKey,
+      label: sample?.stageLabel ?? stageKey,
+      value: stageRows.length ? totalMinutes / stageRows.length / (24 * 60) : 0,
+      color: sample?.stageColor ?? '#89b8ff',
+    }
+  })
+}
+
 export default function PipelinePage() {
   const { dataset, activeClientId, rangeSelection } = useDashboard()
-  const [sorting, setSorting] = useState([])
-  const [filters, setFilters] = useState({
+  const [currentFilters, setCurrentFilters] = useState({
     stage: 'all',
     qualification: 'all',
     objection: 'all',
     bookingStatus: 'all',
   })
-  const [selectedLeadId, setSelectedLeadId] = useState('')
+  const [activeFunnelIndex, setActiveFunnelIndex] = useState(null)
 
   const pipeline = useMemo(
     () => getPipelineModel(dataset, activeClientId, rangeSelection),
@@ -121,110 +281,170 @@ export default function PipelinePage() {
   const filteredRows = useMemo(
     () =>
       pipeline.rows.filter((row) => {
-        if (filters.stage !== 'all' && row.stageKey !== filters.stage) {
-          return false
-        }
-
-        if (filters.qualification !== 'all' && row.qualificationKey !== filters.qualification) {
-          return false
-        }
-
-        if (filters.objection !== 'all' && row.objectionKey !== filters.objection) {
+        if (currentFilters.stage !== 'all' && row.stageKey !== currentFilters.stage) {
           return false
         }
 
         if (
-          filters.bookingStatus !== 'all' &&
-          row.bookingStatusLabel !== filters.bookingStatus
+          currentFilters.qualification !== 'all' &&
+          row.qualificationKey !== currentFilters.qualification
+        ) {
+          return false
+        }
+
+        if (currentFilters.objection !== 'all' && row.objectionKey !== currentFilters.objection) {
+          return false
+        }
+
+        if (
+          currentFilters.bookingStatus !== 'all' &&
+          row.bookingStatusLabel !== currentFilters.bookingStatus
         ) {
           return false
         }
 
         return true
       }),
-    [filters.bookingStatus, filters.objection, filters.qualification, filters.stage, pipeline.rows],
+    [currentFilters.bookingStatus, currentFilters.objection, currentFilters.qualification, currentFilters.stage, pipeline.rows],
   )
 
-  const detail = useMemo(
-    () => getLeadDetailModel(dataset, activeClientId, selectedLeadId),
-    [activeClientId, dataset, selectedLeadId],
+  const summaryCards = useMemo(
+    () => buildPipelineSummary(filteredRows),
+    [filteredRows],
   )
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: 'displayName',
-        header: 'Lead',
-        cell: ({ row }) => (
-          <div className="table-primary-cell">
-            <strong>{row.original.displayName}</strong>
-            <small>{row.original.source}</small>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'stageLabel',
-        header: 'Current Stage',
-        cell: ({ row }) => (
-          <div className="table-stack-cell">
-            <StageBadge tone={row.original.stageTone}>{row.original.stageLabel}</StageBadge>
-            <small>{row.original.stageAgeLabel}</small>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'stageAgeDays',
-        header: 'Stage Age',
-        cell: ({ row }) => row.original.stageAgeLabel,
-      },
-      {
-        accessorKey: 'lastActivityAt',
-        header: 'Last Activity',
-        cell: ({ row }) => (
-          <div className="table-stack-cell">
-            <strong>{row.original.lastActivityLabel}</strong>
-            <small>{row.original.lastActivityDetail}</small>
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'objectionLabel',
-        header: 'Main Objection',
-      },
-      {
-        accessorKey: 'qualificationLabel',
-        header: 'Qualification',
-        cell: ({ row }) => (
-          <StatusPill tone={row.original.qualificationTone}>
-            {row.original.qualificationLabel}
-          </StatusPill>
-        ),
-      },
-      {
-        accessorKey: 'bookingStatusLabel',
-        header: 'Booking Status',
-        cell: ({ row }) => (
-          <StatusPill tone={row.original.bookingStatusTone}>
-            {row.original.bookingStatusLabel}
-          </StatusPill>
-        ),
-      },
-      {
-        accessorKey: 'priorityLabel',
-        header: 'Suggested Priority',
-        cell: ({ row }) => (
-          <StatusPill tone={row.original.priorityTone}>
-            {row.original.priorityLabel}
-          </StatusPill>
-        ),
-      },
-    ],
-    [],
+  const stageDistribution = useMemo(
+    () => buildFilteredStageDistribution(filteredRows),
+    [filteredRows],
+  )
+
+  const responseGapByStage = useMemo(
+    () => buildFilteredResponseGap(filteredRows),
+    [filteredRows],
+  )
+
+  const completionSteps = useMemo(
+    () =>
+      pipeline.completionRate.map((item, index) => ({
+        ...item,
+        count: pipeline.stageMovement.links[index]?.value ?? 0,
+      })),
+    [pipeline.completionRate, pipeline.stageMovement.links],
   )
 
   return (
     <AnimatedPage className="page-stack">
+      <section className="surface-card filter-toolbar-panel filter-toolbar-panel--bare filter-toolbar-panel--spacious pipeline-filter-toolbar-panel">
+        <div className="filter-toolbar filter-toolbar--inline">
+          <FilterChips
+            allLabel="All stages"
+            label="Stage"
+            onChange={(value) => setCurrentFilters((current) => ({ ...current, stage: value }))}
+            options={pipeline.filterOptions.stages}
+            value={currentFilters.stage}
+          />
+          <FilterChips
+            allLabel="All qualification"
+            label="Qualification"
+            onChange={(value) =>
+              setCurrentFilters((current) => ({ ...current, qualification: value }))
+            }
+            options={pipeline.filterOptions.qualifications}
+            value={currentFilters.qualification}
+          />
+          <FilterChips
+            allLabel="All objections"
+            label="Objection"
+            onChange={(value) =>
+              setCurrentFilters((current) => ({ ...current, objection: value }))
+            }
+            options={pipeline.filterOptions.objections}
+            value={currentFilters.objection}
+          />
+          <FilterChips
+            allLabel="All booking"
+            label="Booking"
+            onChange={(value) =>
+              setCurrentFilters((current) => ({ ...current, bookingStatus: value }))
+            }
+            options={pipeline.filterOptions.bookingStatuses}
+            value={currentFilters.bookingStatus}
+          />
+        </div>
+      </section>
+
       <section className="summary-card-grid">
+        {summaryCards.map((card) => (
+          <article className="surface-card summary-card" key={card.key}>
+            <p className="sidebar-caption">{card.label}</p>
+            <strong className="summary-card-value">
+              <AnimatedNumber compact={false} value={card.value} />
+            </strong>
+            <p className="summary-card-detail">{card.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="overview-grid overview-grid--dynamic overview-grid--equal-height">
+        <ChartPanel
+          badge={pipeline.rangeLabel}
+          className="overview-widget overview-widget--wide"
+          subtitle="Where visible leads are currently sitting"
+          title="Stage distribution"
+        >
+          <StageDistribution items={stageDistribution} />
+        </ChartPanel>
+
+        <ChartPanel
+          badge={pipeline.rangeLabel}
+          className="overview-widget overview-widget--wide overview-panel overview-panel--funnel"
+          subtitle="Pipeline progression"
+          title="Lead journey funnel"
+        >
+          <JourneyFunnel
+            activeIndex={activeFunnelIndex}
+            items={pipeline.stageMovement.nodes}
+            onActiveChange={setActiveFunnelIndex}
+            rangeKey={pipeline.rangeKey}
+          />
+        </ChartPanel>
+      </section>
+
+      <section className="overview-grid overview-grid--dynamic">
+        <ChartPanel
+          badge={pipeline.rangeLabel}
+          className="overview-widget overview-widget--wide pipeline-chart-panel"
+          subtitle="Average latency before the next touch"
+          title="Response gap by stage"
+        >
+          <ResponsiveContainer height={300} width="100%">
+            <BarChart
+              data={responseGapByStage}
+              margin={{ top: 8, right: 12, left: -12, bottom: 8 }}
+            >
+              <XAxis dataKey="label" />
+              <YAxis tickFormatter={(value) => `${value.toFixed(1)}d`} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="value" name="Days" radius={[12, 12, 4, 4]}>
+                {responseGapByStage.map((entry) => (
+                  <Cell fill={entry.color} key={entry.key} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartPanel>
+
+        <ChartPanel
+          badge={pipeline.rangeLabel}
+          className="overview-widget overview-widget--wide pipeline-chart-panel"
+          subtitle="Step-by-step advancement"
+          title="Stage completion path"
+        >
+          <CompletionCards items={completionSteps} />
+        </ChartPanel>
+      </section>
+
+      <section className="summary-card-grid summary-card-grid--signals">
         {pipeline.alerts.map((item) => (
           <article className="surface-card summary-card summary-card--compact" key={item.key}>
             <div className="summary-card-header">
@@ -235,136 +455,6 @@ export default function PipelinePage() {
           </article>
         ))}
       </section>
-
-      <section className="overview-grid overview-grid--dynamic">
-        <ChartPanel
-          badge={pipeline.rangeLabel}
-          className="overview-widget overview-widget--wide"
-          subtitle="Current stage mix"
-          title="Stage distribution"
-        >
-          <StageDistribution items={pipeline.stageDistribution} />
-        </ChartPanel>
-
-        <ChartPanel
-          badge="Operational flow"
-          className="overview-widget overview-widget--wide"
-          subtitle="Derived progression"
-          title="Stage movement"
-        >
-          <StageFlow movement={pipeline.stageMovement} />
-        </ChartPanel>
-      </section>
-
-      <section className="overview-grid overview-grid--dynamic">
-        <ChartPanel
-          badge={pipeline.rangeLabel}
-          className="overview-widget overview-widget--wide"
-          subtitle="Current dwell by stage"
-          title="Average time in stage"
-        >
-          <ResponsiveContainer height={248} width="100%">
-            <BarChart
-              data={pipeline.avgTimeInStage}
-              margin={{ top: 8, right: 12, left: -12, bottom: 8 }}
-            >
-              <XAxis dataKey="label" />
-              <YAxis />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" name="Days" radius={[12, 12, 4, 4]}>
-                {pipeline.avgTimeInStage.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
-        <ChartPanel
-          badge="Stage to next stage"
-          className="overview-widget overview-widget--wide"
-          subtitle="Advancement efficiency"
-          title="Stage completion rate"
-        >
-          <ResponsiveContainer height={248} width="100%">
-            <BarChart
-              data={pipeline.completionRate}
-              margin={{ top: 8, right: 12, left: -12, bottom: 8 }}
-            >
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="value" name="Rate" radius={[12, 12, 4, 4]}>
-                {pipeline.completionRate.map((entry) => (
-                  <Cell fill={entry.color} key={entry.key} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-      </section>
-
-      <section className="surface-card data-table-panel">
-        <div className="data-table-panel-header">
-          <div>
-            <p className="sidebar-caption">Pipeline leads</p>
-            <h2>Operational watchlist</h2>
-          </div>
-          <StatusPill tone="info">{filteredRows.length} visible</StatusPill>
-        </div>
-
-        <div className="filter-toolbar">
-          <FilterChips
-            allLabel="All stages"
-            label="Stage"
-            onChange={(value) => setFilters((current) => ({ ...current, stage: value }))}
-            options={pipeline.filterOptions.stages}
-            value={filters.stage}
-          />
-          <FilterChips
-            allLabel="All qualification"
-            label="Qualification"
-            onChange={(value) =>
-              setFilters((current) => ({ ...current, qualification: value }))
-            }
-            options={pipeline.filterOptions.qualifications}
-            value={filters.qualification}
-          />
-          <FilterChips
-            allLabel="All objections"
-            label="Objection"
-            onChange={(value) => setFilters((current) => ({ ...current, objection: value }))}
-            options={pipeline.filterOptions.objections}
-            value={filters.objection}
-          />
-          <FilterChips
-            allLabel="All booking"
-            label="Booking"
-            onChange={(value) =>
-              setFilters((current) => ({ ...current, bookingStatus: value }))
-            }
-            options={pipeline.filterOptions.bookingStatuses}
-            value={filters.bookingStatus}
-          />
-        </div>
-
-        <DataTable
-          columns={columns}
-          data={filteredRows}
-          emptyCopy="No leads match the current pipeline filters."
-          emptyTitle="No leads in this pipeline view"
-          onRowClick={(row) => setSelectedLeadId(row.id)}
-          selectedRowId={selectedLeadId}
-          sorting={sorting}
-          onSortingChange={setSorting}
-        />
-      </section>
-
-      <LeadDetailDrawer
-        lead={detail}
-        onClose={() => setSelectedLeadId('')}
-        open={Boolean(selectedLeadId)}
-      />
     </AnimatedPage>
   )
 }

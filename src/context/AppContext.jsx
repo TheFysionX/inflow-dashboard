@@ -15,6 +15,7 @@ import {
 import { demoDataset } from '../data/demoData'
 import {
   buildCustomRangeSelection,
+  DEFAULT_RANGE_PRESET,
   buildPresetRangeSelection,
   normalizeRangeSelection,
 } from '../lib/rangeSelection'
@@ -26,11 +27,13 @@ function getDefaultSession() {
   return {
     isAuthenticated: false,
     activeClientId: demoDataset.clients[0]?.id ?? '',
-    rangeSelection: buildPresetRangeSelection('30D'),
+    defaultLandingPath: '/overview',
+    defaultRangePreset: DEFAULT_RANGE_PRESET,
+    numberFormat: 'compact',
+    rangeSelection: buildPresetRangeSelection(DEFAULT_RANGE_PRESET),
     sidebarExpanded: false,
     overviewMetricSlots: [...DEFAULT_OVERVIEW_METRIC_SLOTS],
     overviewCustomizerOpen: false,
-    overviewUseCompactNumbers: true,
     overviewWidgetSlots: [...DEFAULT_OVERVIEW_WIDGET_SLOTS],
   }
 }
@@ -48,13 +51,32 @@ function getInitialSession() {
     }
 
     const parsedSession = JSON.parse(rawSession)
+    const { overviewUseCompactNumbers: legacyCompactPreference, ...restParsedSession } =
+      parsedSession
+    const normalizedRangeSelection = normalizeRangeSelection(
+      parsedSession?.rangeSelection ?? parsedSession?.dateRange,
+    )
+    const defaultRangePreset =
+      typeof parsedSession?.defaultRangePreset === 'string'
+        ? parsedSession.defaultRangePreset
+        : normalizedRangeSelection.mode === 'preset'
+          ? normalizedRangeSelection.preset
+          : DEFAULT_RANGE_PRESET
+    const numberFormat =
+      parsedSession?.numberFormat ??
+      (legacyCompactPreference === false ? 'full' : 'compact')
 
     return {
       ...getDefaultSession(),
-      ...parsedSession,
-      rangeSelection: normalizeRangeSelection(
-        parsedSession?.rangeSelection ?? parsedSession?.dateRange,
-      ),
+      ...restParsedSession,
+      defaultLandingPath:
+        typeof parsedSession?.defaultLandingPath === 'string' &&
+        parsedSession.defaultLandingPath.length
+          ? parsedSession.defaultLandingPath
+          : '/overview',
+      defaultRangePreset,
+      numberFormat,
+      rangeSelection: normalizedRangeSelection,
       overviewMetricSlots: normalizeOverviewMetricSlots(
         parsedSession?.overviewMetricSlots,
       ),
@@ -79,6 +101,8 @@ export function AppProvider({ children }) {
   }, [session])
 
   const value = useMemo(() => {
+    const useCompactNumbers = session.numberFormat !== 'full'
+
     const login = (clientId = session.activeClientId) => {
       startTransition(() => {
         setSession((current) => ({
@@ -121,6 +145,34 @@ export function AppProvider({ children }) {
         setSession((current) => ({
           ...current,
           rangeSelection: buildCustomRangeSelection(from, to),
+        }))
+      })
+    }
+
+    const setDefaultLandingPath = (defaultLandingPath) => {
+      startTransition(() => {
+        setSession((current) => ({
+          ...current,
+          defaultLandingPath,
+        }))
+      })
+    }
+
+    const setDefaultRangePreset = (defaultRangePreset) => {
+      startTransition(() => {
+        setSession((current) => ({
+          ...current,
+          defaultRangePreset,
+          rangeSelection: buildPresetRangeSelection(defaultRangePreset),
+        }))
+      })
+    }
+
+    const setNumberFormat = (numberFormat) => {
+      startTransition(() => {
+        setSession((current) => ({
+          ...current,
+          numberFormat,
         }))
       })
     }
@@ -179,7 +231,7 @@ export function AppProvider({ children }) {
       startTransition(() => {
         setSession((current) => ({
           ...current,
-          overviewUseCompactNumbers,
+          numberFormat: overviewUseCompactNumbers ? 'compact' : 'full',
         }))
       })
     }
@@ -216,19 +268,27 @@ export function AppProvider({ children }) {
       ...session,
       clients: demoDataset.clients,
       dataset: demoDataset,
+      defaultLandingPath: session.defaultLandingPath,
+      defaultRangePreset: session.defaultRangePreset,
       login,
       logout,
       setActiveClientId,
       setCustomRange,
+      setDefaultLandingPath,
+      setDefaultRangePreset,
+      setNumberFormat,
       setOverviewCustomizerOpen,
       setOverviewMetricSlot,
       setOverviewUseCompactNumbers,
       setOverviewWidgetSlot,
       setRangePreset,
       setSidebarExpanded,
+      numberFormat: session.numberFormat,
+      overviewUseCompactNumbers: useCompactNumbers,
       resetOverviewMetricSlots,
       resetOverviewWidgetSlots,
       toggleSidebar,
+      useCompactNumbers,
     }
   }, [session])
 

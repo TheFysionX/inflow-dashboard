@@ -23,7 +23,8 @@ import EmptyState from '../components/ui/EmptyState'
 import KpiCard from '../components/ui/KpiCard'
 import OptionSelect from '../components/ui/OptionSelect'
 import StatusPill from '../components/ui/StatusPill'
-import TraceLineChart from '../components/ui/TraceLineChart'
+import DualTraceLineChart from '../components/ui/DualTraceLineChart'
+import { SettingsIcon } from '../components/ui/Icons'
 import {
   buildOverviewWidgetLayout,
   getOverviewWidgetConfig,
@@ -94,6 +95,10 @@ function ActivePieShape(props) {
 }
 
 const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#b993ff', '#f49be3']
+const DEFAULT_TREND_SERIES = {
+  leadTrend: ['total_new_leads'],
+  bookingTrend: ['confirmed_calls'],
+}
 
 function getFunnelStageShare(value, baseline) {
   if (!baseline) {
@@ -101,6 +106,80 @@ function getFunnelStageShare(value, baseline) {
   }
 
   return Math.max(0, Math.min(100, (value / baseline) * 100))
+}
+
+function normalizeTrendSelection(selectedKeys, catalog, fallbackKeys) {
+  const validKeys = (selectedKeys ?? []).filter((key) => catalog.some((item) => item.key === key))
+
+  if (validKeys.length) {
+    return validKeys
+  }
+
+  return fallbackKeys.filter((key) => catalog.some((item) => item.key === key))
+}
+
+function buildTrendChartData(catalog, selectedKeys) {
+  const selectedSeries = catalog.filter((item) => selectedKeys.includes(item.key))
+
+  if (!selectedSeries.length) {
+    return { data: [], series: [] }
+  }
+
+  return {
+    data: selectedSeries[0].data.map((point, index) => ({
+      label: point.label,
+      ...Object.fromEntries(
+        selectedSeries.map((series) => [series.key, series.data[index]?.value ?? 0]),
+      ),
+    })),
+    series: selectedSeries.map((series) => ({
+      key: series.key,
+      label: series.label,
+      color: series.color,
+    })),
+  }
+}
+
+function TrendSettingsPanel({
+  title,
+  options,
+  selectedKeys,
+  onToggle,
+  onReset,
+}) {
+  return (
+    <div className="chart-settings-shell">
+      <div className="chart-settings-copy">
+        <p className="sidebar-caption">Graph settings</p>
+        <h4>{title}</h4>
+        <p>Select one or more values to compare in this chart.</p>
+      </div>
+
+      <div className="chart-settings-options">
+        {options.map((option) => {
+          const active = selectedKeys.includes(option.key)
+
+          return (
+            <button
+              className={`chart-settings-option ${active ? 'is-active' : ''}`}
+              key={option.key}
+              onClick={() => onToggle(option.key)}
+              type="button"
+            >
+              <span className="chart-settings-option-dot" style={{ '--chart-option-color': option.color }} />
+              <span>{option.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="chart-settings-actions">
+        <button className="ghost-button button-small" onClick={onReset} type="button">
+          Reset to default
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function OverviewPage() {
@@ -122,6 +201,11 @@ export default function OverviewPage() {
   } = useDashboard()
   const [activePieIndex, setActivePieIndex] = useState(null)
   const [activeFunnelIndex, setActiveFunnelIndex] = useState(null)
+  const [trendSettingsOpen, setTrendSettingsOpen] = useState({
+    leadTrend: false,
+    bookingTrend: false,
+  })
+  const [trendSelections, setTrendSelections] = useState(DEFAULT_TREND_SERIES)
 
   const overview = useMemo(
     () =>
@@ -164,6 +248,60 @@ export default function OverviewPage() {
     () => widgetLayout.filter((item) => !['leadTrend', 'bookingTrend'].includes(item.key)),
     [widgetLayout],
   )
+  const leadTrendSelection = useMemo(
+    () =>
+      normalizeTrendSelection(
+        trendSelections.leadTrend,
+        overview.leadTrendCatalog ?? [],
+        DEFAULT_TREND_SERIES.leadTrend,
+      ),
+    [overview.leadTrendCatalog, trendSelections.leadTrend],
+  )
+  const bookingTrendSelection = useMemo(
+    () =>
+      normalizeTrendSelection(
+        trendSelections.bookingTrend,
+        overview.bookingTrendCatalog ?? [],
+        DEFAULT_TREND_SERIES.bookingTrend,
+      ),
+    [overview.bookingTrendCatalog, trendSelections.bookingTrend],
+  )
+  const leadTrendChart = useMemo(
+    () => buildTrendChartData(overview.leadTrendCatalog ?? [], leadTrendSelection),
+    [leadTrendSelection, overview.leadTrendCatalog],
+  )
+  const bookingTrendChart = useMemo(
+    () => buildTrendChartData(overview.bookingTrendCatalog ?? [], bookingTrendSelection),
+    [bookingTrendSelection, overview.bookingTrendCatalog],
+  )
+
+  function toggleTrendSetting(widgetKey) {
+    setTrendSettingsOpen((current) => ({
+      ...current,
+      [widgetKey]: !current[widgetKey],
+    }))
+  }
+
+  function toggleTrendSeries(widgetKey, metricKey) {
+    setTrendSelections((current) => {
+      const activeKeys = current[widgetKey] ?? DEFAULT_TREND_SERIES[widgetKey] ?? []
+      const nextKeys = activeKeys.includes(metricKey)
+        ? activeKeys.filter((key) => key !== metricKey)
+        : [...activeKeys, metricKey]
+
+      return {
+        ...current,
+        [widgetKey]: nextKeys.length ? nextKeys : activeKeys,
+      }
+    })
+  }
+
+  function resetTrendSeries(widgetKey) {
+    setTrendSelections((current) => ({
+      ...current,
+      [widgetKey]: [...(DEFAULT_TREND_SERIES[widgetKey] ?? [])],
+    }))
+  }
 
   function renderWidget(layoutItem, slotIndex) {
     const widgetKey = layoutItem.key
@@ -295,17 +433,30 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/leads')}
+          onToolAction={() => toggleTrendSetting('leadTrend')}
           style={widgetStyle}
           subtitle="New lead intake"
+          toolIcon={<SettingsIcon size={16} />}
+          toolLabel="Configure lead trend"
           title="Lead volume trend"
         >
-          <TraceLineChart
-            color="var(--accent-blue)"
-            data={overview.leadTrend}
-            formatValue={(value) => `${value} leads`}
-            height={290}
-            lineKey={`${rangeKey}-lead`}
-          />
+          {trendSettingsOpen.leadTrend ? (
+            <TrendSettingsPanel
+              onReset={() => resetTrendSeries('leadTrend')}
+              onToggle={(metricKey) => toggleTrendSeries('leadTrend', metricKey)}
+              options={overview.leadTrendCatalog ?? []}
+              selectedKeys={leadTrendSelection}
+              title="Lead volume trend"
+            />
+          ) : (
+            <DualTraceLineChart
+              data={leadTrendChart.data}
+              height={290}
+              lineKey={`${rangeKey}-lead-${leadTrendSelection.join('-')}`}
+              series={leadTrendChart.series}
+              yTickCount={5}
+            />
+          )}
         </ChartPanel>
       )
     }
@@ -319,17 +470,30 @@ export default function OverviewPage() {
           index={slotIndex}
           key={`widget-${slotIndex}-${widgetKey}-${rangeKey}`}
           onAction={() => navigate('/bookings')}
+          onToolAction={() => toggleTrendSetting('bookingTrend')}
           style={widgetStyle}
           subtitle="Confirmed bookings"
+          toolIcon={<SettingsIcon size={16} />}
+          toolLabel="Configure booking trend"
           title="Booking trend"
         >
-          <TraceLineChart
-            color="var(--accent-pink)"
-            data={overview.bookingTrend}
-            formatValue={(value) => `${value} calls`}
-            height={290}
-            lineKey={`${rangeKey}-booking`}
-          />
+          {trendSettingsOpen.bookingTrend ? (
+            <TrendSettingsPanel
+              onReset={() => resetTrendSeries('bookingTrend')}
+              onToggle={(metricKey) => toggleTrendSeries('bookingTrend', metricKey)}
+              options={overview.bookingTrendCatalog ?? []}
+              selectedKeys={bookingTrendSelection}
+              title="Booking trend"
+            />
+          ) : (
+            <DualTraceLineChart
+              data={bookingTrendChart.data}
+              height={290}
+              lineKey={`${rangeKey}-booking-${bookingTrendSelection.join('-')}`}
+              series={bookingTrendChart.series}
+              yTickCount={5}
+            />
+          )}
         </ChartPanel>
       )
     }

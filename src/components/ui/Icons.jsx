@@ -105,6 +105,15 @@ export function SearchIcon(props) {
   )
 }
 
+export function ArrowRightIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 12h12" />
+      <path d="m13 8 4 4-4 4" />
+    </IconBase>
+  )
+}
+
 export function CloseIcon(props) {
   return (
     <IconBase {...props}>
@@ -157,6 +166,15 @@ export function MenuDotsIcon(props) {
       <circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    </IconBase>
+  )
+}
+
+export function SettingsIcon(props) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19 12a7 7 0 0 0-.1-1l2-1.4-2-3.4-2.3.7a7.8 7.8 0 0 0-1.7-1L14.6 3h-5.2l-.3 2.9a7.8 7.8 0 0 0-1.7 1L5 6.2l-2 3.4L5 11a7 7 0 0 0 0 2L3 14.4l2 3.4 2.4-.7a7.8 7.8 0 0 0 1.7 1l.3 2.9h5.2l.3-2.9a7.8 7.8 0 0 0 1.7-1l2.3.7 2-3.4-2-1.4c.1-.3.1-.7.1-1Z" />
     </IconBase>
   )
 }

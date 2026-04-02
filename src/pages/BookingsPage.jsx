@@ -11,7 +11,7 @@ import TraceLineChart from '../components/ui/TraceLineChart'
 import { useDashboard } from '../context/AppContext'
 import { getBookingsModel, getLeadDetailModel } from '../data/selectors'
 
-const funnelColors = ['#74c7ff', '#8f6dff', '#f49be3', '#b6a1ff']
+const funnelColors = ['#74c7ff', '#8f6dff', '#f49be3']
 
 function StandardTooltip({ active, payload, label }) {
   if (!active || !payload?.length) {
@@ -229,7 +229,7 @@ export default function BookingsPage() {
           className="overview-widget overview-widget--wide overview-panel overview-panel--funnel"
           index={0}
           style={{ '--overview-span': 6 }}
-          subtitle="Intent through attended calls"
+          subtitle="Proposed slots through attended calls"
           title="Booking funnel"
         >
           <BookingFunnel

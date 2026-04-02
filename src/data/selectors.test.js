@@ -230,7 +230,8 @@ describe('objections and bookings selectors', () => {
     const serialized = JSON.stringify(bookings)
 
     expect(bookings.summaryCards).toHaveLength(4)
-    expect(bookings.funnelSeries).toHaveLength(4)
+    expect(bookings.funnelSeries).toHaveLength(3)
+    expect(bookings.funnelSeries[0]?.stage).toBe('Proposed')
     expect(bookings.funnelSeries.at(-1)?.value).toBeLessThanOrEqual(
       bookings.funnelSeries.at(-2)?.value ?? 0,
     )

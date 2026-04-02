@@ -3104,13 +3104,6 @@ function buildMostExpensiveBlocker(records) {
 function buildBookingFunnelSeries(dailyFacts, window) {
   const rawStages = [
     {
-      stage: 'Intent',
-      value:
-        sumDailyField(dailyFacts, window, 'booking_intent_yes') +
-        sumDailyField(dailyFacts, window, 'booking_intent_maybe'),
-      routePath: '/bookings',
-    },
-    {
       stage: 'Proposed',
       value: sumDailyField(dailyFacts, window, 'proposed_calls'),
       routePath: '/bookings',

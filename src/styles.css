@@ -605,7 +605,7 @@ p {
 .sidebar-link {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
-  gap: 16px;
+  gap: 20px;
   align-items: center;
   min-height: 64px;
   padding: 12px;

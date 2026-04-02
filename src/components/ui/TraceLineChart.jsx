@@ -65,8 +65,8 @@ function buildAxisScale(values, tickCount) {
   const rawMin = Math.min(...numericValues)
   const rawMax = Math.max(...numericValues)
   const rawRange = Math.max(rawMax - rawMin, Math.abs(rawMax || rawMin || 1) * 0.18, 1)
-  const bottomBuffer = rawRange * 0.24
-  const topBuffer = rawRange * 0.12
+  const bottomBuffer = rawRange * 0.32
+  const topBuffer = rawRange * 0.08
 
   let targetMin = rawMin - bottomBuffer
   const targetMax = rawMax + topBuffer

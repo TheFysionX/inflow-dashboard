@@ -57,11 +57,6 @@ export const navigationItems = [
   },
 ]
 
-export const demoCredentials = {
-  email: 'demo@inflowai.net',
-  password: 'inflow-demo',
-}
-
 export const overviewRangeOptions = [
   '7D',
   '30D',

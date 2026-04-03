@@ -1,14 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { brandConfig, demoCredentials } from '../../config/navigation'
+import { brandConfig } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
 import { ChevronIcon, SettingsIcon } from '../ui/Icons'
 import SignOutConfirmModal from '../ui/SignOutConfirmModal'
 
 export default function ProfileMenu() {
   const navigate = useNavigate()
-  const { logout } = useDashboard()
+  const { currentAccount, logout } = useDashboard()
   const [open, setOpen] = useState(false)
   const [confirmingSignOut, setConfirmingSignOut] = useState(false)
   const menuRef = useRef(null)
@@ -37,10 +37,10 @@ export default function ProfileMenu() {
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        <div className="avatar-badge">IN</div>
+        <div className="avatar-badge">{currentAccount.initials}</div>
         <div className="profile-button-copy">
           <strong>{brandConfig.name}</strong>
-          <span>{demoCredentials.email}</span>
+          <span>{currentAccount.email}</span>
         </div>
         <ChevronIcon direction={open ? 'up' : 'down'} size={16} />
       </button>
@@ -56,7 +56,7 @@ export default function ProfileMenu() {
           >
             <div className="profile-dropdown-info">
               <span>Signed in as</span>
-              <strong>{demoCredentials.email}</strong>
+              <strong>{currentAccount.email}</strong>
             </div>
             <motion.button
               className="profile-dropdown-row"

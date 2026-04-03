@@ -11,10 +11,10 @@ import {
 } from './overviewSupplement'
 import {
   brandConfig,
-  demoCredentials,
   navigationItems,
   overviewRangeOptions,
 } from '../config/navigation'
+import { primaryDemoAccess } from '../config/demoAccess'
 import {
   DEFAULT_OVERVIEW_METRIC_SLOTS,
   getWidgetOptionState,
@@ -3965,8 +3965,8 @@ export function getSettingsModel(appState, clientId, availableMetrics = []) {
       numberFormat: appState?.numberFormat ?? 'compact',
     },
     sessionAccount: {
-      email: demoCredentials.email,
-      brandLabel: brandConfig.name,
+      email: appState?.currentAccount?.email ?? primaryDemoAccess.email,
+      brandLabel: appState?.currentAccount?.displayName ?? brandConfig.name,
     },
   }
 }

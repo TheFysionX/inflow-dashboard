@@ -19,6 +19,10 @@ import {
   buildPresetRangeSelection,
   normalizeRangeSelection,
 } from '../lib/rangeSelection'
+import {
+  getDemoAccessAccountById,
+  primaryDemoAccess,
+} from '../config/demoAccess'
 
 const DashboardContext = createContext(null)
 const SESSION_KEY = 'inflow.dashboard.session.v7'
@@ -27,6 +31,7 @@ function getDefaultSession() {
   return {
     isAuthenticated: false,
     activeClientId: demoDataset.clients[0]?.id ?? '',
+    activeAccountId: primaryDemoAccess.id,
     defaultLandingPath: '/overview',
     defaultRangePreset: DEFAULT_RANGE_PRESET,
     numberFormat: 'compact',
@@ -69,6 +74,7 @@ function getInitialSession() {
     return {
       ...getDefaultSession(),
       ...restParsedSession,
+      activeAccountId: getDemoAccessAccountById(parsedSession?.activeAccountId).id,
       defaultLandingPath:
         typeof parsedSession?.defaultLandingPath === 'string' &&
         parsedSession.defaultLandingPath.length
@@ -102,12 +108,17 @@ export function AppProvider({ children }) {
 
   const value = useMemo(() => {
     const useCompactNumbers = session.numberFormat !== 'full'
+    const currentAccount = getDemoAccessAccountById(session.activeAccountId)
 
-    const login = (clientId = session.activeClientId) => {
+    const login = ({
+      accountId = session.activeAccountId,
+      clientId = session.activeClientId,
+    } = {}) => {
       startTransition(() => {
         setSession((current) => ({
           ...current,
           isAuthenticated: true,
+          activeAccountId: getDemoAccessAccountById(accountId).id,
           activeClientId: clientId || current.activeClientId,
         }))
       })
@@ -267,6 +278,7 @@ export function AppProvider({ children }) {
     return {
       ...session,
       clients: demoDataset.clients,
+      currentAccount,
       dataset: demoDataset,
       defaultLandingPath: session.defaultLandingPath,
       defaultRangePreset: session.defaultRangePreset,

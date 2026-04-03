@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const {
     activeClientId,
     clients,
+    currentAccount,
     dataset,
     defaultLandingPath,
     defaultRangePreset,
@@ -40,6 +41,7 @@ export default function SettingsPage() {
       getSettingsModel(
         {
           clients,
+          currentAccount,
           defaultLandingPath,
           defaultRangePreset,
           numberFormat,
@@ -53,6 +55,7 @@ export default function SettingsPage() {
     [
       activeClientId,
       clients,
+      currentAccount,
       defaultLandingPath,
       defaultRangePreset,
       numberFormat,

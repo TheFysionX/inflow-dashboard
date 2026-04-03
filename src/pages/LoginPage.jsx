@@ -3,27 +3,27 @@ import { useState } from 'react'
 import Lottie from 'lottie-react'
 import { useNavigate } from 'react-router-dom'
 import inflowHeaderAnimation from '../assets/inflowai_header_cropped_720.json'
-import { demoCredentials } from '../config/navigation'
+import { resolveDemoAccessAccount } from '../config/demoAccess'
 import { useDashboard } from '../context/AppContext'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { login } = useDashboard()
-  const [email, setEmail] = useState('')
+  const { defaultLandingPath, login } = useDashboard()
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
   function handleLogin() {
-    if (
-      email.trim().toLowerCase() !== demoCredentials.email ||
-      password !== demoCredentials.password
-    ) {
-      setError('Use the provided credentials to continue.')
+    const account = resolveDemoAccessAccount(identifier, password)
+
+    if (!account) {
+      setError('That login key does not match this demo environment.')
       return
     }
 
-    login()
-    navigate('/overview')
+    setError('')
+    login({ accountId: account.id })
+    navigate(defaultLandingPath || '/overview')
   }
 
   return (
@@ -43,11 +43,16 @@ export default function LoginPage() {
         <label className="field field--minimal">
           <span>Username or email</span>
           <input
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="demo@inflowai.net"
+            onChange={(event) => setIdentifier(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                handleLogin()
+              }
+            }}
+            placeholder="Enter your username or email"
             spellCheck="false"
-            type="email"
-            value={email}
+            type="text"
+            value={identifier}
           />
         </label>
 
@@ -55,16 +60,16 @@ export default function LoginPage() {
           <span>Password</span>
           <input
             onChange={(event) => setPassword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                handleLogin()
+              }
+            }}
             placeholder="Enter your password"
             type="password"
             value={password}
           />
         </label>
-
-        <div className="login-note">
-          Access for this environment: <strong>{demoCredentials.email}</strong> /{' '}
-          <strong>{demoCredentials.password}</strong>
-        </div>
 
         {error ? <p className="form-error">{error}</p> : null}
 

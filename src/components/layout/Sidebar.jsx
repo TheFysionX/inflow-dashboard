@@ -4,10 +4,12 @@ import { NavLink } from 'react-router-dom'
 import inflowLogo from '../../assets/inflow-logo.png'
 import { navigationItems } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
+import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ChevronIcon, NavIcon } from '../ui/Icons'
 
 export default function Sidebar() {
   const { sidebarExpanded, toggleSidebar } = useDashboard()
+  const navigate = useDashboardNavigate()
   const prefersReducedMotion = useReducedMotion()
   const [labelsVisible, setLabelsVisible] = useState(sidebarExpanded)
 
@@ -53,6 +55,20 @@ export default function Sidebar() {
                   `sidebar-link ${isActive ? 'sidebar-link--active' : ''}`
                 }
                 key={item.path}
+                onClick={(event) => {
+                  if (
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.altKey ||
+                    event.ctrlKey ||
+                    event.shiftKey
+                  ) {
+                    return
+                  }
+
+                  event.preventDefault()
+                  navigate(item.path)
+                }}
                 to={item.path}
                 title={item.label}
               >

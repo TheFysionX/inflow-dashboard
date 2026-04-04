@@ -58,8 +58,8 @@ const sectionEntries = [
     title: 'Overview summary',
     path: '/overview',
     sectionId: 'overview-summary',
-    description: 'Executive summary and weekly headline',
-    keywords: ['weekly in inflow', 'headline', 'summary'],
+    description: 'Mission-control summary and weekly headline',
+    keywords: ['mission control', 'weekly in inflow', 'headline', 'summary'],
   }),
   createEntry({
     id: 'overview-kpis',
@@ -75,7 +75,7 @@ const sectionEntries = [
     path: '/pipeline',
     sectionId: 'pipeline-summary',
     description: 'Pipeline headline statistics',
-    keywords: ['pipeline leads', 'qualified leads', 'needs attention', 'confirmed calls'],
+    keywords: ['pipeline leads', 'in desired stage', 'needs attention', 'avg response gap'],
   }),
   createEntry({
     id: 'pipeline-filters',
@@ -123,7 +123,7 @@ const sectionEntries = [
     path: '/leads',
     sectionId: 'leads-summary',
     description: 'Lead database headline metrics',
-    keywords: ['leads in view', 'qualified', 'confirmed', 'needs attention'],
+    keywords: ['leads in view', 'qualified', 'booking intent', 'needs attention'],
   }),
   createEntry({
     id: 'leads-quality',
@@ -151,11 +151,11 @@ const sectionEntries = [
   }),
   createEntry({
     id: 'leads-commitment',
-    title: 'Commitment mix',
+    title: 'Source bucket mix',
     path: '/leads',
-    sectionId: 'leads-commitment-mix',
-    description: 'Readiness',
-    keywords: ['commitment', 'readiness'],
+    sectionId: 'leads-source-bucket-mix',
+    description: 'Where leads are coming from',
+    keywords: ['source bucket', 'lead sources', 'paid', 'organic', 'referral', 'outbound'],
   }),
   createEntry({
     id: 'leads-database',
@@ -171,7 +171,7 @@ const sectionEntries = [
     path: '/conversations',
     sectionId: 'conversations-summary',
     description: 'Conversation KPI row',
-    keywords: ['active threads', 'avg messages', 'avg first reply', 'avg reply gap', 'thread close rate'],
+    keywords: ['active threads', 'unhealthy threads', 'avg first reply', 'avg reply gap', 'thread close rate'],
   }),
   createEntry({
     id: 'conversations-volume',
@@ -251,7 +251,7 @@ const sectionEntries = [
     path: '/bookings',
     sectionId: 'bookings-summary',
     description: 'Booking KPI row',
-    keywords: ['confirmed calls', 'booking rate', 'show rate', 'no-show rate'],
+    keywords: ['confirmed calls', 'booking rate', 'show rate', 'at-risk bookings'],
   }),
   createEntry({
     id: 'bookings-funnel',
@@ -374,6 +374,14 @@ const sectionEntries = [
     keywords: ['overview defaults', 'homepage defaults', 'default kpis', 'default widgets'],
   }),
   createEntry({
+    id: 'settings-metric-definitions',
+    title: 'Metric definitions',
+    path: '/settings',
+    sectionId: 'settings-metric-definitions',
+    description: 'Definitions for configurable dashboard metrics',
+    keywords: ['metric definitions', 'metric glossary', 'kpi definitions'],
+  }),
+  createEntry({
     id: 'settings-display',
     title: 'Display preferences',
     path: '/settings',
@@ -394,6 +402,8 @@ const sectionEntries = [
 const metricEntries = [
   ['Total Leads', '/leads', 'leads-summary', ['lead count', 'new leads']],
   ['Pipeline Leads', '/pipeline', 'pipeline-summary', ['pipeline lead count']],
+  ['In Desired Stage', '/pipeline', 'pipeline-summary', ['desired stage']],
+  ['Avg Response Gap', '/pipeline', 'pipeline-summary', ['response gap', 'latency']],
   ['Open Threads', '/conversations', 'conversations-summary', ['open conversations', 'threads']],
   ['Qualified Leads', '/leads', 'leads-summary', ['qualified']],
   ['Unqualified Leads', '/leads', 'leads-summary', ['unqualified']],
@@ -403,7 +413,7 @@ const metricEntries = [
   ['Reply Quality', '/performance', 'performance-summary', ['avg reply quality']],
   ['First Reply Time', '/conversations', 'conversations-summary', ['avg first reply']],
   ['Reply Gap', '/conversations', 'conversations-summary', ['avg reply gap', 'reply latency']],
-  ['Messages / Lead', '/conversations', 'conversations-summary', ['average messages']],
+  ['Unhealthy Threads', '/conversations', 'conversations-summary', ['needs review', 'guardrail touched']],
   ['Thread Close Rate', '/conversations', 'conversations-summary', ['close rate']],
   ['Needs Attention', '/pipeline', 'pipeline-summary', ['attention']],
   ['Upcoming Calls', '/bookings', 'bookings-upcoming', ['upcoming bookings']],
@@ -435,9 +445,10 @@ const SEARCH_ENTRIES = [...pageEntries, ...sectionEntries, ...metricEntries]
 export const quickSearchEntries = [
   pageEntries.find((item) => item.path === '/overview'),
   pageEntries.find((item) => item.path === '/pipeline'),
-  pageEntries.find((item) => item.path === '/leads'),
   pageEntries.find((item) => item.path === '/conversations'),
   pageEntries.find((item) => item.path === '/bookings'),
+  pageEntries.find((item) => item.path === '/objections'),
+  pageEntries.find((item) => item.path === '/leads'),
   pageEntries.find((item) => item.path === '/settings'),
 ].filter(Boolean)
 

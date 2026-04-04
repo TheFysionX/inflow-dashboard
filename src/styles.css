@@ -2,8 +2,8 @@
 
 :root {
   --font-body: 'Poppins', 'Segoe UI', sans-serif;
-  --color-bg: #0b0c16;
-  --color-bg-deep: #06070f;
+  --color-bg: #0a0f18;
+  --color-bg-deep: #05070d;
   --color-surface: rgba(14, 16, 30, 0.78);
   --color-surface-strong: rgba(16, 18, 34, 0.92);
   --color-surface-soft: rgba(255, 255, 255, 0.04);
@@ -94,10 +94,11 @@ body {
   font-family: var(--font-body);
   color: var(--color-text);
   background:
-    radial-gradient(circle at top left, rgba(143, 109, 255, 0.24), transparent 26%),
-    radial-gradient(circle at top right, rgba(116, 199, 255, 0.22), transparent 24%),
-    radial-gradient(circle at 25% 80%, rgba(244, 155, 227, 0.17), transparent 24%),
-    linear-gradient(155deg, #05060d 0%, #0a0b16 36%, #121427 100%);
+    radial-gradient(110% 88% at 50% -12%, rgba(143, 109, 255, 0.12), transparent 36%),
+    radial-gradient(82% 66% at 14% 22%, rgba(116, 199, 255, 0.13), transparent 42%),
+    radial-gradient(76% 60% at 88% 18%, rgba(244, 155, 227, 0.12), transparent 40%),
+    radial-gradient(90% 82% at 52% 92%, rgba(143, 109, 255, 0.14), transparent 46%),
+    linear-gradient(180deg, #05070c 0%, #09111a 42%, #0f1724 100%);
 }
 
 body::before {
@@ -105,11 +106,39 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(circle at center, black 45%, transparent 92%);
+  background:
+    linear-gradient(
+      116deg,
+      transparent 0 20%,
+      rgba(116, 199, 255, 0.05) 34%,
+      rgba(143, 109, 255, 0.018) 40%,
+      transparent 48%,
+      rgba(244, 155, 227, 0.04) 62%,
+      transparent 74%
+    ),
+    linear-gradient(
+      246deg,
+      transparent 0 18%,
+      rgba(244, 155, 227, 0.04) 38%,
+      rgba(143, 109, 255, 0.02) 46%,
+      transparent 56%,
+      rgba(116, 199, 255, 0.035) 72%,
+      transparent 84%
+    );
+  opacity: 0.88;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(143, 109, 255, 0.08), transparent 12%, transparent 100%),
+    radial-gradient(circle at 50% 6%, rgba(116, 199, 255, 0.08), transparent 18%),
+    radial-gradient(circle at 32% 34%, rgba(116, 199, 255, 0.05), transparent 24%),
+    radial-gradient(circle at 72% 30%, rgba(244, 155, 227, 0.05), transparent 22%);
+  opacity: 0.8;
 }
 
 button,
@@ -464,12 +493,14 @@ p {
 }
 
 .dashboard-main {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
 .dashboard-content {
+  position: relative;
   padding: 20px 24px 32px;
 }
 
@@ -1159,6 +1190,226 @@ p {
 .page-stack {
   display: grid;
   gap: 18px;
+}
+
+.route-loader-shell {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 24px;
+  min-height: clamp(360px, calc(100vh - 140px), 560px);
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.route-loader-shell--overlay {
+  min-height: 100%;
+  padding: 48px 24px;
+}
+
+.route-loader-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.route-loader-copy .sidebar-caption {
+  margin-bottom: 0;
+}
+
+.route-loader-copy h2 {
+  font-size: clamp(1.38rem, 2.5vw, 1.92rem);
+  font-weight: 700;
+}
+
+.route-loader-geometry {
+  position: relative;
+  width: min(332px, 62vw);
+  filter: drop-shadow(0 28px 56px rgba(13, 18, 34, 0.42));
+}
+
+.dashboard-route-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(8, 11, 20, 0.82), rgba(8, 11, 20, 0.74)),
+    radial-gradient(circle at 50% 18%, rgba(116, 199, 255, 0.07), transparent 24%),
+    radial-gradient(circle at 50% 84%, rgba(143, 109, 255, 0.08), transparent 26%);
+  backdrop-filter: blur(10px);
+}
+
+.route-loader-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  isolation: isolate;
+}
+
+.route-loader-frame,
+.route-loader-core,
+.route-loader-core-shell,
+.route-loader-beam {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  will-change: transform, opacity;
+}
+
+.route-loader-frame {
+  width: var(--route-loader-size);
+  height: var(--route-loader-size);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: rgba(255, 255, 255, 0.012);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.015),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.route-loader-frame::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid transparent;
+  border-image: linear-gradient(135deg, rgba(116, 199, 255, 0.75), rgba(143, 109, 255, 0.58), rgba(244, 155, 227, 0.72)) 1;
+  opacity: 0.56;
+}
+
+.route-loader-frame--outer {
+  --route-loader-size: 208px;
+  animation: route-loader-rotate-outer 3.6s linear infinite;
+}
+
+.route-loader-frame--middle {
+  --route-loader-size: 146px;
+  animation: route-loader-rotate-middle 2.8s linear infinite reverse;
+}
+
+.route-loader-frame--inner {
+  --route-loader-size: 88px;
+  animation: route-loader-pulse-inner 1.6s ease-in-out infinite;
+}
+
+.route-loader-beam {
+  width: 214px;
+  height: 2px;
+  transform-origin: center;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16) 18%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0.16) 82%, transparent);
+  opacity: 0.54;
+}
+
+.route-loader-beam--horizontal {
+  transform: translate(-50%, -50%);
+  animation: route-loader-beam-fade 1.8s ease-in-out infinite;
+}
+
+.route-loader-beam--diag-left {
+  transform: translate(-50%, -50%) rotate(60deg);
+  animation: route-loader-beam-fade 1.8s ease-in-out infinite 0.6s;
+}
+
+.route-loader-beam--diag-right {
+  transform: translate(-50%, -50%) rotate(-60deg);
+  animation: route-loader-beam-fade 1.8s ease-in-out infinite 1.2s;
+}
+
+.route-loader-core-shell,
+.route-loader-core {
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+@keyframes route-loader-core-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.92);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.06);
+  }
+}
+
+.route-loader-core-shell {
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.02);
+  animation: route-loader-core-shell 1.8s ease-in-out infinite;
+}
+
+.route-loader-core {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.06);
+  animation: route-loader-core-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes route-loader-rotate-outer {
+  from {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(405deg);
+  }
+}
+
+@keyframes route-loader-rotate-middle {
+  from {
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.98);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(-315deg) scale(0.98);
+  }
+}
+
+@keyframes route-loader-pulse-inner {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.94);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-beam-fade {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+
+  50% {
+    opacity: 0.86;
+  }
+}
+
+@keyframes route-loader-core-shell {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.16);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loader-frame,
+  .route-loader-beam,
+  .route-loader-core-shell,
+  .route-loader-core {
+    animation: none !important;
+  }
 }
 
 .overview-toolbar,
@@ -2647,6 +2898,12 @@ p {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.data-table-row.is-clickable:focus-visible td {
+  background: rgba(143, 109, 255, 0.08);
+  outline: 1px solid rgba(143, 109, 255, 0.26);
+  outline-offset: -1px;
+}
+
 .data-table-row.is-selected td {
   background: rgba(143, 109, 255, 0.05);
 }
@@ -3201,6 +3458,12 @@ p {
   gap: 10px;
 }
 
+.trace-chart-shell:focus-visible {
+  outline: 1px solid rgba(143, 109, 255, 0.28);
+  outline-offset: 8px;
+  border-radius: 20px;
+}
+
 .trace-chart-meta {
   display: flex;
   justify-content: space-between;
@@ -3282,6 +3545,40 @@ p {
   }
 }
 
+@keyframes login-ribbon-drift {
+  0% {
+    transform: translate3d(-3%, -2%, 0) rotate(-6deg) scale(1);
+    opacity: 0.64;
+  }
+
+  50% {
+    transform: translate3d(1%, 1%, 0) rotate(-2deg) scale(1.03);
+    opacity: 0.78;
+  }
+
+  100% {
+    transform: translate3d(3%, 2%, 0) rotate(2deg) scale(1.06);
+    opacity: 0.68;
+  }
+}
+
+@keyframes login-ribbon-shift {
+  0% {
+    transform: translate3d(4%, -2%, 0) rotate(7deg) scale(1);
+    opacity: 0.38;
+  }
+
+  50% {
+    transform: translate3d(-1%, 1%, 0) rotate(3deg) scale(1.04);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translate3d(-4%, 2%, 0) rotate(-1deg) scale(1.08);
+    opacity: 0.42;
+  }
+}
+
 .login-shell {
   position: relative;
   display: grid;
@@ -3290,31 +3587,69 @@ p {
   align-items: center;
   min-height: 100vh;
   padding: 28px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(140deg, rgba(8, 12, 22, 0.9), rgba(10, 14, 24, 0.78)),
+    radial-gradient(circle at 18% 18%, rgba(116, 199, 255, 0.07), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(244, 155, 227, 0.07), transparent 22%),
+    radial-gradient(circle at 50% 82%, rgba(143, 109, 255, 0.09), transparent 28%);
 }
 
 .login-shell::before,
 .login-shell::after {
   content: '';
   position: absolute;
-  border-radius: 999px;
-  filter: blur(90px);
   pointer-events: none;
+  inset: -16%;
+  will-change: transform, opacity;
 }
 
 .login-shell::before {
-  top: 10%;
-  left: 6%;
-  width: 280px;
-  height: 280px;
-  background: rgba(143, 109, 255, 0.18);
+  background:
+    linear-gradient(
+      118deg,
+      transparent 0 18%,
+      rgba(116, 199, 255, 0.2) 30%,
+      rgba(143, 109, 255, 0.26) 45%,
+      rgba(244, 155, 227, 0.18) 58%,
+      transparent 74%
+    ),
+    linear-gradient(
+      148deg,
+      transparent 0 44%,
+      rgba(255, 255, 255, 0.05) 52%,
+      transparent 62%
+    );
+  filter: blur(72px);
+  opacity: 0.72;
+  animation: login-ribbon-drift 18s ease-in-out infinite alternate;
 }
 
 .login-shell::after {
-  right: 10%;
-  bottom: 10%;
-  width: 260px;
-  height: 260px;
-  background: rgba(116, 199, 255, 0.18);
+  background:
+    linear-gradient(
+      292deg,
+      transparent 0 16%,
+      rgba(244, 155, 227, 0.12) 30%,
+      rgba(143, 109, 255, 0.18) 44%,
+      rgba(116, 199, 255, 0.12) 56%,
+      transparent 72%
+    ),
+    linear-gradient(
+      316deg,
+      transparent 0 48%,
+      rgba(255, 255, 255, 0.035) 56%,
+      transparent 66%
+    );
+  filter: blur(84px);
+  opacity: 0.46;
+  animation: login-ribbon-shift 15s ease-in-out infinite alternate;
+}
+
+.login-shell > * {
+  position: relative;
+  z-index: 1;
 }
 
 .login-hero {
@@ -3326,18 +3661,22 @@ p {
 }
 
 .login-brand {
-  display: block;
+  display: grid;
+  justify-items: center;
   width: min(100%, 820px);
 }
 
-.login-hero > p:last-of-type {
-  width: min(100%, 760px);
-  max-width: 18ch;
-  color: var(--color-text-soft);
-  line-height: 1.7;
-  font-size: 1.02rem;
-  font-weight: 600;
-  text-align: left;
+.login-subtitle {
+  width: 100%;
+  max-width: 820px;
+  color: rgba(247, 247, 251, 0.96);
+  line-height: 1.1;
+  font-size: clamp(1.14rem, 1.6vw, 1.42rem);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 10px 26px rgba(143, 109, 255, 0.18);
+  text-align: center;
 }
 
 .login-lottie {
@@ -3784,6 +4123,27 @@ p {
   color: rgba(247, 247, 251, 0.66);
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+.settings-definition-groups {
+  display: grid;
+  gap: 22px;
+}
+
+.settings-definition-group {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-definition-header h4 {
+  font-size: 1rem;
+}
+
+.settings-definition-grid strong {
+  color: rgba(247, 247, 251, 0.72);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
 .settings-section-actions {

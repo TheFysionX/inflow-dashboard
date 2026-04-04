@@ -102,13 +102,25 @@ export default function DataTable({
           <tbody>
             {rows.map((row) => (
               <tr
+                aria-selected={row.original.id === selectedRowId}
                 className={`data-table-row ${
                   onRowClick ? 'is-clickable' : ''
                 } ${
                   row.original.id === selectedRowId ? 'is-selected' : ''
                 }`}
                 key={row.id}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onRowClick(row.original)
+                      }
+                    }
+                    : undefined
+                }
                 onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>

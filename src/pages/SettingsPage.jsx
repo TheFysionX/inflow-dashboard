@@ -42,6 +42,7 @@ export default function SettingsPage() {
         {
           clients,
           currentAccount,
+          dataset,
           defaultLandingPath,
           defaultRangePreset,
           numberFormat,
@@ -49,13 +50,14 @@ export default function SettingsPage() {
           overviewUseCompactNumbers,
           overviewWidgetSlots,
         },
-        activeClientId,
-        overview.availableMetrics,
-      ),
+          activeClientId,
+          overview.availableMetrics,
+        ),
     [
       activeClientId,
       clients,
       currentAccount,
+      dataset,
       defaultLandingPath,
       defaultRangePreset,
       numberFormat,
@@ -169,6 +171,10 @@ export default function SettingsPage() {
             </button>
           </div>
 
+          <p className="settings-panel-note">
+            Homepage KPI and graph personalization now lives here so the Overview page stays focused on live operations.
+          </p>
+
           <div className="overview-customizer-section">
             <h4>KPI slots</h4>
             <div className="overview-customizer-grid">
@@ -199,6 +205,36 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </ChartPanel>
+        </section>
+
+        <section className="overview-grid overview-grid--dynamic">
+        <ChartPanel
+          badge={settings.freshness.shortLabel}
+          className="overview-widget overview-widget--wide"
+          index={2}
+          sectionId="settings-metric-definitions"
+          style={{ '--overview-span': 12 }}
+          subtitle="Reference copy"
+          title="Metric definitions"
+        >
+          <div className="settings-definition-groups">
+            {settings.metricDefinitions.map((group) => (
+              <div className="settings-definition-group" key={group.pageLabel}>
+                <div className="settings-definition-header">
+                  <h4>{group.pageLabel}</h4>
+                </div>
+                <div className="detail-card-grid settings-definition-grid">
+                  {group.metrics.map((metric) => (
+                    <div className="detail-card" key={metric.key ?? metric.value}>
+                      <span>{metric.label}</span>
+                      <strong>{metric.detail ?? 'Available as a configurable dashboard metric.'}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </ChartPanel>
         </section>

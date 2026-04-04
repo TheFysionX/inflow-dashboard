@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRightIcon } from './Icons'
+import { getChartKeyboardState } from '../../lib/chartNavigation'
 
 function buildSmoothPath(points) {
   if (!points.length) {
@@ -446,6 +447,10 @@ export default function TraceLineChart({
   )
   const gradientStops = useMemo(() => getGradientStops(color, lineKey), [color, lineKey])
   const hoverDotStops = useMemo(() => getHoverDotStops(color), [color])
+  const instructionsId = useMemo(
+    () => `trace-chart-instructions-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
+    [lineKey],
+  )
   const selectionSummary = useMemo(() => {
     if (compareStartIndex === null || compareEndIndex === null) {
       return null
@@ -483,7 +488,40 @@ export default function TraceLineChart({
     : null
 
   return (
-    <div className={`trace-chart-shell ${dragStartIndex !== null ? 'is-dragging' : ''}`}>
+    <div
+      aria-describedby={instructionsId}
+      className={`trace-chart-shell ${dragStartIndex !== null ? 'is-dragging' : ''}`}
+      onFocus={() => {
+        if (activeIndex === null && points.length) {
+          setActiveIndex(points.length - 1)
+        }
+      }}
+      onKeyDown={(event) => {
+        const nextState = getChartKeyboardState({
+          key: event.key,
+          shiftKey: event.shiftKey,
+          activeIndex,
+          dragStartIndex,
+          dragCurrentIndex,
+          pointCount: points.length,
+        })
+
+        if (!nextState?.handled) {
+          return
+        }
+
+        event.preventDefault()
+        setActiveIndex(nextState.activeIndex)
+        setDragStartIndex(nextState.dragStartIndex)
+        setDragCurrentIndex(nextState.dragCurrentIndex)
+      }}
+      role="group"
+      tabIndex={0}
+    >
+      <p className="sr-only" id={instructionsId}>
+        Use left and right arrow keys to inspect points. Press space to start comparison,
+        shift plus arrows to extend it, and escape to clear.
+      </p>
       <div className="trace-chart-meta">
         <strong>
           {selectionSummary

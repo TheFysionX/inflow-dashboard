@@ -30,13 +30,12 @@ describe('getClientRecords', () => {
 describe('getOverviewModel', () => {
   it('returns the overview surfaces needed for the first milestone', () => {
     const overview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '30D')
-    const conversionRate = overview.kpis.find((item) => item.key === 'conversionRate')
+    const openThreads = overview.kpis.find((item) => item.key === 'activeConversations')
     const availableMetricKeys = overview.availableMetrics.map((item) => item.key)
 
     expect(overview.kpis).toHaveLength(8)
     expect(overview.summary.primaryMetric.numericValue).toBeGreaterThan(0)
-    expect(conversionRate?.valueMeta.numericValue).toBeGreaterThan(4)
-    expect(conversionRate?.valueMeta.numericValue).toBeLessThan(8)
+    expect(openThreads?.valueMeta.numericValue).toBeGreaterThan(0)
     expect(overview.funnelSeries).toHaveLength(5)
     expect(overview.funnelSeries.at(-1)?.value).toBeLessThanOrEqual(
       overview.funnelSeries.at(-2)?.value ?? 0,
@@ -45,6 +44,7 @@ describe('getOverviewModel', () => {
     expect(overview.bookingTrend.length).toBeGreaterThan(5)
     expect(overview.leadTrend.filter((item) => item.value > 0).length).toBeGreaterThan(12)
     expect(overview.topIssues).toHaveLength(3)
+    expect(overview.freshness.shortLabel).toContain('Updated')
     expect(availableMetricKeys).toContain('pipelineLeads')
     expect(availableMetricKeys).toContain('avgFirstResponse')
     expect(availableMetricKeys).toContain('avgReplyLatency')
@@ -158,7 +158,8 @@ describe('operational core selectors', () => {
     expect(leads.qualityMix.length).toBeGreaterThan(0)
     expect(leads.goalMix.length).toBeGreaterThan(0)
     expect(leads.experienceMix.length).toBeGreaterThan(0)
-    expect(leads.commitmentMix.length).toBeGreaterThan(0)
+    expect(leads.sourceBucketMix.length).toBeGreaterThan(0)
+    expect(leads.freshness.shortLabel).toContain('Updated')
     expect(leads.filterOptions.stages.length).toBeGreaterThan(0)
     expect(leads.filterOptions.goalTypes.length).toBeGreaterThan(0)
   })
@@ -258,6 +259,7 @@ describe('performance and settings selectors', () => {
     expect(performance.coachingQueue.length).toBeGreaterThan(0)
     expect(performance.topCorrectionThemes.length).toBeGreaterThan(0)
     expect(performance.strongestSegment.label).toBeTruthy()
+    expect(performance.freshness.shortLabel).toContain('Updated')
     expect(serialized).not.toContain('route_id')
     expect(serialized).not.toContain('selected_question_id')
     expect(serialized).not.toContain('additional_search_scope')
@@ -267,6 +269,7 @@ describe('performance and settings selectors', () => {
     const settings = getSettingsModel(
       {
         clients: demoDataset.clients,
+        dataset: demoDataset,
         defaultLandingPath: '/performance',
         defaultRangePreset: '30D',
         numberFormat: 'compact',
@@ -283,6 +286,8 @@ describe('performance and settings selectors', () => {
     expect(settings.dashboardDefaults.rangeOptions.length).toBeGreaterThan(4)
     expect(settings.overviewDefaults.metricOptions.length).toBeGreaterThan(8)
     expect(settings.overviewDefaults.widgetOptions.length).toBeGreaterThan(3)
+    expect(settings.metricDefinitions.length).toBeGreaterThan(2)
+    expect(settings.freshness.shortLabel).toContain('Updated')
     expect(settings.displayPreferences.useCompactNumbers).toBe(true)
     expect(settings.sessionAccount.email).toContain('@')
   })

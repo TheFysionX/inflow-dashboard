@@ -27,11 +27,16 @@ import {
   getRangeSelectionKey,
   normalizeRangeSelection,
 } from '../lib/rangeSelection'
+import { getFreshnessMeta } from '../lib/freshness'
 
 const DAY = 24 * 60 * 60 * 1000
 const HOUR = 60 * 60 * 1000
 
 export const DEFAULT_DATE_RANGE = DEFAULT_RANGE_PRESET
+
+const pageLabelByPath = Object.fromEntries(
+  navigationItems.map((item) => [item.path, item.label]),
+)
 
 const REFERENCE_DAY_START = startOfDay(REFERENCE_NOW)
 const REFERENCE_DAY_END = endOfDay(REFERENCE_NOW)
@@ -571,6 +576,17 @@ function buildMetric({
     },
     delta: deltaMeta(numericValue, previousValue, invertTone),
   }
+}
+
+function buildPageFreshness(dataset, clientId) {
+  const activeClient =
+    dataset?.clients?.find((client) => client.id === clientId) ??
+    dataset?.clients?.[0]
+
+  return getFreshnessMeta(
+    dataset?.referenceNow ?? REFERENCE_NOW,
+    activeClient?.timezone ?? 'America/Los_Angeles',
+  )
 }
 
 function buildLeadAlias(leadId) {
@@ -1719,7 +1735,7 @@ export function getOverviewModel(
   }
 
   const selectedMetricSlots = (
-    metricSlots?.length ? metricSlots : Object.keys(metricCatalog).slice(0, 8)
+    metricSlots?.length ? metricSlots : DEFAULT_OVERVIEW_METRIC_SLOTS
   )
     .map((slotKey) => metricCatalog[slotKey])
     .filter(Boolean)
@@ -1832,6 +1848,9 @@ export function getOverviewModel(
     availableMetrics: Object.values(metricCatalog).map((metric) => ({
       key: metric.key,
       label: metric.label,
+      detail: metric.detail,
+      routePath: metric.routePath,
+      pageLabel: pageLabelByPath[metric.routePath] ?? 'Dashboard',
     })),
     kpis: selectedMetricSlots,
     summary: createWeeklySummary({
@@ -1854,6 +1873,7 @@ export function getOverviewModel(
     needsAttention,
     upcomingCalls,
     topIssues: getTopIssues(cohortRecords, objectionSeries, funnelSeries),
+    freshness: buildPageFreshness(dataset, clientId),
     rangeKey: window.key,
     rangeLabel: window.label,
   }
@@ -1910,6 +1930,14 @@ const commitmentColors = {
   medium: '#74c7ff',
   low: '#ffb8e6',
   unclear: '#89b8ff',
+}
+
+const sourceBucketColors = {
+  paid: '#8f6dff',
+  organic: '#74c7ff',
+  outbound: '#f49be3',
+  referral: '#8be7c2',
+  other: '#89b8ff',
 }
 
 function humanizeValue(value) {
@@ -2087,6 +2115,8 @@ function buildLeadRow(record) {
     id: record.lead.id,
     displayName: record.lead.displayName,
     source: humanizeValue(record.lead.source),
+    sourceBucketKey: record.leadFact.source_bucket || 'other',
+    sourceBucketLabel: humanizeValue(record.leadFact.source_bucket || 'other'),
     createdAt: record.lead.createdAt,
     createdLabel: formatShortDate(record.lead.createdAt),
     stageKey,
@@ -2452,12 +2482,10 @@ function buildConversationRow(record) {
 function buildConversationSummary(rows, previousRows, dailyFacts, window, previousWindowValue) {
   const activeThreads = rows.filter((row) => row.outcomeKey === 'active').length
   const previousActiveThreads = previousRows.filter((row) => row.outcomeKey === 'active').length
-  const avgMessagesPerLead = rows.length
-    ? average(rows.map((row) => row.messageCount))
-    : 0
-  const previousAvgMessagesPerLead = previousRows.length
-    ? average(previousRows.map((row) => row.messageCount))
-    : 0
+  const unhealthyThreads = rows.filter((row) => row.healthKey !== 'healthy').length
+  const previousUnhealthyThreads = previousRows.filter(
+    (row) => row.healthKey !== 'healthy',
+  ).length
   const avgFirstReply = weightedDailyAverage(
     dailyFacts,
     window,
@@ -2500,13 +2528,14 @@ function buildConversationSummary(rows, previousRows, dailyFacts, window, previo
       compact: false,
     }),
     buildMetric({
-      key: 'messages-per-lead',
-      label: 'Avg Messages / Lead',
-      numericValue: avgMessagesPerLead,
-      previousValue: previousAvgMessagesPerLead,
-      detail: 'Average inbound and outbound thread depth',
+      key: 'unhealthy-threads',
+      label: 'Unhealthy Threads',
+      numericValue: unhealthyThreads,
+      previousValue: previousUnhealthyThreads,
+      detail: 'Threads needing review or guardrail attention',
       routePath: '/conversations',
-      decimals: 1,
+      compact: true,
+      invertTone: true,
     }),
     buildMetric({
       key: 'first-reply',
@@ -2805,9 +2834,12 @@ function buildPipelineAlerts(rows, avgTimeInStage) {
 }
 
 function buildPipelineSummary(rows) {
+  const inDesired = rows.filter((row) => row.stageKey === 'desired').length
   const qualified = rows.filter((row) => row.qualificationKey === 'qualified').length
   const needsAttention = rows.filter((row) => row.statusLabel === 'Needs attention').length
-  const confirmed = rows.filter((row) => row.bookingStatusLabel === 'Confirmed').length
+  const avgResponseGapDays = rows.length
+    ? average(rows.map((row) => Number(row.avgReplyLatencyMinutes ?? 0))) / (24 * 60)
+    : 0
 
   return [
     {
@@ -2818,11 +2850,11 @@ function buildPipelineSummary(rows) {
       tone: 'info',
     },
     {
-      key: 'qualified-leads',
-      label: 'Qualified Leads',
-      value: qualified,
+      key: 'in-desired-stage',
+      label: 'In Desired Stage',
+      value: inDesired,
       detail: rows.length
-        ? `${formatPercent((qualified / rows.length) * 100, 0)} of visible pipeline`
+        ? `${formatPercent((inDesired / rows.length) * 100, 0)} of visible pipeline`
         : 'No visible leads',
       tone: 'positive',
     },
@@ -2834,11 +2866,15 @@ function buildPipelineSummary(rows) {
       tone: 'warning',
     },
     {
-      key: 'confirmed-calls',
-      label: 'Confirmed Calls',
-      value: confirmed,
-      detail: 'Scheduled calls already locked in',
-      tone: 'positive',
+      key: 'avg-response-gap',
+      label: 'Avg Response Gap',
+      value: avgResponseGapDays,
+      detail: qualified
+        ? `${qualified} qualified leads are still in motion`
+        : 'Average latency before the next touch',
+      tone: avgResponseGapDays >= 1.5 ? 'warning' : 'info',
+      suffix: 'd',
+      decimals: 1,
     },
   ]
 }
@@ -2865,15 +2901,16 @@ function buildBreakdownSeries(rows, valueKey, labelKey, colors) {
 
 function buildLeadPageSummary(rows) {
   const qualified = rows.filter((row) => row.qualificationKey === 'qualified').length
-  const booked = rows.filter((row) => row.bookingStatusLabel === 'Confirmed').length
+  const bookingIntent = rows.filter((row) =>
+    ['yes', 'maybe'].includes(row.bookingIntentKey),
+  ).length
   const attention = rows.filter((row) => row.statusLabel === 'Needs attention').length
-  const urgent = rows.filter((row) => row.priorityLabel === 'Urgent').length
 
   return [
     { key: 'records', label: 'Leads in view', value: rows.length, detail: 'Records matching the current range', tone: 'info' },
     { key: 'qualified', label: 'Qualified', value: qualified, detail: `${rows.length ? formatPercent((qualified / rows.length) * 100, 0) : '0%' } of visible leads`, tone: 'positive' },
-    { key: 'booked', label: 'Confirmed', value: booked, detail: 'Call confirmations in visible set', tone: 'positive' },
-    { key: 'attention', label: 'Needs attention', value: attention + urgent, detail: 'High-priority follow-up opportunities', tone: 'warning' },
+    { key: 'booking-intent', label: 'Booking Intent', value: bookingIntent, detail: 'Yes or maybe toward a call', tone: 'positive' },
+    { key: 'attention', label: 'Needs Attention', value: attention, detail: 'Follow-up opportunities that need action', tone: 'warning' },
   ]
 }
 
@@ -3529,6 +3566,7 @@ export function getConversationsModel(
       healthStates: collectOptionCounts(rows, 'healthKey', 'healthLabel'),
       stages: collectOptionCounts(rows, 'stageKey', 'stageLabel'),
     },
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3562,6 +3600,7 @@ export function getPipelineModel(
       objections: collectOptionCounts(rows, 'objectionKey', 'objectionLabel'),
       bookingStatuses: collectOptionCounts(rows, 'bookingStatusLabel'),
     },
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3583,7 +3622,7 @@ export function getLeadsModel(
     qualityMix: buildBreakdownSeries(rows, 'qualificationKey', 'qualificationLabel', qualificationColors),
     goalMix: buildBreakdownSeries(rows, 'goalKey', 'goalLabel', goalColors),
     experienceMix: buildBreakdownSeries(rows, 'experienceKey', 'experienceLabel', experienceColors),
-    commitmentMix: buildBreakdownSeries(rows, 'commitmentKey', 'commitmentLabel', commitmentColors),
+    sourceBucketMix: buildBreakdownSeries(rows, 'sourceBucketKey', 'sourceBucketLabel', sourceBucketColors),
     filterOptions: {
       stages: collectOptionCounts(rows, 'stageKey', 'stageLabel'),
       qualifications: collectOptionCounts(rows, 'qualificationKey', 'qualificationLabel'),
@@ -3592,6 +3631,7 @@ export function getLeadsModel(
       experienceLevels: collectOptionCounts(rows, 'experienceKey', 'experienceLabel'),
       goalTypes: collectOptionCounts(rows, 'goalKey', 'goalLabel'),
     },
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3692,6 +3732,7 @@ export function getObjectionsModel(
     topBlocker: buildTopBlocker(distribution),
     expensiveBlocker: buildMostExpensiveBlocker(objectionRecords),
     recoveredExamples: buildRecoveredObjectionExamples(visibleRecords),
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3770,13 +3811,13 @@ export function getBookingsModel(
         suffix: '%',
       }),
       buildMetric({
-        key: 'no-show-rate',
-        label: 'No-show Rate',
-        numericValue: noShowRateCurrent,
-        previousValue: noShowRatePrevious,
-        detail: `${atRiskCurrent} at-risk bookings flagged in range`,
+        key: 'at-risk-bookings',
+        label: 'At-risk Bookings',
+        numericValue: atRiskCurrent,
+        previousValue: atRiskPrevious,
+        detail: `${formatPercent(noShowRateCurrent, 0)} current no-show rate`,
         routePath: '/bookings',
-        suffix: '%',
+        compact: true,
         invertTone: true,
       }),
     ],
@@ -3787,6 +3828,7 @@ export function getBookingsModel(
     attendanceSeries: buildAttendanceSeries(dailyFacts, window, upcomingBookings.length),
     frictionSummary,
     atRiskDelta: deltaMeta(atRiskCurrent, atRiskPrevious, true),
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3907,6 +3949,7 @@ export function getPerformanceModel(
     coachingQueue: buildCoachingQueue(visibleRecords),
     topCorrectionThemes: buildCorrectionThemes(dailyFacts, window),
     strongestSegment: buildStrongestPerformingSegment(visibleRows),
+    freshness: buildPageFreshness(dataset, clientId),
     rangeLabel: window.label,
     rangeKey: window.key,
   }
@@ -3929,6 +3972,23 @@ export function getSettingsModel(appState, clientId, availableMetrics = []) {
       value: metric.key,
       label: metric.label,
     }))
+  const groupedMetricDefinitions = (availableMetrics.length ? availableMetrics : metricOptions)
+    .reduce((groups, metric) => {
+      const pageLabel = metric.pageLabel ?? 'Dashboard'
+      const existingGroup = groups.find((group) => group.pageLabel === pageLabel)
+
+      if (existingGroup) {
+        existingGroup.metrics.push(metric)
+        return groups
+      }
+
+      groups.push({
+        pageLabel,
+        metrics: [metric],
+      })
+
+      return groups
+    }, [])
   const landingOptions = navigationItems
     .filter((item) => item.path !== '/settings')
     .map((item) => ({
@@ -3964,6 +4024,8 @@ export function getSettingsModel(appState, clientId, availableMetrics = []) {
       useCompactNumbers: appState?.overviewUseCompactNumbers ?? true,
       numberFormat: appState?.numberFormat ?? 'compact',
     },
+    metricDefinitions: groupedMetricDefinitions,
+    freshness: buildPageFreshness(appState?.dataset ?? {}, clientId),
     sessionAccount: {
       email: appState?.currentAccount?.email ?? primaryDemoAccess.email,
       brandLabel: appState?.currentAccount?.displayName ?? brandConfig.name,

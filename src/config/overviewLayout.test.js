@@ -1,10 +1,39 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DEFAULT_OVERVIEW_METRIC_SLOTS,
   buildOverviewWidgetLayout,
   DEFAULT_OVERVIEW_WIDGET_SLOTS,
   getWidgetOptionState,
   normalizeOverviewWidgetSlots,
 } from './overviewLayout'
+
+describe('default overview slots', () => {
+  it('uses the operator-first KPI order', () => {
+    expect(DEFAULT_OVERVIEW_METRIC_SLOTS).toEqual([
+      'activeConversations',
+      'needsAttention',
+      'bookingIntent',
+      'confirmedCalls',
+      'atRiskBookings',
+      'qualifiedLeads',
+      'showRate',
+      'avgReplyQuality',
+    ])
+  })
+
+  it('starts the homepage with the two trend charts', () => {
+    expect(DEFAULT_OVERVIEW_WIDGET_SLOTS).toEqual([
+      'leadTrend',
+      'bookingTrend',
+      'funnel',
+      'qualificationBreakdown',
+      'needsAttention',
+      'upcomingCalls',
+      'topIssues',
+      'objectionDistribution',
+    ])
+  })
+})
 
 describe('normalizeOverviewWidgetSlots', () => {
   it('restores a unique canonical widget order when duplicates are present', () => {
@@ -26,7 +55,7 @@ describe('getWidgetOptionState', () => {
     const options = getWidgetOptionState(DEFAULT_OVERVIEW_WIDGET_SLOTS, 1)
 
     expect(options.find((option) => option.value === 'funnel')?.disabled).toBe(true)
-    expect(options.find((option) => option.value === 'qualificationBreakdown')?.disabled).toBe(false)
+    expect(options.find((option) => option.value === 'bookingTrend')?.disabled).toBe(false)
   })
 })
 

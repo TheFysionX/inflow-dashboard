@@ -201,10 +201,20 @@ function CompletionCards({ items }) {
   )
 }
 
+function average(values) {
+  if (!values.length) {
+    return 0
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
 function buildPipelineSummary(rows) {
-  const qualified = rows.filter((row) => row.qualificationKey === 'qualified').length
+  const inDesired = rows.filter((row) => row.stageKey === 'desired').length
   const needsAttention = rows.filter((row) => row.statusLabel === 'Needs attention').length
-  const confirmed = rows.filter((row) => row.bookingStatusLabel === 'Confirmed').length
+  const avgResponseGapDays = rows.length
+    ? average(rows.map((row) => Number(row.avgReplyLatencyMinutes ?? 0))) / (24 * 60)
+    : 0
 
   return [
     {
@@ -214,10 +224,10 @@ function buildPipelineSummary(rows) {
       detail: 'Leads visible after the current filters',
     },
     {
-      key: 'qualified-leads',
-      label: 'Qualified Leads',
-      value: qualified,
-      detail: rows.length ? `${Math.round((qualified / rows.length) * 100)}% of visible pipeline` : 'No visible leads',
+      key: 'in-desired-stage',
+      label: 'In Desired Stage',
+      value: inDesired,
+      detail: rows.length ? `${Math.round((inDesired / rows.length) * 100)}% of visible pipeline` : 'No visible leads',
     },
     {
       key: 'needs-attention',
@@ -226,10 +236,12 @@ function buildPipelineSummary(rows) {
       detail: 'Threads that need a follow-up right now',
     },
     {
-      key: 'confirmed-calls',
-      label: 'Confirmed Calls',
-      value: confirmed,
-      detail: 'Calls already scheduled in this filtered set',
+      key: 'avg-response-gap',
+      label: 'Avg Response Gap',
+      value: avgResponseGapDays,
+      detail: 'Average latency before the next touch',
+      suffix: 'd',
+      decimals: 1,
     },
   ]
 }
@@ -382,7 +394,12 @@ export default function PipelinePage() {
           <article className="surface-card summary-card" key={card.key}>
             <p className="sidebar-caption">{card.label}</p>
             <strong className="summary-card-value">
-              <AnimatedNumber compact={false} value={card.value} />
+              <AnimatedNumber
+                compact={false}
+                decimals={card.decimals ?? 0}
+                suffix={card.suffix ?? ''}
+                value={card.value}
+              />
             </strong>
             <p className="summary-card-detail">{card.detail}</p>
           </article>

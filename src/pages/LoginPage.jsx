@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import Lottie from 'lottie-react'
-import { useNavigate } from 'react-router-dom'
 import inflowHeaderAnimation from '../assets/inflowai_header_cropped_720.json'
 import { resolveDemoAccessAccount } from '../config/demoAccess'
 import { useDashboard } from '../context/AppContext'
+import useDashboardNavigate from '../lib/useDashboardNavigate'
 
 export default function LoginPage() {
-  const navigate = useNavigate()
+  const navigate = useDashboardNavigate()
   const { defaultLandingPath, login } = useDashboard()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -36,7 +36,7 @@ export default function LoginPage() {
             loop={false}
           />
         </div>
-        <p>Client dashboard</p>
+        <p className="login-subtitle">Dashboard</p>
       </section>
 
       <section className="login-panel">

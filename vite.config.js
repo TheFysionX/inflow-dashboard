@@ -6,10 +6,32 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          motion: ['framer-motion'],
-          charts: ['recharts'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'react-vendor'
+          }
+
+          if (id.includes('node_modules/framer-motion')) {
+            return 'motion'
+          }
+
+          if (id.includes('node_modules/recharts')) {
+            return 'charts'
+          }
+
+          if (
+            id.includes('/src/data/workbookSeed.js') ||
+            id.includes('/src/data/demoData.js') ||
+            id.includes('/src/data/overviewSupplement.js')
+          ) {
+            return 'demo-data'
+          }
+
+          if (id.includes('/src/data/selectors.js')) {
+            return 'dashboard-models'
+          }
+
+          return undefined
         },
       },
     },

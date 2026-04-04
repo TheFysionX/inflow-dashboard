@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { quickSearchEntries, searchDashboard } from '../../config/searchIndex'
 import {
   brandConfig,
@@ -8,15 +8,25 @@ import {
   overviewRangeOptions,
 } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
+import { getFreshnessMeta } from '../../lib/freshness'
 import { scrollToSearchTarget } from '../../lib/searchNavigation'
+import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ArrowRightIcon, CloseIcon, NavIcon, SearchIcon } from '../ui/Icons'
 import RangeSelector from '../ui/RangeSelector'
+import StatusPill from '../ui/StatusPill'
 import ProfileMenu from './ProfileMenu'
 
 export default function Topbar() {
-  const navigate = useNavigate()
+  const navigate = useDashboardNavigate()
   const location = useLocation()
-  const { rangeSelection, setCustomRange, setRangePreset } = useDashboard()
+  const {
+    activeClientId,
+    clients,
+    dataset,
+    rangeSelection,
+    setCustomRange,
+    setRangePreset,
+  } = useDashboard()
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeResultIndex, setActiveResultIndex] = useState(0)
@@ -45,6 +55,18 @@ export default function Topbar() {
         ? searchDashboard(searchQuery, 8)
         : quickSearchEntries.slice(0, 6),
     [searchQuery],
+  )
+  const activeClient = useMemo(
+    () => clients.find((client) => client.id === activeClientId) ?? clients[0],
+    [activeClientId, clients],
+  )
+  const freshness = useMemo(
+    () =>
+      getFreshnessMeta(
+        dataset?.referenceNow,
+        activeClient?.timezone ?? 'America/Los_Angeles',
+      ),
+    [activeClient?.timezone, dataset?.referenceNow],
   )
 
   useEffect(() => {
@@ -217,6 +239,9 @@ export default function Topbar() {
           options={overviewRangeOptions}
           value={rangeSelection}
         />
+        <StatusPill tone="info" title={freshness.label}>
+          {freshness.shortLabel}
+        </StatusPill>
         <ProfileMenu />
       </div>
     </header>

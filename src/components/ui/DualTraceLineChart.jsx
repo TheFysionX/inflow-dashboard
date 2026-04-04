@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRightIcon } from './Icons'
+import { getChartKeyboardState } from '../../lib/chartNavigation'
 
 function buildSmoothPath(points) {
   if (!points.length) {
@@ -452,9 +453,46 @@ export default function DualTraceLineChart({
       }
     })()
     : null
+  const instructionsId = useMemo(
+    () => `dual-trace-chart-instructions-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}`,
+    [lineKey],
+  )
 
   return (
-    <div className={`trace-chart-shell ${dragStartIndex !== null ? 'is-dragging' : ''}`}>
+    <div
+      aria-describedby={instructionsId}
+      className={`trace-chart-shell ${dragStartIndex !== null ? 'is-dragging' : ''}`}
+      onFocus={() => {
+        if (activeIndex === null && data.length) {
+          setActiveIndex(data.length - 1)
+        }
+      }}
+      onKeyDown={(event) => {
+        const nextState = getChartKeyboardState({
+          key: event.key,
+          shiftKey: event.shiftKey,
+          activeIndex,
+          dragStartIndex,
+          dragCurrentIndex,
+          pointCount: data.length,
+        })
+
+        if (!nextState?.handled) {
+          return
+        }
+
+        event.preventDefault()
+        setActiveIndex(nextState.activeIndex)
+        setDragStartIndex(nextState.dragStartIndex)
+        setDragCurrentIndex(nextState.dragCurrentIndex)
+      }}
+      role="group"
+      tabIndex={0}
+    >
+      <p className="sr-only" id={instructionsId}>
+        Use left and right arrow keys to inspect points. Press space to start comparison,
+        shift plus arrows to extend it, and escape to clear.
+      </p>
       <div className="trace-chart-meta trace-chart-meta--dual">
         <strong>
           {selectionSummary

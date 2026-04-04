@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import RouteLoader from '../ui/RouteLoader'
 import { useDashboard } from '../../context/AppContext'
 import { scrollToSearchTarget } from '../../lib/searchNavigation'
 import useScrollbarGradients from '../../lib/useScrollbarGradients'
@@ -7,7 +8,14 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 export default function DashboardLayout() {
-  const { clients, activeClientId } = useDashboard()
+  const {
+    clients,
+    activeClientId,
+    completeRouteTransition,
+    routeTransitionActive,
+    routeTransitionStartedAt,
+    routeTransitionTargetPath,
+  } = useDashboard()
   const location = useLocation()
   const contentRef = useRef(null)
   const activeClient =
@@ -30,6 +38,35 @@ export default function DashboardLayout() {
     scrollToSearchTarget(hash)
   }, [location.hash, location.pathname])
 
+  useEffect(() => {
+    if (!routeTransitionActive) {
+      return undefined
+    }
+
+    if (
+      routeTransitionTargetPath &&
+      routeTransitionTargetPath !== location.pathname
+    ) {
+      return undefined
+    }
+
+    const elapsed = Date.now() - routeTransitionStartedAt
+    const timeoutId = window.setTimeout(
+      () => {
+        completeRouteTransition()
+      },
+      Math.max(0, 260 - elapsed),
+    )
+
+    return () => window.clearTimeout(timeoutId)
+  }, [
+    completeRouteTransition,
+    location.pathname,
+    routeTransitionActive,
+    routeTransitionStartedAt,
+    routeTransitionTargetPath,
+  ])
+
   return (
     <div
       className="dashboard-shell"
@@ -44,6 +81,14 @@ export default function DashboardLayout() {
         <Topbar />
         <div className="dashboard-content" ref={contentRef}>
           <Outlet />
+          {routeTransitionActive ? (
+            <div className="dashboard-route-overlay">
+              <RouteLoader
+                className="route-loader-shell--overlay"
+                title="Syncing the next view"
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

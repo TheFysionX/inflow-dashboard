@@ -89,7 +89,7 @@ function RadialMix({ items }) {
 export default function LeadsPage() {
   const { dataset, activeClientId, rangeSelection } = useDashboard()
   const [sorting, setSorting] = useState([
-    { id: 'createdAt', desc: true },
+    { id: 'lastActivityAt', desc: true },
   ])
   const [filters, setFilters] = useState({
     stage: 'all',
@@ -284,11 +284,11 @@ export default function LeadsPage() {
         <ChartPanel
           badge={leads.rangeLabel}
           className="overview-widget overview-widget--compact leads-chart-panel"
-          sectionId="leads-commitment-mix"
-          subtitle="Readiness"
-          title="Commitment mix"
+          sectionId="leads-source-bucket-mix"
+          subtitle="Where leads are coming from"
+          title="Source bucket mix"
         >
-          <RadialMix items={leads.commitmentMix} />
+          <RadialMix items={leads.sourceBucketMix} />
         </ChartPanel>
       </section>
 

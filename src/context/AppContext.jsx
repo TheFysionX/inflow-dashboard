@@ -12,7 +12,6 @@ import {
   normalizeOverviewMetricSlots,
   normalizeOverviewWidgetSlots,
 } from '../config/overviewLayout'
-import { demoDataset } from '../data/demoData'
 import {
   buildCustomRangeSelection,
   DEFAULT_RANGE_PRESET,
@@ -26,11 +25,48 @@ import {
 
 const DashboardContext = createContext(null)
 const SESSION_KEY = 'inflow.dashboard.session.v7'
+const LEGACY_OVERVIEW_METRIC_SLOTS = [
+  'totalLeads',
+  'activeConversations',
+  'qualifiedLeads',
+  'unqualifiedLeads',
+  'bookingIntent',
+  'confirmedCalls',
+  'conversionRate',
+  'avgReplyQuality',
+]
+const LEGACY_OVERVIEW_WIDGET_SLOTS = [
+  'funnel',
+  'qualificationBreakdown',
+  'leadTrend',
+  'bookingTrend',
+  'objectionDistribution',
+  'needsAttention',
+  'upcomingCalls',
+  'topIssues',
+]
+const PREVIOUS_OPERATOR_OVERVIEW_WIDGET_SLOTS = [
+  'funnel',
+  'needsAttention',
+  'upcomingCalls',
+  'topIssues',
+  'objectionDistribution',
+  'leadTrend',
+  'bookingTrend',
+  'qualificationBreakdown',
+]
 
-function getDefaultSession() {
+function matchesLegacyDefaults(currentSlots = [], legacySlots = []) {
+  return (
+    currentSlots.length === legacySlots.length &&
+    currentSlots.every((slot, index) => slot === legacySlots[index])
+  )
+}
+
+function getDefaultSession(initialDataset) {
   return {
     isAuthenticated: false,
-    activeClientId: demoDataset.clients[0]?.id ?? '',
+    activeClientId: initialDataset?.clients?.[0]?.id ?? '',
     activeAccountId: primaryDemoAccess.id,
     defaultLandingPath: '/overview',
     defaultRangePreset: DEFAULT_RANGE_PRESET,
@@ -43,16 +79,16 @@ function getDefaultSession() {
   }
 }
 
-function getInitialSession() {
+function getInitialSession(initialDataset) {
   if (typeof window === 'undefined') {
-    return getDefaultSession()
+    return getDefaultSession(initialDataset)
   }
 
   try {
     const rawSession = window.localStorage.getItem(SESSION_KEY)
 
     if (!rawSession) {
-      return getDefaultSession()
+      return getDefaultSession(initialDataset)
     }
 
     const parsedSession = JSON.parse(rawSession)
@@ -72,7 +108,7 @@ function getInitialSession() {
       (legacyCompactPreference === false ? 'full' : 'compact')
 
     return {
-      ...getDefaultSession(),
+      ...getDefaultSession(initialDataset),
       ...restParsedSession,
       activeAccountId: getDemoAccessAccountById(parsedSession?.activeAccountId).id,
       defaultLandingPath:
@@ -83,20 +119,71 @@ function getInitialSession() {
       defaultRangePreset,
       numberFormat,
       rangeSelection: normalizedRangeSelection,
-      overviewMetricSlots: normalizeOverviewMetricSlots(
-        parsedSession?.overviewMetricSlots,
-      ),
-      overviewWidgetSlots: normalizeOverviewWidgetSlots(
-        parsedSession?.overviewWidgetSlots,
-      ),
+      overviewMetricSlots: matchesLegacyDefaults(
+        parsedSession?.overviewMetricSlots ?? [],
+        LEGACY_OVERVIEW_METRIC_SLOTS,
+      )
+        ? [...DEFAULT_OVERVIEW_METRIC_SLOTS]
+        : normalizeOverviewMetricSlots(parsedSession?.overviewMetricSlots),
+      overviewWidgetSlots: matchesLegacyDefaults(
+        parsedSession?.overviewWidgetSlots ?? [],
+        LEGACY_OVERVIEW_WIDGET_SLOTS,
+      )
+        || matchesLegacyDefaults(
+          parsedSession?.overviewWidgetSlots ?? [],
+          PREVIOUS_OPERATOR_OVERVIEW_WIDGET_SLOTS,
+        )
+        ? [...DEFAULT_OVERVIEW_WIDGET_SLOTS]
+        : normalizeOverviewWidgetSlots(parsedSession?.overviewWidgetSlots),
     }
   } catch {
-    return getDefaultSession()
+    return getDefaultSession(initialDataset)
   }
 }
 
-export function AppProvider({ children }) {
-  const [session, setSession] = useState(getInitialSession)
+export function AppProvider({ children, initialDataset = null }) {
+  const [dataset, setDataset] = useState(initialDataset)
+  const [session, setSession] = useState(() => getInitialSession(initialDataset))
+  const [routeTransition, setRouteTransition] = useState({
+    active: false,
+    startedAt: 0,
+    targetPath: '',
+  })
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (dataset || !session.isAuthenticated) {
+      return () => {
+        cancelled = true
+      }
+    }
+
+    import('../data/demoData').then((module) => {
+      if (cancelled) {
+        return
+      }
+
+      setDataset(module.demoDataset)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [dataset, session.isAuthenticated])
+
+  useEffect(() => {
+    if (!dataset?.clients?.length || session.activeClientId) {
+      return
+    }
+
+    startTransition(() => {
+      setSession((current) => ({
+        ...current,
+        activeClientId: dataset.clients[0]?.id ?? current.activeClientId,
+      }))
+    })
+  }, [dataset, session.activeClientId])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -275,13 +362,35 @@ export function AppProvider({ children }) {
       })
     }
 
+    const startRouteTransition = (targetPath = '') => {
+      setRouteTransition({
+        active: true,
+        startedAt: Date.now(),
+        targetPath,
+      })
+    }
+
+    const completeRouteTransition = () => {
+      setRouteTransition((current) =>
+        current.active
+          ? {
+              active: false,
+              startedAt: 0,
+              targetPath: '',
+            }
+          : current,
+      )
+    }
+
     return {
       ...session,
-      clients: demoDataset.clients,
+      clients: dataset?.clients ?? [],
       currentAccount,
-      dataset: demoDataset,
+      dataset,
+      datasetReady: Boolean(dataset),
       defaultLandingPath: session.defaultLandingPath,
       defaultRangePreset: session.defaultRangePreset,
+      completeRouteTransition,
       login,
       logout,
       setActiveClientId,
@@ -299,10 +408,14 @@ export function AppProvider({ children }) {
       overviewUseCompactNumbers: useCompactNumbers,
       resetOverviewMetricSlots,
       resetOverviewWidgetSlots,
+      routeTransitionActive: routeTransition.active,
+      routeTransitionStartedAt: routeTransition.startedAt,
+      routeTransitionTargetPath: routeTransition.targetPath,
+      startRouteTransition,
       toggleSidebar,
       useCompactNumbers,
     }
-  }, [session])
+  }, [dataset, routeTransition, session])
 
   return (
     <DashboardContext.Provider value={value}>

@@ -1,11 +1,11 @@
 export const DEFAULT_OVERVIEW_METRIC_SLOTS = [
-  'totalLeads',
   'activeConversations',
-  'qualifiedLeads',
-  'unqualifiedLeads',
+  'needsAttention',
   'bookingIntent',
   'confirmedCalls',
-  'conversionRate',
+  'atRiskBookings',
+  'qualifiedLeads',
+  'showRate',
   'avgReplyQuality',
 ]
 
@@ -60,9 +60,16 @@ export const OVERVIEW_WIDGET_CATALOG = [
   },
 ]
 
-export const DEFAULT_OVERVIEW_WIDGET_SLOTS = OVERVIEW_WIDGET_CATALOG.map(
-  (widget) => widget.key,
-)
+export const DEFAULT_OVERVIEW_WIDGET_SLOTS = [
+  'leadTrend',
+  'bookingTrend',
+  'funnel',
+  'qualificationBreakdown',
+  'needsAttention',
+  'upcomingCalls',
+  'topIssues',
+  'objectionDistribution',
+]
 
 const VALID_WIDGET_KEYS = new Set(
   OVERVIEW_WIDGET_CATALOG.map((widget) => widget.key),

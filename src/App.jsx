@@ -1,17 +1,32 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DashboardLayout from './components/layout/DashboardLayout'
+import RouteLoader from './components/ui/RouteLoader'
 import { AppProvider, useDashboard } from './context/AppContext'
 import { navigationItems } from './config/navigation'
-import BookingsPage from './pages/BookingsPage'
-import ConversationsPage from './pages/ConversationsPage'
-import LeadsPage from './pages/LeadsPage'
-import LoginPage from './pages/LoginPage'
-import ObjectionsPage from './pages/ObjectionsPage'
-import OverviewPage from './pages/OverviewPage'
-import PerformancePage from './pages/PerformancePage'
-import PipelinePage from './pages/PipelinePage'
-import PlaceholderPage from './pages/PlaceholderPage'
-import SettingsPage from './pages/SettingsPage'
+
+const BookingsPage = lazy(() => import('./pages/BookingsPage'))
+const ConversationsPage = lazy(() => import('./pages/ConversationsPage'))
+const LeadsPage = lazy(() => import('./pages/LeadsPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ObjectionsPage = lazy(() => import('./pages/ObjectionsPage'))
+const OverviewPage = lazy(() => import('./pages/OverviewPage'))
+const PerformancePage = lazy(() => import('./pages/PerformancePage'))
+const PipelinePage = lazy(() => import('./pages/PipelinePage'))
+const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+
+function RouteFallback() {
+  return <RouteLoader />
+}
+
+function renderLazyPage(PageComponent, props = {}) {
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      <PageComponent {...props} />
+    </Suspense>
+  )
+}
 
 function getProtectedLandingPath(defaultLandingPath) {
   return navigationItems.some((item) => item.path === defaultLandingPath)
@@ -20,10 +35,14 @@ function getProtectedLandingPath(defaultLandingPath) {
 }
 
 function ProtectedApp() {
-  const { isAuthenticated } = useDashboard()
+  const { datasetReady, isAuthenticated } = useDashboard()
 
   if (!isAuthenticated) {
     return <Navigate replace to="/login" />
+  }
+
+  if (!datasetReady) {
+    return <RouteFallback />
   }
 
   return <DashboardLayout />
@@ -49,21 +68,21 @@ function DashboardRoutes() {
   return (
     <Routes>
       <Route element={<RootRedirect />} path="/" />
-      <Route element={<LoginRoute />} path="/login" />
+      <Route element={renderLazyPage(LoginRoute)} path="/login" />
       <Route element={<ProtectedApp />} path="/">
-        <Route element={<OverviewPage />} path="overview" />
-        <Route element={<PipelinePage />} path="pipeline" />
-        <Route element={<LeadsPage />} path="leads" />
-        <Route element={<ConversationsPage />} path="conversations" />
-        <Route element={<ObjectionsPage />} path="objections" />
-        <Route element={<BookingsPage />} path="bookings" />
-        <Route element={<PerformancePage />} path="performance" />
-        <Route element={<SettingsPage />} path="settings" />
+        <Route element={renderLazyPage(OverviewPage)} path="overview" />
+        <Route element={renderLazyPage(PipelinePage)} path="pipeline" />
+        <Route element={renderLazyPage(LeadsPage)} path="leads" />
+        <Route element={renderLazyPage(ConversationsPage)} path="conversations" />
+        <Route element={renderLazyPage(ObjectionsPage)} path="objections" />
+        <Route element={renderLazyPage(BookingsPage)} path="bookings" />
+        <Route element={renderLazyPage(PerformancePage)} path="performance" />
+        <Route element={renderLazyPage(SettingsPage)} path="settings" />
         {navigationItems
           .filter((item) => !['/overview', '/pipeline', '/leads', '/conversations', '/objections', '/bookings', '/performance', '/settings'].includes(item.path))
           .map((item) => (
             <Route
-              element={<PlaceholderPage routePath={item.path} />}
+              element={renderLazyPage(PlaceholderPage, { routePath: item.path })}
               key={item.path}
               path={item.path.slice(1)}
             />

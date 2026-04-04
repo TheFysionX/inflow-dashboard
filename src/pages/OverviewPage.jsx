@@ -1,6 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Bar,
   BarChart,
@@ -21,17 +20,16 @@ import AnimatedNumber from '../components/ui/AnimatedNumber'
 import ChartPanel from '../components/ui/ChartPanel'
 import EmptyState from '../components/ui/EmptyState'
 import KpiCard from '../components/ui/KpiCard'
-import OptionSelect from '../components/ui/OptionSelect'
 import StatusPill from '../components/ui/StatusPill'
 import DualTraceLineChart from '../components/ui/DualTraceLineChart'
 import { SettingsIcon } from '../components/ui/Icons'
 import {
   buildOverviewWidgetLayout,
   getOverviewWidgetConfig,
-  getWidgetOptionState,
 } from '../config/overviewLayout'
 import { useDashboard } from '../context/AppContext'
 import { getOverviewModel } from '../data/selectors'
+import useDashboardNavigate from '../lib/useDashboardNavigate'
 
 function StandardTooltip({ active, payload, label }) {
   if (!active || !payload?.length) {
@@ -183,21 +181,14 @@ function TrendSettingsPanel({
 }
 
 export default function OverviewPage() {
-  const navigate = useNavigate()
+  const navigate = useDashboardNavigate()
   const {
     dataset,
     activeClientId,
     rangeSelection,
     overviewMetricSlots,
-    overviewCustomizerOpen,
     overviewUseCompactNumbers,
     overviewWidgetSlots,
-    resetOverviewMetricSlots,
-    resetOverviewWidgetSlots,
-    setOverviewCustomizerOpen,
-    setOverviewMetricSlot,
-    setOverviewUseCompactNumbers,
-    setOverviewWidgetSlot,
   } = useDashboard()
   const [activePieIndex, setActivePieIndex] = useState(null)
   const [activeFunnelIndex, setActiveFunnelIndex] = useState(null)
@@ -212,42 +203,45 @@ export default function OverviewPage() {
       getOverviewModel(dataset, activeClientId, rangeSelection, overviewMetricSlots),
     [activeClientId, dataset, overviewMetricSlots, rangeSelection],
   )
-  const metricOptions = useMemo(
-    () =>
-      overview.availableMetrics.map((metric) => ({
-        label: metric.label,
-        value: metric.key,
-      })),
-    [overview.availableMetrics],
-  )
-  const widgetOptions = useMemo(
-    () =>
-      overviewWidgetSlots.map((_, index) =>
-        getWidgetOptionState(overviewWidgetSlots, index)),
-    [overviewWidgetSlots],
-  )
   const widgetLayout = useMemo(
     () => buildOverviewWidgetLayout(overviewWidgetSlots),
     [overviewWidgetSlots],
   )
-  const primaryWidgetLayout = useMemo(
-    () => {
-      const preferred = widgetLayout.filter((item) =>
-        ['leadTrend', 'bookingTrend'].includes(item.key),
-      )
+  const {
+    trendWidgetLayout,
+    focusWidgetLayout,
+    supportWidgetLayout,
+    overflowWidgetLayout,
+  } = useMemo(() => {
+    const handledKeys = new Set()
+    const buildSection = (keys, spanOverrides = {}) => {
+      const keySet = new Set(keys)
+      const sectionItems = widgetLayout
+        .filter((item) => keySet.has(item.key))
+        .map((item) => ({
+          ...item,
+          span: spanOverrides[item.key] ?? item.span,
+        }))
 
-      if (preferred.length) {
-        return preferred
-      }
+      sectionItems.forEach((item) => handledKeys.add(item.key))
+      return sectionItems
+    }
 
-      return widgetLayout.filter((item) => item.key !== 'qualificationBreakdown').slice(0, 2)
-    },
-    [widgetLayout],
-  )
-  const secondaryWidgetLayout = useMemo(
-    () => widgetLayout.filter((item) => !['leadTrend', 'bookingTrend'].includes(item.key)),
-    [widgetLayout],
-  )
+    return {
+      trendWidgetLayout: buildSection(['leadTrend', 'bookingTrend']),
+      focusWidgetLayout: buildSection(['funnel', 'qualificationBreakdown']),
+      supportWidgetLayout: buildSection(
+        ['needsAttention', 'upcomingCalls', 'topIssues', 'objectionDistribution'],
+        {
+          needsAttention: 6,
+          upcomingCalls: 6,
+          topIssues: 6,
+          objectionDistribution: 6,
+        },
+      ),
+      overflowWidgetLayout: widgetLayout.filter((item) => !handledKeys.has(item.key)),
+    }
+  }, [widgetLayout])
   const leadTrendSelection = useMemo(
     () =>
       normalizeTrendSelection(
@@ -734,147 +728,6 @@ export default function OverviewPage() {
 
   return (
     <AnimatedPage className="page-stack">
-      <motion.section className="surface-card overview-toolbar" layout>
-        <div className="overview-toolbar-copy">
-          <p className="sidebar-caption">Overview layout</p>
-          <h2>Choose the KPIs and graphs shown on this page.</h2>
-        </div>
-
-        <div className="overview-toolbar-actions">
-          <button
-            className="secondary-button button-small"
-            onClick={() => setOverviewCustomizerOpen(!overviewCustomizerOpen)}
-            type="button"
-          >
-            {overviewCustomizerOpen ? 'Hide overview controls' : 'Customize overview'}
-          </button>
-          <button
-            aria-label={
-              overviewUseCompactNumbers
-                ? 'Switch to full number format'
-                : 'Switch to compact number format'
-            }
-            aria-pressed={overviewUseCompactNumbers}
-            className={`overview-display-toggle-button overview-display-toggle-button--toolbar ${
-              overviewUseCompactNumbers ? 'is-compact' : 'is-full'
-            }`}
-            onClick={() => setOverviewUseCompactNumbers(!overviewUseCompactNumbers)}
-            type="button"
-          >
-            <span>1K</span>
-            <span>1,000</span>
-          </button>
-          {overviewCustomizerOpen ? (
-            <>
-              <button
-                className="ghost-button button-small"
-                onClick={resetOverviewMetricSlots}
-                type="button"
-              >
-                Reset KPIs
-              </button>
-              <button
-                className="ghost-button button-small"
-                onClick={resetOverviewWidgetSlots}
-                type="button"
-              >
-                Reset graphs
-              </button>
-            </>
-          ) : null}
-        </div>
-      </motion.section>
-
-      <AnimatePresence initial={false}>
-        {overviewCustomizerOpen ? (
-          <motion.section
-            animate={{ height: 'auto', opacity: 1, y: 0 }}
-            className="surface-card overview-customizer"
-            exit={{ height: 0, opacity: 0, y: -8 }}
-            initial={{ height: 0, opacity: 0, y: -8 }}
-            layout
-            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="overview-customizer-inner"
-              exit={{ opacity: 0, y: -4 }}
-              initial={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="overview-customizer-header">
-                <div>
-                  <p className="sidebar-caption">Overview controls</p>
-                  <h3>Select which metrics and graphs the homepage shows</h3>
-                </div>
-              </div>
-
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="overview-customizer-section"
-                initial={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.24, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <h4>KPI slots</h4>
-                <div className="overview-customizer-grid">
-                  {overviewMetricSlots.map((metricKey, index) => (
-                    <motion.div
-                      animate={{ opacity: 1, y: 0 }}
-                      className="overview-customizer-field"
-                      initial={{ opacity: 0, y: 10 }}
-                      key={`metric-slot-${index}`}
-                      transition={{
-                        duration: 0.2,
-                        delay: 0.08 + index * 0.03,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <span>Slot {index + 1}</span>
-                      <OptionSelect
-                        onChange={(nextValue) => setOverviewMetricSlot(index, nextValue)}
-                        options={metricOptions}
-                        value={metricKey}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="overview-customizer-section"
-                initial={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.24, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <h4>Graph and widget slots</h4>
-                <div className="overview-customizer-grid">
-                  {overviewWidgetSlots.map((widgetKey, index) => (
-                    <motion.div
-                      animate={{ opacity: 1, y: 0 }}
-                      className="overview-customizer-field"
-                      initial={{ opacity: 0, y: 10 }}
-                      key={`widget-slot-${index}`}
-                      transition={{
-                        duration: 0.2,
-                        delay: 0.12 + index * 0.03,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <span>Widget {index + 1}</span>
-                      <OptionSelect
-                        onChange={(nextValue) => setOverviewWidgetSlot(index, nextValue)}
-                        options={widgetOptions[index]}
-                        value={widgetKey}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          </motion.section>
-        ) : null}
-      </AnimatePresence>
-
       <motion.section className="surface-card overview-summary search-jump-target" id="overview-summary" layout>
         <div className="overview-summary-copy">
           <p className="sidebar-caption">{overview.summary.title}</p>
@@ -906,9 +759,17 @@ export default function OverviewPage() {
         </div>
       </motion.section>
 
-      {primaryWidgetLayout.length ? (
+      {trendWidgetLayout.length ? (
         <motion.section className="overview-grid overview-grid--dynamic" layout>
-          {primaryWidgetLayout.map((layoutItem, index) => renderWidget(layoutItem, index))}
+          {trendWidgetLayout.map((layoutItem, index) => renderWidget(layoutItem, index))}
+        </motion.section>
+      ) : null}
+
+      {focusWidgetLayout.length ? (
+        <motion.section className="overview-grid overview-grid--dynamic" layout>
+          {focusWidgetLayout.map((layoutItem, index) =>
+            renderWidget(layoutItem, trendWidgetLayout.length + index),
+          )}
         </motion.section>
       ) : null}
 
@@ -927,10 +788,28 @@ export default function OverviewPage() {
         ))}
       </motion.section>
 
-      {secondaryWidgetLayout.length ? (
+      {supportWidgetLayout.length ? (
         <motion.section className="overview-grid overview-grid--dynamic" layout>
-          {secondaryWidgetLayout.map((layoutItem, index) =>
-            renderWidget(layoutItem, primaryWidgetLayout.length + index),
+          {supportWidgetLayout.map((layoutItem, index) =>
+            renderWidget(
+              layoutItem,
+              trendWidgetLayout.length + focusWidgetLayout.length + overview.kpis.length + index,
+            ),
+          )}
+        </motion.section>
+      ) : null}
+
+      {overflowWidgetLayout.length ? (
+        <motion.section className="overview-grid overview-grid--dynamic" layout>
+          {overflowWidgetLayout.map((layoutItem, index) =>
+            renderWidget(
+              layoutItem,
+              trendWidgetLayout.length +
+                focusWidgetLayout.length +
+                overview.kpis.length +
+                supportWidgetLayout.length +
+                index,
+            ),
           )}
         </motion.section>
       ) : null}

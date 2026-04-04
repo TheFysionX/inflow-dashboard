@@ -179,6 +179,36 @@ function shiftShade(color, amount) {
   })
 }
 
+function resolveColorToken(color) {
+  const palette = {
+    'var(--accent-blue)': '#8bd7ff',
+    'var(--accent-pink)': '#ffc2ef',
+    'var(--accent-violet)': '#b6a1ff',
+    '#8be7c2': '#8be7c2',
+    'var(--color-success)': '#8be7c2',
+    'var(--color-danger)': '#ff8bb9',
+  }
+
+  return palette[color] ?? color
+}
+
+function mixColors(baseColor, targetColor, amount) {
+  const baseRgb = hexToRgb(resolveColorToken(baseColor))
+  const targetRgb = hexToRgb(resolveColorToken(targetColor))
+
+  if (!baseRgb || !targetRgb) {
+    return resolveColorToken(targetColor)
+  }
+
+  const blendAmount = clamp(amount, 0, 1)
+
+  return rgbToHex({
+    r: baseRgb.r + ((targetRgb.r - baseRgb.r) * blendAmount),
+    g: baseRgb.g + ((targetRgb.g - baseRgb.g) * blendAmount),
+    b: baseRgb.b + ((targetRgb.b - baseRgb.b) * blendAmount),
+  })
+}
+
 function createSeed(input) {
   return Array.from(String(input)).reduce(
     (seed, character) => ((seed * 31) + character.charCodeAt(0)) % 2147483647,
@@ -314,6 +344,64 @@ function getHoverDotStops(color) {
   ]
 }
 
+function getCompareHoverDotStops(color, percent = 0) {
+  const palette = {
+    blue: '#8bd7ff',
+    pink: '#ffc2ef',
+    violet: '#b6a1ff',
+    green: '#8be7c2',
+    danger: '#ff8bb9',
+  }
+  const magnitude = clamp(Math.abs(percent) / 42, 0, 1)
+  const resolvedBase = resolveColorToken(color)
+
+  if (magnitude < 0.035) {
+    return [
+      { offset: '0%', color: mixColors(palette.blue, palette.violet, 0.28), opacity: 1 },
+      { offset: '58%', color: mixColors(palette.pink, palette.violet, 0.44), opacity: 0.98 },
+      { offset: '100%', color: mixColors(resolvedBase, palette.violet, 0.22), opacity: 0.8 },
+    ]
+  }
+
+  const toneColor = percent > 0 ? palette.green : palette.danger
+  const leadAccent = percent > 0
+    ? mixColors(palette.blue, toneColor, 0.34 + (magnitude * 0.48))
+    : mixColors(palette.pink, toneColor, 0.34 + (magnitude * 0.5))
+  const supportAccent = mixColors(palette.violet, toneColor, 0.22 + (magnitude * 0.5))
+  const edgeAccent = mixColors(resolvedBase, toneColor, 0.18 + (magnitude * 0.64))
+
+  return [
+    { offset: '0%', color: leadAccent, opacity: 1 },
+    { offset: '58%', color: supportAccent, opacity: 0.98 },
+    { offset: '100%', color: edgeAccent, opacity: 0.8 + (magnitude * 0.1) },
+  ]
+}
+
+function getCompareHoverDotStroke(percent = 0) {
+  const magnitude = clamp(Math.abs(percent) / 42, 0, 1)
+
+  if (magnitude < 0.035) {
+    return 'rgba(255,255,255,0.9)'
+  }
+
+  const darkTone = percent > 0 ? '#316b58' : '#8a4d69'
+  return mixColors('#ffffff', darkTone, 0.42 + (magnitude * 0.4))
+}
+
+function getCompareSelectionBandFill(percent = 0) {
+  const magnitude = clamp(Math.abs(percent) / 42, 0, 1)
+
+  if (magnitude < 0.035) {
+    return 'rgba(255,255,255,0.025)'
+  }
+
+  const tint = percent > 0
+    ? { r: 139, g: 231, b: 194 }
+    : { r: 255, g: 139, b: 185 }
+
+  return `rgba(${tint.r}, ${tint.g}, ${tint.b}, ${(0.03 + (magnitude * 0.05)).toFixed(3)})`
+}
+
 export default function DualTraceLineChart({
   data,
   series,
@@ -439,6 +527,26 @@ export default function DualTraceLineChart({
       }),
     }
   }, [compareEndIndex, compareStartIndex, data, pointMap])
+  const selectionSummaryByKey = useMemo(
+    () => Object.fromEntries(selectionSummary?.series.map((entry) => [entry.key, entry]) ?? []),
+    [selectionSummary],
+  )
+  const selectionBandPercent = useMemo(() => {
+    if (!selectionSummary?.series?.length) {
+      return 0
+    }
+
+    const totalPercent = selectionSummary.series.reduce(
+      (sum, entry) => sum + (entry.percent ?? 0),
+      0,
+    )
+
+    return totalPercent / selectionSummary.series.length
+  }, [selectionSummary])
+  const selectionBandFill = useMemo(
+    () => getCompareSelectionBandFill(selectionBandPercent),
+    [selectionBandPercent],
+  )
 
   const selectionBand = effectiveSelection && pointMap[0]?.points.length
     ? (() => {
@@ -549,7 +657,9 @@ export default function DualTraceLineChart({
             const gradientId = `trace-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
             const hoverGradientId = `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
             const gradientStops = getGradientStops(entry.color, `${lineKey}-${entry.key}`)
-            const hoverStops = getHoverDotStops(entry.color)
+            const hoverStops = selectionSummaryByKey[entry.key]
+              ? getCompareHoverDotStops(entry.color, selectionSummaryByKey[entry.key].percent)
+              : getHoverDotStops(entry.color)
 
             return (
               <g key={entry.key}>
@@ -608,6 +718,7 @@ export default function DualTraceLineChart({
         {selectionBand ? (
           <rect
             className="trace-chart-selection-band"
+            fill={selectionBandFill}
             height={chartHeight - padding.top - padding.bottom}
             pointerEvents="none"
             width={Math.max(selectionBand.width, 18)}
@@ -694,6 +805,9 @@ export default function DualTraceLineChart({
           ? pointMap.map((entry) => {
             const displayedPoint = entry.points[activeIndex]
             const hoverGradientId = `trace-hover-gradient-${String(lineKey).replace(/[^a-zA-Z0-9_-]/g, '-')}-${entry.key}`
+            const hoverStroke = selectionSummaryByKey[entry.key]
+              ? getCompareHoverDotStroke(selectionSummaryByKey[entry.key].percent)
+              : 'rgba(255,255,255,0.9)'
 
             return displayedPoint ? (
               <circle
@@ -704,7 +818,7 @@ export default function DualTraceLineChart({
                 key={`hover-${entry.key}`}
                 pointerEvents="none"
                 r="4.2"
-                stroke="rgba(255,255,255,0.9)"
+                stroke={hoverStroke}
                 strokeWidth="1.2"
               />
             ) : null
@@ -719,6 +833,7 @@ export default function DualTraceLineChart({
               animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1, 1.7, 2.1] }}
               initial={{ opacity: 0, scale: 0.4 }}
               key={`pulse-${lineKey}-${entry.key}`}
+              pointerEvents="none"
               transition={{ duration: 1.02, delay: 1.95, ease: 'easeOut' }}
             >
               <circle

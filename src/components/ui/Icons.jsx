@@ -81,6 +81,13 @@ export function NavIcon({ name, className = '', size = 18 }) {
         <path d="M17 18v-4" />
       </>
     ),
+    loaderLab: (
+      <>
+        <path d="M12 3 20 8v8l-8 5-8-5V8Z" />
+        <path d="M12 6.5 17 9.5v5L12 17.5l-5-3v-5Z" />
+        <path d="M12 10.2 14.3 12.5 12 14.8 9.7 12.5Z" />
+      </>
+    ),
     settings: (
       <>
         <circle cx="12" cy="12" r="3.2" />

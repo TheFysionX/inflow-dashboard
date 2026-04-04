@@ -8,21 +8,16 @@ import {
   overviewRangeOptions,
 } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
-import { getFreshnessMeta } from '../../lib/freshness'
 import { scrollToSearchTarget } from '../../lib/searchNavigation'
 import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ArrowRightIcon, CloseIcon, NavIcon, SearchIcon } from '../ui/Icons'
 import RangeSelector from '../ui/RangeSelector'
-import StatusPill from '../ui/StatusPill'
 import ProfileMenu from './ProfileMenu'
 
 export default function Topbar() {
   const navigate = useDashboardNavigate()
   const location = useLocation()
   const {
-    activeClientId,
-    clients,
-    dataset,
     rangeSelection,
     setCustomRange,
     setRangePreset,
@@ -55,18 +50,6 @@ export default function Topbar() {
         ? searchDashboard(searchQuery, 8)
         : quickSearchEntries.slice(0, 6),
     [searchQuery],
-  )
-  const activeClient = useMemo(
-    () => clients.find((client) => client.id === activeClientId) ?? clients[0],
-    [activeClientId, clients],
-  )
-  const freshness = useMemo(
-    () =>
-      getFreshnessMeta(
-        dataset?.referenceNow,
-        activeClient?.timezone ?? 'America/Los_Angeles',
-      ),
-    [activeClient?.timezone, dataset?.referenceNow],
   )
 
   useEffect(() => {
@@ -239,9 +222,6 @@ export default function Topbar() {
           options={overviewRangeOptions}
           value={rangeSelection}
         />
-        <StatusPill tone="info" title={freshness.label}>
-          {freshness.shortLabel}
-        </StatusPill>
         <ProfileMenu />
       </div>
     </header>

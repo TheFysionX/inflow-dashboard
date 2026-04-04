@@ -1102,6 +1102,25 @@ p {
   color: #ff8bb9;
 }
 
+.profile-dropdown-version {
+  display: grid;
+  gap: 2px;
+  padding: 2px 14px 0;
+  color: var(--color-text-muted);
+}
+
+.profile-dropdown-version span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-dropdown-version strong {
+  color: var(--color-text-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .profile-signout-confirm {
   display: grid;
   gap: 12px;
@@ -1193,6 +1212,41 @@ p {
 }
 
 .route-loader-shell {
+  --route-loader-accent-a: rgba(116, 199, 255, 0.7);
+  --route-loader-accent-b: rgba(143, 109, 255, 0.58);
+  --route-loader-accent-c: rgba(244, 155, 227, 0.68);
+  --route-loader-frame-border: rgba(255, 255, 255, 0.14);
+  --route-loader-frame-fill: rgba(255, 255, 255, 0.012);
+  --route-loader-frame-inline: rgba(255, 255, 255, 0.015);
+  --route-loader-line-bright: rgba(255, 255, 255, 0.78);
+  --route-loader-line-soft: rgba(255, 255, 255, 0.4);
+  --route-loader-line-faint: rgba(255, 255, 255, 0.3);
+  --route-loader-beam-core: rgba(255, 255, 255, 0.42);
+  --route-loader-beam-soft: rgba(255, 255, 255, 0.16);
+  --route-loader-core-shell-border: rgba(255, 255, 255, 0.22);
+  --route-loader-core-shell-fill: rgba(255, 255, 255, 0.02);
+  --route-loader-core-border: rgba(255, 255, 255, 0.84);
+  --route-loader-core-fill: rgba(255, 255, 255, 0.06);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(
+    34% 0%,
+    66% 0%,
+    82% 5%,
+    95% 18%,
+    100% 34%,
+    100% 66%,
+    95% 82%,
+    82% 95%,
+    66% 100%,
+    34% 100%,
+    18% 95%,
+    5% 82%,
+    0% 66%,
+    0% 34%,
+    5% 18%,
+    18% 5%
+  );
+  --route-loader-core-shape: var(--route-loader-shape);
   display: grid;
   justify-items: center;
   align-content: center;
@@ -1205,6 +1259,11 @@ p {
 .route-loader-shell--overlay {
   min-height: 100%;
   padding: 48px 24px;
+}
+
+.route-loader-shell--preview {
+  min-height: 0;
+  padding: 10px 0 0;
 }
 
 .route-loader-copy {
@@ -1227,6 +1286,31 @@ p {
   filter: drop-shadow(0 28px 56px rgba(13, 18, 34, 0.42));
 }
 
+.route-loader-geometry::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--route-loader-accent-a), transparent 46%),
+    radial-gradient(circle at 26% 34%, var(--route-loader-accent-b), transparent 34%),
+    radial-gradient(circle at 74% 68%, var(--route-loader-accent-c), transparent 34%);
+  opacity: 0.3;
+  filter: blur(34px);
+  pointer-events: none;
+}
+
+.route-loader-geometry::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .dashboard-route-overlay {
   position: fixed;
   inset: 0;
@@ -1245,6 +1329,19 @@ p {
   width: 100%;
   aspect-ratio: 1;
   isolation: isolate;
+  transform: rotate(var(--route-loader-stage-rotate));
+}
+
+.route-loader-stage::before,
+.route-loader-stage::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .route-loader-frame,
@@ -1259,21 +1356,53 @@ p {
 .route-loader-frame {
   width: var(--route-loader-size);
   height: var(--route-loader-size);
-  border: 2px solid rgba(255, 255, 255, 0.14);
+  border: 2px solid var(--route-loader-frame-border);
+  clip-path: var(--route-loader-shape);
   transform: translate(-50%, -50%) rotate(45deg);
-  background: rgba(255, 255, 255, 0.012);
+  background: var(--route-loader-frame-fill);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.015),
-    0 0 0 1px rgba(255, 255, 255, 0.015);
+    inset 0 0 0 1px var(--route-loader-frame-inline),
+    0 0 0 1px var(--route-loader-frame-inline);
+}
+
+.route-loader-frame::before,
+.route-loader-frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  clip-path: inherit;
 }
 
 .route-loader-frame::before {
-  content: '';
-  position: absolute;
   inset: -2px;
   border: 2px solid transparent;
-  border-image: linear-gradient(135deg, rgba(116, 199, 255, 0.75), rgba(143, 109, 255, 0.58), rgba(244, 155, 227, 0.72)) 1;
-  opacity: 0.56;
+  border-image: linear-gradient(135deg, var(--route-loader-accent-a), var(--route-loader-accent-b), var(--route-loader-accent-c)) 1;
+  opacity: 0.42;
+}
+
+.route-loader-frame--halo {
+  --route-loader-size: 248px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.006);
+  animation: route-loader-rotate-halo 6.4s linear infinite reverse;
+}
+
+.route-loader-frame--halo::before {
+  opacity: 0.22;
+}
+
+.route-loader-frame--halo::after {
+  inset: 14px;
+  background:
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 20px left / 30px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 20px left / 2px 30px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 20px right / 30px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 20px right / 2px 30px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 20px left / 30px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 20px left / 2px 30px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 20px right / 30px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 20px right / 2px 30px no-repeat;
+  opacity: 0.42;
 }
 
 .route-loader-frame--outer {
@@ -1281,27 +1410,85 @@ p {
   animation: route-loader-rotate-outer 3.6s linear infinite;
 }
 
+.route-loader-frame--outer::before {
+  opacity: 0.54;
+}
+
+.route-loader-frame--outer::after {
+  inset: 10px;
+  background:
+    linear-gradient(90deg, transparent, var(--route-loader-line-soft) 28%, var(--route-loader-line-bright) 50%, var(--route-loader-line-soft) 72%, transparent) top center / 82px 2px no-repeat,
+    linear-gradient(90deg, transparent, var(--route-loader-line-soft) 28%, var(--route-loader-line-bright) 50%, var(--route-loader-line-soft) 72%, transparent) bottom center / 82px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-soft), var(--route-loader-line-bright), var(--route-loader-line-soft)) center left / 2px 82px no-repeat,
+    linear-gradient(var(--route-loader-line-soft), var(--route-loader-line-bright), var(--route-loader-line-soft)) center right / 2px 82px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 18px left / 38px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 18px left / 2px 38px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 18px right / 38px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) top 18px right / 2px 38px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 18px left / 38px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 18px left / 2px 38px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 18px right / 38px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-faint)) bottom 18px right / 2px 38px no-repeat;
+  opacity: 0.62;
+}
+
+.route-loader-frame--support {
+  --route-loader-size: 176px;
+  border-color: rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.01);
+  animation: route-loader-rotate-support 4.4s linear infinite reverse;
+}
+
+.route-loader-frame--support::before {
+  opacity: 0.32;
+}
+
+.route-loader-frame--support::after {
+  inset: 12px;
+  background:
+    linear-gradient(90deg, transparent, var(--route-loader-line-faint) 34%, var(--route-loader-line-soft) 50%, var(--route-loader-line-faint) 66%, transparent) top center / 62px 2px no-repeat,
+    linear-gradient(90deg, transparent, var(--route-loader-line-faint) 34%, var(--route-loader-line-soft) 50%, var(--route-loader-line-faint) 66%, transparent) bottom center / 62px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-soft), var(--route-loader-line-faint)) center left / 2px 62px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-soft), var(--route-loader-line-faint)) center right / 2px 62px no-repeat;
+  opacity: 0.38;
+}
+
 .route-loader-frame--middle {
   --route-loader-size: 146px;
   animation: route-loader-rotate-middle 2.8s linear infinite reverse;
 }
 
+.route-loader-frame--middle::after {
+  inset: 10px;
+  background:
+    linear-gradient(90deg, transparent, var(--route-loader-line-faint) 40%, var(--route-loader-line-bright) 50%, var(--route-loader-line-faint) 60%, transparent) top center / 44px 2px no-repeat,
+    linear-gradient(90deg, transparent, var(--route-loader-line-faint) 40%, var(--route-loader-line-bright) 50%, var(--route-loader-line-faint) 60%, transparent) bottom center / 44px 2px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-bright), var(--route-loader-line-faint)) center left / 2px 44px no-repeat,
+    linear-gradient(var(--route-loader-line-faint), var(--route-loader-line-bright), var(--route-loader-line-faint)) center right / 2px 44px no-repeat;
+  opacity: 0.36;
+}
+
 .route-loader-frame--inner {
   --route-loader-size: 88px;
-  animation: route-loader-pulse-inner 1.6s ease-in-out infinite;
+  animation: route-loader-rotate-inner 2.2s ease-in-out infinite;
 }
 
 .route-loader-beam {
   width: 214px;
   height: 2px;
   transform-origin: center;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16) 18%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0.16) 82%, transparent);
+  background: linear-gradient(90deg, transparent, var(--route-loader-beam-soft) 18%, var(--route-loader-beam-core) 50%, var(--route-loader-beam-soft) 82%, transparent);
   opacity: 0.54;
 }
 
 .route-loader-beam--horizontal {
   transform: translate(-50%, -50%);
   animation: route-loader-beam-fade 1.8s ease-in-out infinite;
+}
+
+.route-loader-beam--vertical {
+  transform: translate(-50%, -50%) rotate(90deg);
+  animation: route-loader-beam-fade 1.8s ease-in-out infinite 0.3s;
 }
 
 .route-loader-beam--diag-left {
@@ -1314,10 +1501,24 @@ p {
   animation: route-loader-beam-fade 1.8s ease-in-out infinite 1.2s;
 }
 
+.route-loader-beam--diag-left-soft,
+.route-loader-beam--diag-right-soft {
+  opacity: 0;
+}
+
+.route-loader-beam--diag-left-soft {
+  transform: translate(-50%, -50%) rotate(30deg);
+}
+
+.route-loader-beam--diag-right-soft {
+  transform: translate(-50%, -50%) rotate(-30deg);
+}
+
 .route-loader-core-shell,
 .route-loader-core {
   width: 34px;
   height: 34px;
+  clip-path: var(--route-loader-core-shape);
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
@@ -1333,17 +1534,1946 @@ p {
 }
 
 .route-loader-core-shell {
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid var(--route-loader-core-shell-border);
+  background: var(--route-loader-core-shell-fill);
   animation: route-loader-core-shell 1.8s ease-in-out infinite;
 }
 
 .route-loader-core {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.84);
-  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid var(--route-loader-core-border);
+  background: var(--route-loader-core-fill);
   animation: route-loader-core-breathe 1.8s ease-in-out infinite;
+}
+
+.route-loader-scene {
+  --route-scene-bg-a: rgba(17, 25, 39, 0.92);
+  --route-scene-bg-b: rgba(14, 20, 33, 0.96);
+  --route-scene-bg-c: rgba(9, 13, 22, 0.98);
+  --route-scene-glow-a: rgba(120, 198, 255, 0.18);
+  --route-scene-glow-b: rgba(165, 141, 255, 0.14);
+  --route-scene-border: rgba(255, 255, 255, 0.12);
+  --route-scene-border-soft: rgba(255, 255, 255, 0.08);
+  --route-scene-surface-a: rgba(255, 255, 255, 0.09);
+  --route-scene-surface-b: rgba(255, 255, 255, 0.045);
+  --route-scene-chip: rgba(255, 255, 255, 0.12);
+  position: relative;
+  width: min(360px, 74vw);
+  aspect-ratio: 1.04;
+  overflow: hidden;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 18% 18%, var(--route-scene-glow-a), transparent 34%),
+    radial-gradient(circle at 82% 74%, var(--route-scene-glow-b), transparent 32%),
+    linear-gradient(160deg, var(--route-scene-bg-a), var(--route-scene-bg-b) 54%, var(--route-scene-bg-c));
+  box-shadow:
+    inset 0 0 0 1px var(--route-scene-border-soft),
+    0 28px 52px rgba(9, 13, 22, 0.42);
+  isolation: isolate;
+}
+
+.route-loader-scene::before,
+.route-loader-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.route-loader-scene::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 24%),
+    linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.035) 48%, transparent 76%);
+  opacity: 0.8;
+}
+
+.route-loader-scene::after {
+  inset: auto 18px 18px;
+  height: 72px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 70%);
+  filter: blur(20px);
+  opacity: 0.42;
+}
+
+.route-loader-scene-glow,
+.route-loader-scene-surface,
+.route-loader-scene-chip {
+  position: absolute;
+  will-change: transform, opacity;
+}
+
+.route-loader-scene-glow {
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  filter: blur(36px);
+  opacity: 0.44;
+}
+
+.route-loader-scene-glow--a {
+  background: var(--route-scene-glow-a);
+  left: 12px;
+  top: 10px;
+}
+
+.route-loader-scene-glow--b {
+  background: var(--route-scene-glow-b);
+  right: 8px;
+  bottom: 12px;
+}
+
+.route-loader-scene-surface {
+  border: 1px solid var(--route-scene-border);
+  background: linear-gradient(165deg, var(--route-scene-surface-a), var(--route-scene-surface-b));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 30px rgba(7, 10, 18, 0.22);
+  backdrop-filter: blur(16px);
+}
+
+.route-loader-scene-chip {
+  min-width: 18px;
+  min-height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(165deg, var(--route-scene-chip), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 20px rgba(8, 12, 22, 0.16);
+  opacity: 0;
+}
+
+.route-loader-scene-surface--a {
+  inset: 22px 122px 132px 22px;
+  border-radius: 30px;
+}
+
+.route-loader-scene-surface--b {
+  inset: 56px 26px 168px 174px;
+  border-radius: 24px;
+}
+
+.route-loader-scene-surface--c {
+  inset: 172px 118px 56px 32px;
+  border-radius: 28px;
+}
+
+.route-loader-scene-surface--d {
+  inset: 126px 34px 98px 164px;
+  border-radius: 22px;
+}
+
+.route-loader-scene-surface--e {
+  inset: auto 28px 26px 120px;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.route-loader-scene-surface--f {
+  inset: auto 184px 22px 28px;
+  height: 30px;
+  border-radius: 16px;
+}
+
+.route-loader-scene-chip--a {
+  width: 74px;
+  height: 18px;
+  border-radius: 999px;
+  left: 26px;
+  top: 22px;
+}
+
+.route-loader-scene-chip--b {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  right: 28px;
+  top: 32px;
+}
+
+.route-loader-scene-chip--c {
+  width: 90px;
+  height: 16px;
+  border-radius: 999px;
+  left: 42px;
+  bottom: 40px;
+}
+
+.route-loader-scene-chip--d {
+  width: 42px;
+  height: 14px;
+  border-radius: 999px;
+  right: 88px;
+  bottom: 92px;
+}
+
+.route-loader-shell--preview .route-loader-scene {
+  width: min(320px, 70vw);
+}
+
+.route-loader-shell--variant-facet {
+  --route-loader-accent-a: rgba(108, 218, 255, 0.7);
+  --route-loader-accent-b: rgba(135, 117, 255, 0.58);
+  --route-loader-accent-c: rgba(255, 138, 214, 0.68);
+}
+
+.route-loader-shell--variant-crown {
+  --route-loader-accent-a: rgba(116, 199, 255, 0.78);
+  --route-loader-accent-b: rgba(143, 109, 255, 0.64);
+  --route-loader-accent-c: rgba(244, 155, 227, 0.56);
+  --route-loader-line-bright: rgba(231, 244, 255, 0.92);
+  --route-loader-line-soft: rgba(147, 204, 255, 0.54);
+  --route-loader-line-faint: rgba(170, 152, 255, 0.34);
+  --route-loader-beam-core: rgba(177, 220, 255, 0.5);
+  --route-loader-beam-soft: rgba(126, 190, 255, 0.2);
+  --route-loader-core-shell-border: rgba(176, 192, 255, 0.36);
+  --route-loader-core-border: rgba(236, 243, 255, 0.94);
+  --route-loader-core-fill: rgba(143, 109, 255, 0.12);
+  --route-loader-stage-rotate: -6deg;
+  --route-loader-shape: polygon(
+    30% 0%,
+    40% 4%,
+    50% 0%,
+    60% 4%,
+    70% 0%,
+    82% 6%,
+    92% 18%,
+    100% 30%,
+    96% 40%,
+    100% 50%,
+    96% 60%,
+    100% 70%,
+    92% 82%,
+    82% 94%,
+    70% 100%,
+    60% 96%,
+    50% 100%,
+    40% 96%,
+    30% 100%,
+    18% 94%,
+    8% 82%,
+    0% 70%,
+    4% 60%,
+    0% 50%,
+    4% 40%,
+    0% 30%,
+    8% 18%,
+    18% 6%
+  );
+  --route-loader-core-shape: polygon(
+    50% 0%,
+    82% 18%,
+    100% 50%,
+    82% 82%,
+    50% 100%,
+    18% 82%,
+    0% 50%,
+    18% 18%
+  );
+}
+
+.route-loader-shell--variant-crown .route-loader-frame--halo {
+  --route-loader-size: 268px;
+}
+
+.route-loader-shell--variant-crown .route-loader-frame--outer {
+  --route-loader-size: 224px;
+}
+
+.route-loader-shell--variant-crown .route-loader-frame--support {
+  --route-loader-size: 192px;
+}
+
+.route-loader-shell--variant-crown .route-loader-beam--vertical,
+.route-loader-shell--variant-crown .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-crown .route-loader-beam--diag-right-soft {
+  opacity: 0.56;
+  animation: route-loader-beam-fade 2.3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-aperture {
+  --route-loader-accent-a: rgba(153, 226, 255, 0.68);
+  --route-loader-accent-b: rgba(110, 173, 255, 0.52);
+  --route-loader-accent-c: rgba(156, 152, 255, 0.48);
+  --route-loader-line-soft: rgba(158, 219, 255, 0.48);
+  --route-loader-stage-rotate: -4deg;
+  --route-loader-shape: polygon(
+    34% 0%,
+    50% 4%,
+    66% 0%,
+    82% 8%,
+    92% 20%,
+    100% 34%,
+    96% 50%,
+    100% 66%,
+    92% 80%,
+    82% 92%,
+    66% 100%,
+    50% 96%,
+    34% 100%,
+    18% 92%,
+    8% 80%,
+    0% 66%,
+    4% 50%,
+    0% 34%,
+    8% 20%,
+    18% 8%
+  );
+}
+
+.route-loader-shell--variant-aperture .route-loader-geometry::after {
+  width: 156px;
+  height: 156px;
+  opacity: 0.34;
+  border: 1px solid rgba(219, 248, 255, 0.34);
+  clip-path: polygon(38% 0%, 62% 0%, 82% 8%, 94% 26%, 100% 50%, 94% 74%, 82% 92%, 62% 100%, 38% 100%, 18% 92%, 6% 74%, 0% 50%, 6% 26%, 18% 8%);
+  animation: route-loader-spin-soft 5.8s linear infinite reverse;
+}
+
+.route-loader-shell--variant-aperture .route-loader-beam--horizontal,
+.route-loader-shell--variant-aperture .route-loader-beam--vertical {
+  opacity: 0.24;
+}
+
+.route-loader-shell--variant-vector {
+  --route-loader-accent-a: rgba(108, 235, 255, 0.74);
+  --route-loader-accent-b: rgba(90, 185, 255, 0.58);
+  --route-loader-accent-c: rgba(121, 143, 255, 0.44);
+  --route-loader-line-bright: rgba(228, 250, 255, 0.92);
+  --route-loader-line-soft: rgba(131, 225, 255, 0.54);
+  --route-loader-stage-rotate: 8deg;
+  --route-loader-shape: polygon(
+    28% 0%,
+    72% 0%,
+    88% 8%,
+    100% 28%,
+    100% 72%,
+    88% 92%,
+    72% 100%,
+    28% 100%,
+    12% 92%,
+    0% 72%,
+    0% 28%,
+    12% 8%
+  );
+  --route-loader-core-shape: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+.route-loader-shell--variant-vector .route-loader-stage::after {
+  width: 132px;
+  height: 132px;
+  opacity: 0.48;
+  border: 1px solid rgba(195, 241, 255, 0.28);
+  clip-path: polygon(28% 0%, 72% 0%, 100% 28%, 100% 72%, 72% 100%, 28% 100%, 0% 72%, 0% 28%);
+  animation: route-loader-spin-soft-reverse 4.8s linear infinite;
+}
+
+.route-loader-shell--variant-vector .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-vector .route-loader-beam--diag-right-soft {
+  opacity: 0.42;
+  animation: route-loader-beam-fade 2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-axis {
+  --route-loader-accent-a: rgba(126, 242, 226, 0.74);
+  --route-loader-accent-b: rgba(103, 190, 255, 0.5);
+  --route-loader-accent-c: rgba(143, 149, 255, 0.42);
+  --route-loader-line-bright: rgba(230, 255, 249, 0.9);
+  --route-loader-line-soft: rgba(135, 235, 226, 0.52);
+  --route-loader-beam-core: rgba(182, 246, 242, 0.54);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(
+    34% 0%,
+    66% 0%,
+    84% 6%,
+    94% 18%,
+    100% 34%,
+    100% 66%,
+    94% 82%,
+    84% 94%,
+    66% 100%,
+    34% 100%,
+    16% 94%,
+    6% 82%,
+    0% 66%,
+    0% 34%,
+    6% 18%,
+    16% 6%
+  );
+}
+
+.route-loader-shell--variant-axis .route-loader-stage::before {
+  width: 164px;
+  height: 164px;
+  opacity: 0.38;
+  background:
+    linear-gradient(90deg, transparent, rgba(230, 255, 249, 0.6) 44%, rgba(230, 255, 249, 0.6) 56%, transparent),
+    linear-gradient(transparent, rgba(230, 255, 249, 0.6) 44%, rgba(230, 255, 249, 0.6) 56%, transparent);
+  clip-path: polygon(34% 0%, 66% 0%, 100% 34%, 100% 66%, 66% 100%, 34% 100%, 0% 66%, 0% 34%);
+  animation: route-loader-pulse-accent 2.3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-axis .route-loader-beam--diag-left,
+.route-loader-shell--variant-axis .route-loader-beam--diag-right,
+.route-loader-shell--variant-axis .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-axis .route-loader-beam--diag-right-soft {
+  opacity: 0.18;
+}
+
+.route-loader-shell--variant-ember {
+  --route-loader-accent-a: rgba(255, 194, 128, 0.78);
+  --route-loader-accent-b: rgba(255, 133, 101, 0.56);
+  --route-loader-accent-c: rgba(255, 110, 146, 0.42);
+  --route-loader-line-soft: rgba(255, 196, 133, 0.46);
+  --route-loader-stage-rotate: 10deg;
+  --route-loader-shape: polygon(
+    50% 0%,
+    62% 8%,
+    76% 2%,
+    86% 14%,
+    98% 24%,
+    92% 38%,
+    100% 50%,
+    92% 62%,
+    98% 76%,
+    86% 86%,
+    76% 98%,
+    62% 92%,
+    50% 100%,
+    38% 92%,
+    24% 98%,
+    14% 86%,
+    2% 76%,
+    8% 62%,
+    0% 50%,
+    8% 38%,
+    2% 24%,
+    14% 14%,
+    24% 2%,
+    38% 8%
+  );
+}
+
+.route-loader-shell--variant-ember .route-loader-stage::after {
+  width: 118px;
+  height: 118px;
+  opacity: 0.28;
+  border: 1px solid rgba(255, 208, 165, 0.3);
+  clip-path: polygon(50% 0%, 76% 8%, 100% 50%, 76% 92%, 50% 100%, 24% 92%, 0% 50%, 24% 8%);
+  animation: route-loader-spin-soft 3.6s linear infinite;
+}
+
+.route-loader-shell--variant-signal {
+  --route-loader-accent-a: rgba(137, 235, 255, 0.76);
+  --route-loader-accent-b: rgba(90, 192, 255, 0.54);
+  --route-loader-accent-c: rgba(106, 148, 255, 0.34);
+  --route-loader-line-soft: rgba(149, 224, 255, 0.5);
+  --route-loader-beam-core: rgba(188, 239, 255, 0.52);
+  --route-loader-shape: polygon(22% 0%, 78% 0%, 100% 22%, 100% 78%, 78% 100%, 22% 100%, 0% 78%, 0% 22%);
+}
+
+.route-loader-shell--variant-signal .route-loader-geometry::after {
+  width: 190px;
+  height: 146px;
+  opacity: 0.34;
+  background:
+    linear-gradient(180deg, transparent, rgba(223, 248, 255, 0.2) 48%, rgba(223, 248, 255, 0.56) 50%, rgba(223, 248, 255, 0.2) 52%, transparent),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(223, 248, 255, 0.08) 22px 24px);
+  clip-path: polygon(12% 0%, 88% 0%, 100% 18%, 100% 82%, 88% 100%, 12% 100%, 0% 82%, 0% 18%);
+  animation: route-loader-scan-accent 2.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-signal .route-loader-beam--diag-left,
+.route-loader-shell--variant-signal .route-loader-beam--diag-right,
+.route-loader-shell--variant-signal .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-signal .route-loader-beam--diag-right-soft {
+  opacity: 0.12;
+}
+
+.route-loader-shell--variant-nova {
+  --route-loader-accent-a: rgba(255, 208, 150, 0.76);
+  --route-loader-accent-b: rgba(255, 160, 184, 0.52);
+  --route-loader-accent-c: rgba(163, 156, 255, 0.4);
+  --route-loader-line-bright: rgba(255, 240, 214, 0.92);
+  --route-loader-stage-rotate: 6deg;
+  --route-loader-shape: polygon(
+    50% 0%,
+    58% 12%,
+    72% 6%,
+    80% 18%,
+    94% 20%,
+    88% 34%,
+    100% 42%,
+    92% 50%,
+    100% 58%,
+    88% 66%,
+    94% 80%,
+    80% 82%,
+    72% 94%,
+    58% 88%,
+    50% 100%,
+    42% 88%,
+    28% 94%,
+    20% 82%,
+    6% 80%,
+    12% 66%,
+    0% 58%,
+    8% 50%,
+    0% 42%,
+    12% 34%,
+    6% 20%,
+    20% 18%,
+    28% 6%,
+    42% 12%
+  );
+}
+
+.route-loader-shell--variant-nova .route-loader-stage::before {
+  width: 176px;
+  height: 176px;
+  opacity: 0.28;
+  border: 1px solid rgba(255, 230, 194, 0.26);
+  clip-path: polygon(50% 0%, 66% 14%, 86% 14%, 86% 34%, 100% 50%, 86% 66%, 86% 86%, 66% 86%, 50% 100%, 34% 86%, 14% 86%, 14% 66%, 0% 50%, 14% 34%, 14% 14%, 34% 14%);
+  animation: route-loader-spin-soft 5.2s linear infinite;
+}
+
+.route-loader-shell--variant-helix {
+  --route-loader-accent-a: rgba(153, 234, 255, 0.64);
+  --route-loader-accent-b: rgba(111, 199, 255, 0.48);
+  --route-loader-accent-c: rgba(130, 170, 255, 0.36);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(42% 0%, 58% 0%, 74% 4%, 88% 12%, 96% 26%, 100% 42%, 100% 58%, 96% 74%, 88% 88%, 74% 96%, 58% 100%, 42% 100%, 26% 96%, 12% 88%, 4% 74%, 0% 58%, 0% 42%, 4% 26%, 12% 12%, 26% 4%);
+}
+
+.route-loader-shell--variant-helix .route-loader-stage::before {
+  width: 192px;
+  height: 192px;
+  opacity: 0.34;
+  border: 1px solid rgba(210, 246, 255, 0.26);
+  clip-path: polygon(42% 0%, 58% 0%, 74% 4%, 88% 12%, 96% 26%, 100% 42%, 100% 58%, 96% 74%, 88% 88%, 74% 96%, 58% 100%, 42% 100%, 26% 96%, 12% 88%, 4% 74%, 0% 58%, 0% 42%, 4% 26%, 12% 12%, 26% 4%);
+  animation: route-loader-spin-soft 5.4s linear infinite;
+}
+
+.route-loader-shell--variant-helix .route-loader-stage::after {
+  width: 126px;
+  height: 126px;
+  opacity: 0.26;
+  border: 1px solid rgba(210, 246, 255, 0.26);
+  clip-path: polygon(42% 0%, 58% 0%, 74% 4%, 88% 12%, 96% 26%, 100% 42%, 100% 58%, 96% 74%, 88% 88%, 74% 96%, 58% 100%, 42% 100%, 26% 96%, 12% 88%, 4% 74%, 0% 58%, 0% 42%, 4% 26%, 12% 12%, 26% 4%);
+  animation: route-loader-spin-soft-reverse 3.8s linear infinite;
+}
+
+.route-loader-shell--variant-helix .route-loader-beam {
+  opacity: 0.12;
+}
+
+.route-loader-shell--variant-glyph {
+  --route-loader-accent-a: rgba(255, 214, 149, 0.72);
+  --route-loader-accent-b: rgba(244, 189, 132, 0.5);
+  --route-loader-accent-c: rgba(220, 162, 109, 0.32);
+  --route-loader-line-soft: rgba(255, 219, 176, 0.48);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(28% 0%, 72% 0%, 100% 28%, 100% 72%, 72% 100%, 28% 100%, 0% 72%, 0% 28%);
+}
+
+.route-loader-shell--variant-glyph .route-loader-stage::before {
+  width: 108px;
+  height: 108px;
+  opacity: 0.44;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 238, 204, 0.72) 46%, rgba(255, 238, 204, 0.72) 54%, transparent),
+    linear-gradient(transparent 24%, rgba(255, 238, 204, 0.26) 24% 28%, transparent 28% 72%, rgba(255, 238, 204, 0.26) 72% 76%, transparent 76%);
+  clip-path: polygon(22% 0%, 78% 0%, 100% 22%, 100% 78%, 78% 100%, 22% 100%, 0% 78%, 0% 22%);
+}
+
+.route-loader-shell--variant-glyph .route-loader-beam {
+  opacity: 0.16;
+}
+
+.route-loader-shell--variant-monolith {
+  --route-loader-accent-a: rgba(151, 215, 255, 0.6);
+  --route-loader-accent-b: rgba(126, 165, 255, 0.46);
+  --route-loader-accent-c: rgba(100, 118, 188, 0.24);
+  --route-loader-line-soft: rgba(175, 214, 255, 0.36);
+  --route-loader-stage-rotate: -45deg;
+  --route-loader-shape: polygon(38% 0%, 62% 0%, 74% 8%, 82% 24%, 82% 76%, 74% 92%, 62% 100%, 38% 100%, 26% 92%, 18% 76%, 18% 24%, 26% 8%);
+  --route-loader-core-shape: polygon(38% 0%, 62% 0%, 78% 22%, 78% 78%, 62% 100%, 38% 100%, 22% 78%, 22% 22%);
+}
+
+.route-loader-shell--variant-monolith .route-loader-frame--halo {
+  --route-loader-size: 224px;
+}
+
+.route-loader-shell--variant-monolith .route-loader-stage::before {
+  width: 64px;
+  height: 214px;
+  opacity: 0.2;
+  border: 1px solid rgba(213, 233, 255, 0.2);
+  clip-path: polygon(26% 0%, 74% 0%, 100% 22%, 100% 78%, 74% 100%, 26% 100%, 0% 78%, 0% 22%);
+  animation: route-loader-pulse-accent 2.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-monolith .route-loader-beam--horizontal,
+.route-loader-shell--variant-monolith .route-loader-beam--diag-left,
+.route-loader-shell--variant-monolith .route-loader-beam--diag-right,
+.route-loader-shell--variant-monolith .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-monolith .route-loader-beam--diag-right-soft {
+  opacity: 0.12;
+}
+
+.route-loader-shell--variant-bloom {
+  --route-loader-accent-a: rgba(255, 205, 216, 0.68);
+  --route-loader-accent-b: rgba(255, 174, 201, 0.48);
+  --route-loader-accent-c: rgba(198, 176, 255, 0.34);
+  --route-loader-line-soft: rgba(255, 216, 228, 0.44);
+  --route-loader-stage-rotate: -2deg;
+  --route-loader-shape: polygon(50% 0%, 66% 6%, 80% 18%, 94% 20%, 100% 34%, 94% 50%, 100% 66%, 94% 80%, 80% 82%, 66% 94%, 50% 100%, 34% 94%, 20% 82%, 6% 80%, 0% 66%, 6% 50%, 0% 34%, 6% 20%, 20% 18%, 34% 6%);
+}
+
+.route-loader-shell--variant-bloom .route-loader-stage::after {
+  width: 142px;
+  height: 142px;
+  opacity: 0.28;
+  border: 1px solid rgba(255, 230, 238, 0.28);
+  clip-path: polygon(50% 0%, 70% 10%, 90% 30%, 100% 50%, 90% 70%, 70% 90%, 50% 100%, 30% 90%, 10% 70%, 0% 50%, 10% 30%, 30% 10%);
+  animation: route-loader-pulse-accent 2.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-relay {
+  --route-loader-accent-a: rgba(166, 247, 220, 0.68);
+  --route-loader-accent-b: rgba(94, 220, 205, 0.48);
+  --route-loader-accent-c: rgba(96, 174, 255, 0.34);
+  --route-loader-stage-rotate: 2deg;
+  --route-loader-shape: polygon(30% 0%, 70% 0%, 92% 12%, 100% 30%, 100% 70%, 92% 88%, 70% 100%, 30% 100%, 8% 88%, 0% 70%, 0% 30%, 8% 12%);
+}
+
+.route-loader-shell--variant-relay .route-loader-stage::before {
+  width: 194px;
+  height: 194px;
+  opacity: 0.3;
+  border: 1px dashed rgba(208, 255, 237, 0.3);
+  clip-path: polygon(30% 0%, 70% 0%, 92% 12%, 100% 30%, 100% 70%, 92% 88%, 70% 100%, 30% 100%, 8% 88%, 0% 70%, 0% 30%, 8% 12%);
+  animation: route-loader-spin-soft-reverse 6.8s linear infinite;
+}
+
+.route-loader-shell--variant-relay .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-relay .route-loader-beam--diag-right-soft {
+  opacity: 0.5;
+  animation: route-loader-beam-fade 1.7s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-shard {
+  --route-loader-accent-a: rgba(173, 236, 255, 0.7);
+  --route-loader-accent-b: rgba(124, 184, 255, 0.5);
+  --route-loader-accent-c: rgba(112, 130, 222, 0.34);
+  --route-loader-stage-rotate: 14deg;
+  --route-loader-shape: polygon(18% 0%, 72% 2%, 100% 22%, 88% 46%, 100% 72%, 76% 100%, 30% 94%, 0% 70%, 8% 42%, 0% 18%);
+  --route-loader-core-shape: polygon(24% 0%, 76% 6%, 100% 34%, 90% 76%, 58% 100%, 16% 82%, 0% 42%);
+}
+
+.route-loader-shell--variant-shard .route-loader-stage::after {
+  width: 150px;
+  height: 150px;
+  opacity: 0.24;
+  border: 1px solid rgba(214, 244, 255, 0.22);
+  clip-path: polygon(18% 0%, 72% 2%, 100% 22%, 88% 46%, 100% 72%, 76% 100%, 30% 94%, 0% 70%, 8% 42%, 0% 18%);
+  animation: route-loader-spin-soft 4.2s linear infinite;
+}
+
+.route-loader-shell--variant-eclipse {
+  --route-loader-accent-a: rgba(182, 205, 255, 0.4);
+  --route-loader-accent-b: rgba(140, 155, 212, 0.28);
+  --route-loader-accent-c: rgba(95, 109, 154, 0.16);
+  --route-loader-frame-border: rgba(255, 255, 255, 0.08);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(42% 0%, 58% 0%, 72% 4%, 84% 12%, 92% 24%, 98% 40%, 100% 50%, 98% 60%, 92% 76%, 84% 88%, 72% 96%, 58% 100%, 42% 100%, 28% 96%, 16% 88%, 8% 76%, 2% 60%, 0% 50%, 2% 40%, 8% 24%, 16% 12%, 28% 4%);
+}
+
+.route-loader-shell--variant-eclipse .route-loader-geometry::before {
+  opacity: 0.18;
+}
+
+.route-loader-shell--variant-eclipse .route-loader-geometry::after {
+  width: 206px;
+  height: 206px;
+  opacity: 0.22;
+  border: 1px solid rgba(221, 230, 255, 0.16);
+  clip-path: polygon(42% 0%, 58% 0%, 72% 4%, 84% 12%, 92% 24%, 98% 40%, 100% 50%, 98% 60%, 92% 76%, 84% 88%, 72% 96%, 58% 100%, 42% 100%, 28% 96%, 16% 88%, 8% 76%, 2% 60%, 0% 50%, 2% 40%, 8% 24%, 16% 12%, 28% 4%);
+  animation: route-loader-spin-soft 8.2s linear infinite;
+}
+
+.route-loader-shell--variant-eclipse .route-loader-beam {
+  opacity: 0.08;
+}
+
+.route-loader-shell--variant-aurora {
+  --route-loader-accent-a: rgba(146, 250, 234, 0.62);
+  --route-loader-accent-b: rgba(112, 215, 255, 0.46);
+  --route-loader-accent-c: rgba(166, 171, 255, 0.34);
+  --route-loader-stage-rotate: -10deg;
+  --route-loader-shape: polygon(24% 0%, 76% 0%, 96% 14%, 100% 36%, 88% 50%, 100% 64%, 96% 86%, 76% 100%, 24% 100%, 4% 86%, 0% 64%, 12% 50%, 0% 36%, 4% 14%);
+}
+
+.route-loader-shell--variant-aurora .route-loader-geometry::after {
+  width: 228px;
+  height: 112px;
+  opacity: 0.34;
+  background: linear-gradient(90deg, transparent, rgba(210, 255, 249, 0.1) 18%, rgba(210, 255, 249, 0.48) 50%, rgba(210, 255, 249, 0.1) 82%, transparent);
+  clip-path: polygon(10% 0%, 90% 0%, 100% 24%, 88% 50%, 100% 76%, 90% 100%, 10% 100%, 0% 76%, 12% 50%, 0% 24%);
+  animation: route-loader-drift-accent 4.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-tide {
+  --route-loader-accent-a: rgba(156, 228, 255, 0.6);
+  --route-loader-accent-b: rgba(128, 199, 230, 0.4);
+  --route-loader-accent-c: rgba(143, 167, 196, 0.26);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(18% 0%, 82% 0%, 100% 20%, 92% 36%, 100% 50%, 92% 64%, 100% 80%, 82% 100%, 18% 100%, 0% 80%, 8% 64%, 0% 50%, 8% 36%, 0% 20%);
+}
+
+.route-loader-shell--variant-tide .route-loader-geometry::after {
+  width: 226px;
+  height: 126px;
+  opacity: 0.28;
+  background:
+    linear-gradient(90deg, transparent, rgba(224, 248, 255, 0.26) 18%, rgba(224, 248, 255, 0.5) 50%, rgba(224, 248, 255, 0.26) 82%, transparent),
+    repeating-linear-gradient(180deg, transparent 0 16px, rgba(224, 248, 255, 0.1) 16px 18px);
+  clip-path: polygon(8% 0%, 92% 0%, 100% 22%, 88% 50%, 100% 78%, 92% 100%, 8% 100%, 0% 78%, 12% 50%, 0% 22%);
+  animation: route-loader-scan-accent 2.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-tide .route-loader-beam--vertical,
+.route-loader-shell--variant-tide .route-loader-beam--diag-left,
+.route-loader-shell--variant-tide .route-loader-beam--diag-right,
+.route-loader-shell--variant-tide .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-tide .route-loader-beam--diag-right-soft {
+  opacity: 0.08;
+}
+
+.route-loader-shell--variant-forge {
+  --route-loader-accent-a: rgba(255, 203, 152, 0.68);
+  --route-loader-accent-b: rgba(232, 165, 120, 0.5);
+  --route-loader-accent-c: rgba(181, 134, 108, 0.28);
+  --route-loader-line-bright: rgba(255, 237, 210, 0.9);
+  --route-loader-stage-rotate: 4deg;
+  --route-loader-shape: polygon(24% 0%, 76% 0%, 100% 24%, 100% 76%, 76% 100%, 24% 100%, 0% 76%, 0% 24%);
+}
+
+.route-loader-shell--variant-forge .route-loader-frame {
+  border-width: 3px;
+}
+
+.route-loader-shell--variant-forge .route-loader-stage::before {
+  width: 136px;
+  height: 136px;
+  opacity: 0.22;
+  border: 2px solid rgba(255, 232, 204, 0.22);
+  clip-path: polygon(24% 0%, 76% 0%, 100% 24%, 100% 76%, 76% 100%, 24% 100%, 0% 76%, 0% 24%);
+  animation: route-loader-pulse-accent 2.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-kite {
+  --route-loader-accent-a: rgba(178, 235, 255, 0.72);
+  --route-loader-accent-b: rgba(130, 206, 255, 0.48);
+  --route-loader-accent-c: rgba(147, 150, 255, 0.28);
+  --route-loader-stage-rotate: 16deg;
+  --route-loader-shape: polygon(50% 0%, 78% 22%, 90% 50%, 78% 78%, 50% 100%, 22% 82%, 0% 50%, 22% 18%);
+  --route-loader-core-shape: polygon(50% 0%, 72% 24%, 86% 50%, 72% 76%, 50% 100%, 28% 76%, 14% 50%, 28% 24%);
+}
+
+.route-loader-shell--variant-kite .route-loader-beam--diag-left,
+.route-loader-shell--variant-kite .route-loader-beam--diag-right {
+  opacity: 0.68;
+}
+
+.route-loader-shell--variant-pulse {
+  --route-loader-accent-a: rgba(176, 255, 235, 0.66);
+  --route-loader-accent-b: rgba(112, 232, 214, 0.46);
+  --route-loader-accent-c: rgba(110, 192, 178, 0.24);
+  --route-loader-line-soft: rgba(176, 255, 235, 0.44);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(34% 0%, 66% 0%, 82% 10%, 100% 34%, 100% 66%, 82% 90%, 66% 100%, 34% 100%, 18% 90%, 0% 66%, 0% 34%, 18% 10%);
+}
+
+.route-loader-shell--variant-pulse .route-loader-stage::after {
+  width: 164px;
+  height: 164px;
+  opacity: 0.22;
+  border: 1px solid rgba(220, 255, 245, 0.24);
+  clip-path: polygon(34% 0%, 66% 0%, 82% 10%, 100% 34%, 100% 66%, 82% 90%, 66% 100%, 34% 100%, 18% 90%, 0% 66%, 0% 34%, 18% 10%);
+  animation: route-loader-pulse-accent 1.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-pulse .route-loader-beam--horizontal,
+.route-loader-shell--variant-pulse .route-loader-beam--vertical {
+  opacity: 0.5;
+}
+
+.route-loader-shell--variant-pulse .route-loader-beam--diag-left,
+.route-loader-shell--variant-pulse .route-loader-beam--diag-right,
+.route-loader-shell--variant-pulse .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-pulse .route-loader-beam--diag-right-soft {
+  opacity: 0.08;
+}
+
+.route-loader-shell--variant-weave {
+  --route-loader-accent-a: rgba(157, 248, 233, 0.68);
+  --route-loader-accent-b: rgba(106, 224, 255, 0.46);
+  --route-loader-accent-c: rgba(123, 161, 255, 0.28);
+  --route-loader-stage-rotate: 4deg;
+  --route-loader-shape: polygon(28% 0%, 72% 0%, 94% 10%, 100% 28%, 100% 72%, 94% 90%, 72% 100%, 28% 100%, 6% 90%, 0% 72%, 0% 28%, 6% 10%);
+}
+
+.route-loader-shell--variant-weave .route-loader-stage::before {
+  width: 172px;
+  height: 172px;
+  opacity: 0.24;
+  border: 1px solid rgba(220, 255, 248, 0.22);
+  clip-path: polygon(28% 0%, 72% 0%, 94% 10%, 100% 28%, 100% 72%, 94% 90%, 72% 100%, 28% 100%, 6% 90%, 0% 72%, 0% 28%, 6% 10%);
+  animation: route-loader-spin-soft-reverse 4.4s linear infinite;
+}
+
+.route-loader-shell--variant-weave .route-loader-stage::after {
+  width: 132px;
+  height: 132px;
+  opacity: 0.28;
+  border: 1px solid rgba(220, 255, 248, 0.22);
+  clip-path: polygon(28% 0%, 72% 0%, 94% 10%, 100% 28%, 100% 72%, 94% 90%, 72% 100%, 28% 100%, 6% 90%, 0% 72%, 0% 28%, 6% 10%);
+  animation: route-loader-spin-soft 3.2s linear infinite;
+}
+
+.route-loader-shell--variant-weave .route-loader-beam--diag-left-soft,
+.route-loader-shell--variant-weave .route-loader-beam--diag-right-soft {
+  opacity: 0.54;
+  animation: route-loader-beam-fade 1.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-zenith {
+  --route-loader-accent-a: rgba(255, 212, 141, 0.72);
+  --route-loader-accent-b: rgba(255, 176, 153, 0.5);
+  --route-loader-accent-c: rgba(186, 165, 255, 0.32);
+  --route-loader-stage-rotate: -6deg;
+  --route-loader-shape: polygon(50% 0%, 60% 10%, 74% 4%, 82% 18%, 96% 22%, 90% 36%, 100% 50%, 90% 64%, 96% 78%, 82% 82%, 74% 96%, 60% 90%, 50% 100%, 40% 90%, 26% 96%, 18% 82%, 4% 78%, 10% 64%, 0% 50%, 10% 36%, 4% 22%, 18% 18%, 26% 4%, 40% 10%);
+}
+
+.route-loader-shell--variant-zenith .route-loader-stage::before {
+  width: 182px;
+  height: 182px;
+  opacity: 0.22;
+  border: 1px solid rgba(255, 231, 196, 0.22);
+  clip-path: polygon(50% 0%, 66% 12%, 88% 12%, 88% 34%, 100% 50%, 88% 66%, 88% 88%, 66% 88%, 50% 100%, 34% 88%, 12% 88%, 12% 66%, 0% 50%, 12% 34%, 12% 12%, 34% 12%);
+  animation: route-loader-spin-soft 5s linear infinite;
+}
+
+.route-loader-shell--variant-harbor {
+  --route-loader-accent-a: rgba(166, 227, 255, 0.64);
+  --route-loader-accent-b: rgba(124, 181, 255, 0.44);
+  --route-loader-accent-c: rgba(113, 140, 214, 0.26);
+  --route-loader-stage-rotate: -45deg;
+  --route-loader-shape: polygon(30% 0%, 70% 0%, 90% 16%, 90% 56%, 72% 88%, 50% 100%, 28% 88%, 10% 56%, 10% 16%);
+  --route-loader-core-shape: polygon(32% 0%, 68% 0%, 84% 20%, 84% 58%, 66% 88%, 50% 100%, 34% 88%, 16% 58%, 16% 20%);
+}
+
+.route-loader-shell--variant-harbor .route-loader-geometry::after {
+  width: 214px;
+  height: 72px;
+  opacity: 0.18;
+  background: linear-gradient(90deg, transparent, rgba(226, 244, 255, 0.12) 18%, rgba(226, 244, 255, 0.42) 50%, rgba(226, 244, 255, 0.12) 82%, transparent);
+  clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
+}
+
+.route-loader-shell--variant-mirage {
+  --route-loader-accent-a: rgba(191, 240, 255, 0.64);
+  --route-loader-accent-b: rgba(156, 203, 255, 0.42);
+  --route-loader-accent-c: rgba(203, 175, 255, 0.28);
+  --route-loader-stage-rotate: 12deg;
+  --route-loader-shape: polygon(26% 0%, 74% 4%, 100% 22%, 92% 50%, 100% 78%, 74% 96%, 26% 100%, 0% 78%, 8% 50%, 0% 22%);
+}
+
+.route-loader-shell--variant-mirage .route-loader-geometry::after {
+  width: 182px;
+  height: 182px;
+  opacity: 0.22;
+  background: linear-gradient(135deg, rgba(244, 251, 255, 0.24), transparent 48%, rgba(244, 251, 255, 0.18));
+  clip-path: polygon(26% 0%, 74% 4%, 100% 22%, 92% 50%, 100% 78%, 74% 96%, 26% 100%, 0% 78%, 8% 50%, 0% 22%);
+  animation: route-loader-drift-accent 4.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-lucid {
+  --route-loader-accent-a: rgba(199, 244, 255, 0.52);
+  --route-loader-accent-b: rgba(165, 214, 255, 0.38);
+  --route-loader-accent-c: rgba(187, 191, 255, 0.24);
+  --route-loader-frame-border: rgba(255, 255, 255, 0.1);
+  --route-loader-stage-rotate: 0deg;
+  --route-loader-shape: polygon(44% 0%, 56% 0%, 70% 4%, 84% 12%, 94% 24%, 100% 40%, 100% 60%, 94% 76%, 84% 88%, 70% 96%, 56% 100%, 44% 100%, 30% 96%, 16% 88%, 6% 76%, 0% 60%, 0% 40%, 6% 24%, 16% 12%, 30% 4%);
+}
+
+.route-loader-shell--variant-lucid .route-loader-geometry::before {
+  opacity: 0.18;
+}
+
+.route-loader-shell--variant-lucid .route-loader-geometry::after {
+  width: 214px;
+  height: 214px;
+  opacity: 0.2;
+  border: 1px solid rgba(233, 247, 255, 0.14);
+  clip-path: polygon(44% 0%, 56% 0%, 70% 4%, 84% 12%, 94% 24%, 100% 40%, 100% 60%, 94% 76%, 84% 88%, 70% 96%, 56% 100%, 44% 100%, 30% 96%, 16% 88%, 6% 76%, 0% 60%, 0% 40%, 6% 24%, 16% 12%, 30% 4%);
+  animation: route-loader-spin-soft-reverse 8.8s linear infinite;
+}
+
+.route-loader-shell--variant-lucid .route-loader-beam {
+  opacity: 0.06;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene {
+  --route-scene-bg-a: rgba(53, 29, 27, 0.94);
+  --route-scene-bg-b: rgba(27, 18, 23, 0.97);
+  --route-scene-bg-c: rgba(15, 11, 16, 0.99);
+  --route-scene-glow-a: rgba(255, 158, 124, 0.2);
+  --route-scene-glow-b: rgba(255, 106, 138, 0.16);
+  --route-scene-surface-a: rgba(255, 197, 170, 0.18);
+  --route-scene-surface-b: rgba(255, 132, 108, 0.08);
+  --route-scene-chip: rgba(255, 202, 182, 0.16);
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--a {
+  inset: 108px 128px 32px 20px;
+  border-radius: 30px;
+  clip-path: polygon(0 12%, 88% 0, 100% 82%, 14% 100%);
+  animation: route-loader-scene-sweep-y 3.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--b {
+  inset: 22px 20px 180px 168px;
+  border-radius: 24px;
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+  animation: route-loader-scene-float-x 3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--c {
+  inset: 42px 170px 126px 42px;
+  border-radius: 18px;
+  animation: route-loader-scene-pop 2.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--d {
+  inset: 176px 28px 76px 192px;
+  border-radius: 22px;
+  clip-path: polygon(0 18%, 100% 0, 88% 100%, 0 82%);
+  animation: route-loader-scene-drift-diag 3.1s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--e {
+  inset: auto 118px 26px 30px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-surface--f {
+  inset: 86px 28px 184px 236px;
+  border-radius: 12px;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-chip--a {
+  opacity: 0.84;
+  left: 28px;
+  top: 24px;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-chip--b {
+  opacity: 0.68;
+  right: 30px;
+  top: 94px;
+}
+
+.route-loader-shell--variant-ember .route-loader-scene-chip--c {
+  opacity: 0.72;
+  left: 212px;
+  bottom: 34px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene {
+  --route-scene-bg-a: rgba(16, 34, 44, 0.94);
+  --route-scene-bg-b: rgba(13, 22, 32, 0.97);
+  --route-scene-bg-c: rgba(9, 14, 20, 0.99);
+  --route-scene-glow-a: rgba(106, 220, 255, 0.18);
+  --route-scene-glow-b: rgba(116, 178, 255, 0.12);
+  --route-scene-surface-a: rgba(196, 246, 255, 0.12);
+  --route-scene-surface-b: rgba(119, 219, 255, 0.06);
+}
+
+.route-loader-shell--variant-signal .route-loader-scene::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 22%),
+    repeating-linear-gradient(180deg, transparent 0 28px, rgba(255, 255, 255, 0.03) 28px 30px);
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--a {
+  inset: 24px 20px 24px 172px;
+  border-radius: 28px;
+  animation: route-loader-scene-float-y 3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--b {
+  inset: 42px 198px 196px 24px;
+  border-radius: 20px;
+  animation: route-loader-scene-pop 2.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--c {
+  inset: 106px 194px 126px 24px;
+  border-radius: 18px;
+  animation: route-loader-scene-sweep-x 2.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--d {
+  inset: 176px 194px 56px 24px;
+  border-radius: 18px;
+  animation: route-loader-scene-sweep-x 2.8s ease-in-out infinite 0.3s;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--e {
+  inset: 54px 44px auto 204px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-surface--f {
+  inset: auto 52px 48px 208px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-chip--a,
+.route-loader-shell--variant-signal .route-loader-scene-chip--b,
+.route-loader-shell--variant-signal .route-loader-scene-chip--c {
+  opacity: 0.88;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-chip--a {
+  left: 32px;
+  top: 52px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-chip--b {
+  left: 32px;
+  top: 118px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-chip--c {
+  left: 32px;
+  top: 188px;
+}
+
+.route-loader-shell--variant-signal .route-loader-scene-chip--d {
+  opacity: 0.72;
+  width: 68px;
+  height: 12px;
+  right: 40px;
+  top: 38px;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene {
+  --route-scene-bg-a: rgba(34, 22, 46, 0.94);
+  --route-scene-bg-b: rgba(19, 17, 33, 0.97);
+  --route-scene-bg-c: rgba(10, 12, 22, 0.99);
+  --route-scene-glow-a: rgba(255, 187, 146, 0.16);
+  --route-scene-glow-b: rgba(194, 162, 255, 0.16);
+  --route-scene-surface-a: rgba(255, 222, 194, 0.14);
+  --route-scene-surface-b: rgba(255, 170, 178, 0.07);
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--a,
+.route-loader-shell--variant-nova .route-loader-scene-surface--b,
+.route-loader-shell--variant-nova .route-loader-scene-surface--c,
+.route-loader-shell--variant-nova .route-loader-scene-surface--d {
+  clip-path: polygon(0 18%, 82% 0, 100% 82%, 18% 100%);
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--a {
+  inset: 148px 198px 40px 26px;
+  animation: route-loader-scene-rise 2.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--b {
+  inset: 102px 126px 88px 88px;
+  animation: route-loader-scene-rise 2.8s ease-in-out infinite 0.18s;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--c {
+  inset: 56px 54px 136px 150px;
+  animation: route-loader-scene-rise 2.8s ease-in-out infinite 0.36s;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--d {
+  inset: 24px 24px 194px 230px;
+  animation: route-loader-scene-rise 2.8s ease-in-out infinite 0.54s;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--e {
+  inset: auto 150px 34px 52px;
+  height: 18px;
+}
+
+.route-loader-shell--variant-nova .route-loader-scene-surface--f {
+  inset: 24px 164px auto 24px;
+  height: 18px;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene {
+  --route-scene-bg-a: rgba(18, 30, 33, 0.94);
+  --route-scene-bg-b: rgba(11, 19, 28, 0.97);
+  --route-scene-bg-c: rgba(8, 13, 20, 0.99);
+  --route-scene-glow-a: rgba(118, 248, 219, 0.14);
+  --route-scene-glow-b: rgba(118, 200, 255, 0.14);
+  --route-scene-surface-a: rgba(210, 255, 243, 0.12);
+  --route-scene-surface-b: rgba(103, 214, 255, 0.06);
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--a,
+.route-loader-shell--variant-helix .route-loader-scene-surface--b,
+.route-loader-shell--variant-helix .route-loader-scene-surface--c,
+.route-loader-shell--variant-helix .route-loader-scene-surface--d {
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--a {
+  inset: 32px 40px 232px 24px;
+  animation: route-loader-scene-sweep-x 3.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--b {
+  inset: 94px 92px 170px 56px;
+  animation: route-loader-scene-sweep-x 3.2s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--c {
+  inset: 156px 26px 108px 104px;
+  animation: route-loader-scene-sweep-x 3.2s ease-in-out infinite 0.2s;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--d {
+  inset: 220px 74px 40px 30px;
+  animation: route-loader-scene-sweep-x 3.2s ease-in-out infinite reverse 0.3s;
+}
+
+.route-loader-shell--variant-helix .route-loader-scene-surface--e,
+.route-loader-shell--variant-helix .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene {
+  --route-scene-bg-a: rgba(45, 34, 22, 0.94);
+  --route-scene-bg-b: rgba(22, 18, 15, 0.97);
+  --route-scene-bg-c: rgba(12, 10, 9, 0.99);
+  --route-scene-glow-a: rgba(255, 205, 134, 0.14);
+  --route-scene-glow-b: rgba(243, 188, 120, 0.12);
+  --route-scene-surface-a: rgba(255, 232, 198, 0.12);
+  --route-scene-surface-b: rgba(255, 198, 137, 0.06);
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--a {
+  inset: 26px 186px 98px 24px;
+  border-radius: 32px;
+  clip-path: polygon(0 0, 76% 0, 100% 24%, 100% 100%, 0 100%);
+  animation: route-loader-scene-breathe 2.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--b {
+  inset: 52px 28px 206px 212px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--c {
+  inset: 126px 30px 150px 212px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--d {
+  inset: 200px 30px 76px 212px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--e {
+  inset: auto 86px 34px 34px;
+  height: 22px;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-surface--f {
+  inset: auto 244px 34px 34px;
+  height: 22px;
+}
+
+.route-loader-shell--variant-glyph .route-loader-scene-chip--a,
+.route-loader-shell--variant-glyph .route-loader-scene-chip--c {
+  opacity: 0.74;
+}
+
+.route-loader-shell--variant-monolith .route-loader-scene {
+  --route-scene-bg-a: rgba(18, 24, 37, 0.95);
+  --route-scene-bg-b: rgba(13, 16, 25, 0.98);
+  --route-scene-bg-c: rgba(8, 11, 16, 0.99);
+  --route-scene-glow-a: rgba(142, 184, 255, 0.16);
+  --route-scene-glow-b: rgba(114, 146, 255, 0.12);
+  --route-scene-surface-a: rgba(213, 230, 255, 0.12);
+  --route-scene-surface-b: rgba(138, 169, 255, 0.05);
+}
+
+.route-loader-shell--variant-monolith .route-loader-scene-surface--a {
+  inset: 28px 202px 28px 72px;
+  border-radius: 24px;
+  clip-path: polygon(18% 0, 82% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
+  animation: route-loader-scene-sweep-y 3.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-monolith .route-loader-scene-surface--b {
+  inset: 28px 72px 28px 202px;
+  border-radius: 24px;
+  clip-path: polygon(18% 0, 82% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
+  animation: route-loader-scene-sweep-y 3.6s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-monolith .route-loader-scene-surface--c {
+  inset: auto 102px 28px 102px;
+  height: 34px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-monolith .route-loader-scene-surface--d,
+.route-loader-shell--variant-monolith .route-loader-scene-surface--e,
+.route-loader-shell--variant-monolith .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene {
+  --route-scene-bg-a: rgba(40, 26, 39, 0.94);
+  --route-scene-bg-b: rgba(22, 16, 28, 0.97);
+  --route-scene-bg-c: rgba(13, 11, 18, 0.99);
+  --route-scene-glow-a: rgba(255, 204, 223, 0.18);
+  --route-scene-glow-b: rgba(222, 186, 255, 0.14);
+  --route-scene-surface-a: rgba(255, 232, 241, 0.14);
+  --route-scene-surface-b: rgba(255, 174, 208, 0.07);
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene-surface--a {
+  inset: 24px 58px 164px 134px;
+  border-radius: 38px;
+  animation: route-loader-scene-float-y 3.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene-surface--b {
+  inset: 98px 22px 88px 198px;
+  border-radius: 36px;
+  animation: route-loader-scene-float-x 3.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene-surface--c {
+  inset: 144px 134px 34px 28px;
+  border-radius: 34px;
+  animation: route-loader-scene-breathe 2.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene-surface--d {
+  inset: 44px 198px 182px 34px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-bloom .route-loader-scene-surface--e,
+.route-loader-shell--variant-bloom .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene {
+  --route-scene-bg-a: rgba(17, 33, 28, 0.94);
+  --route-scene-bg-b: rgba(12, 22, 21, 0.97);
+  --route-scene-bg-c: rgba(8, 14, 15, 0.99);
+  --route-scene-glow-a: rgba(134, 255, 215, 0.14);
+  --route-scene-glow-b: rgba(102, 214, 222, 0.12);
+  --route-scene-surface-a: rgba(222, 255, 244, 0.12);
+  --route-scene-surface-b: rgba(112, 243, 213, 0.06);
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--a,
+.route-loader-shell--variant-relay .route-loader-scene-surface--b,
+.route-loader-shell--variant-relay .route-loader-scene-surface--c,
+.route-loader-shell--variant-relay .route-loader-scene-surface--d {
+  inset: auto auto 60px 24px;
+  width: 74px;
+  height: 58px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--a {
+  left: 24px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--b {
+  left: 108px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.2s;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--c {
+  left: 192px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.4s;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--d {
+  left: 276px;
+  width: 58px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.6s;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--e {
+  inset: auto 24px 144px 24px;
+  height: 18px;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-surface--f {
+  inset: auto 148px 24px 24px;
+  height: 18px;
+}
+
+.route-loader-shell--variant-relay .route-loader-scene-chip--b,
+.route-loader-shell--variant-relay .route-loader-scene-chip--d {
+  opacity: 0.7;
+}
+
+.route-loader-shell--variant-shard .route-loader-scene {
+  --route-scene-bg-a: rgba(15, 25, 40, 0.95);
+  --route-scene-bg-b: rgba(12, 18, 29, 0.98);
+  --route-scene-bg-c: rgba(9, 12, 20, 0.99);
+  --route-scene-glow-a: rgba(165, 223, 255, 0.16);
+  --route-scene-glow-b: rgba(138, 160, 255, 0.12);
+  --route-scene-surface-a: rgba(228, 246, 255, 0.12);
+  --route-scene-surface-b: rgba(138, 195, 255, 0.06);
+}
+
+.route-loader-shell--variant-shard .route-loader-scene-surface--a,
+.route-loader-shell--variant-shard .route-loader-scene-surface--b,
+.route-loader-shell--variant-shard .route-loader-scene-surface--c,
+.route-loader-shell--variant-shard .route-loader-scene-surface--d {
+  border-radius: 0;
+}
+
+.route-loader-shell--variant-shard .route-loader-scene-surface--a {
+  inset: 22px 176px 146px 26px;
+  clip-path: polygon(0 14%, 100% 0, 82% 100%, 10% 86%);
+  animation: route-loader-scene-drift-diag 3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-shard .route-loader-scene-surface--b {
+  inset: 44px 28px 164px 190px;
+  clip-path: polygon(18% 0, 100% 16%, 84% 100%, 0 78%);
+  animation: route-loader-scene-drift-diag 3.2s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-shard .route-loader-scene-surface--c {
+  inset: 150px 140px 38px 34px;
+  clip-path: polygon(0 24%, 78% 0, 100% 78%, 24% 100%);
+  animation: route-loader-scene-pop 2.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-shard .route-loader-scene-surface--d {
+  inset: 148px 24px 56px 220px;
+  clip-path: polygon(24% 0, 100% 22%, 70% 100%, 0 74%);
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene {
+  --route-scene-bg-a: rgba(17, 20, 31, 0.96);
+  --route-scene-bg-b: rgba(10, 13, 22, 0.99);
+  --route-scene-bg-c: rgba(7, 10, 18, 1);
+  --route-scene-glow-a: rgba(155, 181, 255, 0.12);
+  --route-scene-glow-b: rgba(102, 122, 184, 0.1);
+  --route-scene-surface-a: rgba(255, 255, 255, 0.08);
+  --route-scene-surface-b: rgba(135, 154, 215, 0.04);
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene::before {
+  background:
+    radial-gradient(circle at 118% 50%, rgba(255, 255, 255, 0.1) 0 16%, transparent 17%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%);
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--a {
+  inset: 26px 72px 86px 24px;
+  border-radius: 28px;
+  animation: route-loader-scene-sweep-x 4.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--b {
+  inset: 48px 26px 48px 212px;
+  border-radius: 999px 26px 26px 999px;
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--c {
+  inset: auto 110px 32px 34px;
+  height: 20px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--d,
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--e,
+.route-loader-shell--variant-eclipse .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-aurora .route-loader-scene {
+  --route-scene-bg-a: rgba(17, 33, 36, 0.94);
+  --route-scene-bg-b: rgba(13, 21, 30, 0.97);
+  --route-scene-bg-c: rgba(9, 13, 20, 0.99);
+  --route-scene-glow-a: rgba(133, 246, 231, 0.14);
+  --route-scene-glow-b: rgba(171, 166, 255, 0.14);
+  --route-scene-surface-a: rgba(225, 255, 248, 0.1);
+  --route-scene-surface-b: rgba(119, 220, 255, 0.06);
+}
+
+.route-loader-shell--variant-aurora .route-loader-scene-surface--a {
+  inset: auto 20px 38px 20px;
+  height: 64px;
+  border-radius: 22px 22px 28px 28px;
+  animation: route-loader-scene-sweep-x 4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-aurora .route-loader-scene-surface--b {
+  inset: auto 62px 116px 66px;
+  height: 42px;
+  border-radius: 999px;
+  animation: route-loader-scene-sweep-x 3.4s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-aurora .route-loader-scene-surface--c {
+  inset: auto 108px 182px 34px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-aurora .route-loader-scene-surface--d,
+.route-loader-shell--variant-aurora .route-loader-scene-surface--e,
+.route-loader-shell--variant-aurora .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene {
+  --route-scene-bg-a: rgba(16, 28, 39, 0.95);
+  --route-scene-bg-b: rgba(12, 18, 28, 0.98);
+  --route-scene-bg-c: rgba(9, 12, 18, 1);
+  --route-scene-glow-a: rgba(144, 213, 255, 0.12);
+  --route-scene-glow-b: rgba(116, 160, 214, 0.1);
+  --route-scene-surface-a: rgba(228, 245, 255, 0.1);
+  --route-scene-surface-b: rgba(135, 181, 216, 0.06);
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--a,
+.route-loader-shell--variant-tide .route-loader-scene-surface--b,
+.route-loader-shell--variant-tide .route-loader-scene-surface--c,
+.route-loader-shell--variant-tide .route-loader-scene-surface--d {
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--a {
+  inset: auto 28px 38px 22px;
+  height: 34px;
+  animation: route-loader-scene-sweep-x 3.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--b {
+  inset: auto 80px 90px 48px;
+  height: 30px;
+  animation: route-loader-scene-sweep-x 3.8s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--c {
+  inset: auto 132px 140px 84px;
+  height: 26px;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--d {
+  inset: auto 184px 188px 26px;
+  height: 22px;
+}
+
+.route-loader-shell--variant-tide .route-loader-scene-surface--e,
+.route-loader-shell--variant-tide .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-forge .route-loader-scene {
+  --route-scene-bg-a: rgba(40, 29, 22, 0.95);
+  --route-scene-bg-b: rgba(22, 18, 16, 0.98);
+  --route-scene-bg-c: rgba(12, 10, 9, 1);
+  --route-scene-glow-a: rgba(255, 196, 149, 0.12);
+  --route-scene-glow-b: rgba(215, 154, 109, 0.12);
+  --route-scene-surface-a: rgba(255, 235, 210, 0.11);
+  --route-scene-surface-b: rgba(236, 173, 120, 0.06);
+}
+
+.route-loader-shell--variant-forge .route-loader-scene-surface--a {
+  inset: auto 24px 26px 24px;
+  height: 72px;
+  border-radius: 26px;
+}
+
+.route-loader-shell--variant-forge .route-loader-scene-surface--b {
+  inset: 118px 220px 98px 36px;
+  border-radius: 20px;
+  animation: route-loader-scene-rise 2.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-forge .route-loader-scene-surface--c {
+  inset: 78px 146px 98px 118px;
+  border-radius: 20px;
+  animation: route-loader-scene-rise 2.6s ease-in-out infinite 0.24s;
+}
+
+.route-loader-shell--variant-forge .route-loader-scene-surface--d {
+  inset: 48px 70px 98px 200px;
+  border-radius: 20px;
+  animation: route-loader-scene-rise 2.6s ease-in-out infinite 0.48s;
+}
+
+.route-loader-shell--variant-forge .route-loader-scene-surface--e,
+.route-loader-shell--variant-forge .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene {
+  --route-scene-bg-a: rgba(17, 29, 42, 0.95);
+  --route-scene-bg-b: rgba(12, 20, 30, 0.98);
+  --route-scene-bg-c: rgba(9, 12, 18, 1);
+  --route-scene-glow-a: rgba(162, 222, 255, 0.12);
+  --route-scene-glow-b: rgba(152, 166, 255, 0.12);
+  --route-scene-surface-a: rgba(235, 246, 255, 0.11);
+  --route-scene-surface-b: rgba(148, 204, 255, 0.06);
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--a,
+.route-loader-shell--variant-kite .route-loader-scene-surface--b,
+.route-loader-shell--variant-kite .route-loader-scene-surface--c,
+.route-loader-shell--variant-kite .route-loader-scene-surface--d {
+  clip-path: polygon(50% 0, 100% 40%, 72% 100%, 0 56%);
+  border-radius: 0;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--a {
+  inset: 26px 198px 186px 32px;
+  animation: route-loader-scene-drift-diag 3.6s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--b {
+  inset: 92px 122px 118px 106px;
+  animation: route-loader-scene-drift-diag 3.6s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--c {
+  inset: 156px 42px 46px 198px;
+  animation: route-loader-scene-drift-diag 3.6s ease-in-out infinite 0.2s;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--d {
+  inset: 182px 168px 24px 52px;
+  animation: route-loader-scene-drift-diag 3.6s ease-in-out infinite reverse 0.3s;
+}
+
+.route-loader-shell--variant-kite .route-loader-scene-surface--e,
+.route-loader-shell--variant-kite .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene {
+  --route-scene-bg-a: rgba(16, 33, 30, 0.95);
+  --route-scene-bg-b: rgba(11, 21, 20, 0.98);
+  --route-scene-bg-c: rgba(8, 14, 14, 1);
+  --route-scene-glow-a: rgba(145, 255, 221, 0.12);
+  --route-scene-glow-b: rgba(103, 228, 192, 0.1);
+  --route-scene-surface-a: rgba(230, 255, 245, 0.11);
+  --route-scene-surface-b: rgba(121, 247, 207, 0.06);
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene-surface--a {
+  inset: 174px 244px 38px 26px;
+  border-radius: 18px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene-surface--b {
+  inset: 132px 174px 38px 98px;
+  border-radius: 18px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.16s;
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene-surface--c {
+  inset: 94px 104px 38px 170px;
+  border-radius: 18px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.32s;
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene-surface--d {
+  inset: 56px 34px 38px 242px;
+  border-radius: 18px;
+  animation: route-loader-scene-rise 2.2s ease-in-out infinite 0.48s;
+}
+
+.route-loader-shell--variant-pulse .route-loader-scene-surface--e,
+.route-loader-shell--variant-pulse .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-weave .route-loader-scene {
+  --route-scene-bg-a: rgba(15, 30, 31, 0.95);
+  --route-scene-bg-b: rgba(11, 20, 22, 0.98);
+  --route-scene-bg-c: rgba(8, 13, 16, 1);
+  --route-scene-glow-a: rgba(149, 246, 225, 0.12);
+  --route-scene-glow-b: rgba(115, 199, 255, 0.1);
+  --route-scene-surface-a: rgba(229, 255, 248, 0.11);
+  --route-scene-surface-b: rgba(111, 226, 234, 0.06);
+}
+
+.route-loader-shell--variant-weave .route-loader-scene-surface--a {
+  inset: 34px 144px 34px 34px;
+  border-radius: 22px;
+}
+
+.route-loader-shell--variant-weave .route-loader-scene-surface--b {
+  inset: 60px 34px 184px 160px;
+  border-radius: 22px;
+}
+
+.route-loader-shell--variant-weave .route-loader-scene-surface--c {
+  inset: 170px 34px 74px 160px;
+  border-radius: 22px;
+}
+
+.route-loader-shell--variant-weave .route-loader-scene-surface--d {
+  inset: 116px 64px 118px 24px;
+  border-radius: 999px;
+  animation: route-loader-scene-sweep-x 3.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-weave .route-loader-scene-surface--e,
+.route-loader-shell--variant-weave .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-zenith .route-loader-scene {
+  --route-scene-bg-a: rgba(39, 28, 25, 0.95);
+  --route-scene-bg-b: rgba(24, 18, 18, 0.98);
+  --route-scene-bg-c: rgba(14, 11, 12, 1);
+  --route-scene-glow-a: rgba(255, 212, 141, 0.14);
+  --route-scene-glow-b: rgba(255, 173, 154, 0.12);
+  --route-scene-surface-a: rgba(255, 236, 210, 0.11);
+  --route-scene-surface-b: rgba(255, 176, 154, 0.06);
+}
+
+.route-loader-shell--variant-zenith .route-loader-scene-surface--a {
+  inset: 40px 166px 36px 28px;
+  clip-path: polygon(0 100%, 24% 44%, 48% 68%, 72% 18%, 100% 100%);
+  border-radius: 0;
+  animation: route-loader-scene-sweep-y 3.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-zenith .route-loader-scene-surface--b {
+  inset: 58px 34px 72px 180px;
+  clip-path: polygon(0 100%, 32% 26%, 62% 56%, 100% 0, 100% 100%);
+  border-radius: 0;
+  animation: route-loader-scene-sweep-y 3.2s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-zenith .route-loader-scene-surface--c,
+.route-loader-shell--variant-zenith .route-loader-scene-surface--d,
+.route-loader-shell--variant-zenith .route-loader-scene-surface--e,
+.route-loader-shell--variant-zenith .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene {
+  --route-scene-bg-a: rgba(18, 26, 37, 0.95);
+  --route-scene-bg-b: rgba(12, 18, 27, 0.98);
+  --route-scene-bg-c: rgba(8, 12, 18, 1);
+  --route-scene-glow-a: rgba(155, 214, 255, 0.12);
+  --route-scene-glow-b: rgba(116, 165, 226, 0.1);
+  --route-scene-surface-a: rgba(232, 246, 255, 0.11);
+  --route-scene-surface-b: rgba(132, 190, 235, 0.06);
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--a {
+  inset: 34px 238px 54px 28px;
+  border-radius: 24px;
+  animation: route-loader-scene-float-y 3s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--b,
+.route-loader-shell--variant-harbor .route-loader-scene-surface--c,
+.route-loader-shell--variant-harbor .route-loader-scene-surface--d {
+  inset: auto auto 34px 124px;
+  width: 64px;
+  height: 86px;
+  border-radius: 18px;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--b {
+  left: 124px;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--c {
+  left: 198px;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--d {
+  left: 272px;
+  width: 48px;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-surface--e,
+.route-loader-shell--variant-harbor .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-harbor .route-loader-scene-chip--a,
+.route-loader-shell--variant-harbor .route-loader-scene-chip--b {
+  opacity: 0.68;
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene {
+  --route-scene-bg-a: rgba(19, 29, 39, 0.94);
+  --route-scene-bg-b: rgba(14, 20, 31, 0.97);
+  --route-scene-bg-c: rgba(9, 13, 22, 0.99);
+  --route-scene-glow-a: rgba(203, 240, 255, 0.14);
+  --route-scene-glow-b: rgba(190, 181, 255, 0.12);
+  --route-scene-surface-a: rgba(244, 250, 255, 0.11);
+  --route-scene-surface-b: rgba(182, 212, 255, 0.06);
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene-surface--a,
+.route-loader-shell--variant-mirage .route-loader-scene-surface--b,
+.route-loader-shell--variant-mirage .route-loader-scene-surface--c {
+  border-radius: 24px;
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene-surface--a {
+  inset: 24px 134px 114px 26px;
+  animation: route-loader-scene-sweep-x 3.8s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene-surface--b {
+  inset: 72px 30px 84px 170px;
+  animation: route-loader-scene-sweep-x 3.8s ease-in-out infinite reverse;
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene-surface--c {
+  inset: 140px 96px 28px 72px;
+  animation: route-loader-scene-float-y 3.2s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-mirage .route-loader-scene-surface--d,
+.route-loader-shell--variant-mirage .route-loader-scene-surface--e,
+.route-loader-shell--variant-mirage .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene {
+  --route-scene-bg-a: rgba(20, 26, 36, 0.92);
+  --route-scene-bg-b: rgba(14, 18, 28, 0.96);
+  --route-scene-bg-c: rgba(10, 13, 21, 0.98);
+  --route-scene-glow-a: rgba(201, 238, 255, 0.1);
+  --route-scene-glow-b: rgba(184, 204, 255, 0.08);
+  --route-scene-surface-a: rgba(248, 252, 255, 0.09);
+  --route-scene-surface-b: rgba(196, 219, 255, 0.04);
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene-surface--a {
+  inset: 24px 98px 148px 34px;
+  border-radius: 24px;
+  animation: route-loader-scene-float-y 4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene-surface--b {
+  inset: 112px 34px 84px 150px;
+  border-radius: 24px;
+  animation: route-loader-scene-float-x 4.4s ease-in-out infinite;
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene-surface--c {
+  inset: auto 58px 34px 54px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.route-loader-shell--variant-lucid .route-loader-scene-surface--d,
+.route-loader-shell--variant-lucid .route-loader-scene-surface--e,
+.route-loader-shell--variant-lucid .route-loader-scene-surface--f {
+  opacity: 0;
+}
+
+@keyframes route-loader-scene-float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes route-loader-scene-float-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(12px);
+  }
+}
+
+@keyframes route-loader-scene-drift-diag {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(10px, -8px);
+  }
+}
+
+@keyframes route-loader-scene-sweep-x {
+  0%,
+  100% {
+    transform: translateX(-8px);
+  }
+
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes route-loader-scene-sweep-y {
+  0%,
+  100% {
+    transform: translateY(8px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes route-loader-scene-rise {
+  0%,
+  100% {
+    transform: translateY(12px);
+    opacity: 0.56;
+  }
+
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-scene-breathe {
+  0%,
+  100% {
+    transform: scale(0.97);
+    opacity: 0.74;
+  }
+
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-scene-pop {
+  0%,
+  100% {
+    transform: translateY(6px) scale(0.94);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-spin-soft {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes route-loader-spin-soft-reverse {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+@keyframes route-loader-pulse-accent {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.94);
+    opacity: 0.16;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.04);
+    opacity: 0.48;
+  }
+}
+
+@keyframes route-loader-scan-accent {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(-18px);
+    opacity: 0.12;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) translateY(18px);
+    opacity: 0.48;
+  }
+}
+
+@keyframes route-loader-drift-accent {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.96);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(14deg) scale(1.04);
+    opacity: 0.42;
+  }
+}
+
+@keyframes route-loader-rotate-halo {
+  from {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.01);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(-315deg) scale(1.01);
+  }
 }
 
 @keyframes route-loader-rotate-outer {
@@ -1353,6 +3483,16 @@ p {
 
   to {
     transform: translate(-50%, -50%) rotate(405deg);
+  }
+}
+
+@keyframes route-loader-rotate-support {
+  from {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(-315deg);
   }
 }
 
@@ -1366,7 +3506,7 @@ p {
   }
 }
 
-@keyframes route-loader-pulse-inner {
+@keyframes route-loader-rotate-inner {
   0%,
   100% {
     transform: translate(-50%, -50%) rotate(45deg) scale(0.94);
@@ -1374,7 +3514,7 @@ p {
   }
 
   50% {
-    transform: translate(-50%, -50%) rotate(45deg) scale(1.06);
+    transform: translate(-50%, -50%) rotate(225deg) scale(1.06);
     opacity: 1;
   }
 }
@@ -1403,11 +3543,1101 @@ p {
   }
 }
 
+.route-loader-exp {
+  --exp-bg-a: rgba(17, 24, 39, 0.96);
+  --exp-bg-b: rgba(11, 16, 28, 0.99);
+  --exp-bg-c: rgba(8, 11, 20, 1);
+  --exp-glow-a: rgba(120, 198, 255, 0.18);
+  --exp-glow-b: rgba(165, 141, 255, 0.12);
+  --exp-surface-a: rgba(255, 255, 255, 0.12);
+  --exp-surface-b: rgba(255, 255, 255, 0.05);
+  --exp-border: rgba(255, 255, 255, 0.12);
+  position: relative;
+  width: min(360px, 74vw);
+  aspect-ratio: 1.04;
+  overflow: hidden;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 18% 18%, var(--exp-glow-a), transparent 30%),
+    radial-gradient(circle at 82% 76%, var(--exp-glow-b), transparent 28%),
+    linear-gradient(165deg, var(--exp-bg-a), var(--exp-bg-b) 56%, var(--exp-bg-c));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 28px 56px rgba(6, 9, 17, 0.38);
+  isolation: isolate;
+}
+
+.route-loader-shell--preview .route-loader-exp {
+  width: min(320px, 70vw);
+}
+
+.route-loader-exp::before,
+.route-loader-exp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.route-loader-exp::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 24%),
+    linear-gradient(135deg, transparent 12%, rgba(255, 255, 255, 0.03) 48%, transparent 78%);
+}
+
+.route-loader-exp::after {
+  inset: auto 20px 16px;
+  height: 64px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 72%);
+  filter: blur(20px);
+  opacity: 0.42;
+}
+
+.route-loader-exp__glow {
+  position: absolute;
+  width: 164px;
+  height: 164px;
+  border-radius: 999px;
+  filter: blur(38px);
+  opacity: 0.44;
+}
+
+.route-loader-exp__glow--a {
+  left: 12px;
+  top: 10px;
+  background: var(--exp-glow-a);
+}
+
+.route-loader-exp__glow--b {
+  right: 8px;
+  bottom: 12px;
+  background: var(--exp-glow-b);
+}
+
+.route-loader-exp :is(
+  .route-loader-exp-stack,
+  .route-loader-exp-console,
+  .route-loader-exp-trail,
+  .route-loader-exp-ribbons,
+  .route-loader-exp-shell,
+  .route-loader-exp-gateway,
+  .route-loader-exp-cluster,
+  .route-loader-exp-conveyor,
+  .route-loader-exp-mosaic,
+  .route-loader-exp-portal,
+  .route-loader-exp-horizon,
+  .route-loader-exp-wavefield,
+  .route-loader-exp-forge,
+  .route-loader-exp-facets,
+  .route-loader-exp-stairs,
+  .route-loader-exp-planes,
+  .route-loader-exp-skyline,
+  .route-loader-exp-harbor,
+  .route-loader-exp-panes,
+  .route-loader-exp-sheets
+) {
+  position: absolute;
+  inset: 0;
+}
+
+.route-loader-exp span:not(.route-loader-exp__glow),
+.route-loader-exp :is(
+  .route-loader-exp-console__rail,
+  .route-loader-exp-console__panel,
+  .route-loader-exp-shell__sidebar,
+  .route-loader-exp-shell__main,
+  .route-loader-exp-harbor__bays
+) {
+  position: absolute;
+  display: block;
+  border: 1px solid var(--exp-border);
+  background: linear-gradient(165deg, var(--exp-surface-a), var(--exp-surface-b));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 16px 28px rgba(6, 9, 17, 0.24);
+}
+
+.route-loader-exp-console__panel,
+.route-loader-exp-shell__sidebar,
+.route-loader-exp-shell__main,
+.route-loader-exp-harbor__bays {
+  overflow: hidden;
+}
+
+.route-loader-exp-console__rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.route-loader-exp-console__panel {
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.route-loader-exp-console__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.route-loader-exp-shell {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  padding: 24px;
+}
+
+.route-loader-exp-shell__sidebar,
+.route-loader-exp-shell__main {
+  position: relative;
+  border-radius: 22px;
+}
+
+.route-loader-exp-shell__main {
+  padding: 18px;
+}
+
+.route-loader-exp-shell__modules {
+  position: absolute;
+  inset: auto 18px 18px 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.route-loader-exp-console__pip,
+.route-loader-exp-console__dot,
+.route-loader-exp-console__line,
+.route-loader-exp-shell__module,
+.route-loader-exp-harbor__bay {
+  position: static !important;
+}
+
+.route-loader-exp-harbor__bays {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.route-loader-exp--ember {
+  --exp-bg-a: rgba(54, 29, 24, 0.96);
+  --exp-bg-b: rgba(27, 18, 22, 0.99);
+  --exp-bg-c: rgba(14, 10, 13, 1);
+  --exp-glow-a: rgba(255, 152, 118, 0.2);
+  --exp-glow-b: rgba(255, 101, 134, 0.14);
+  --exp-surface-a: rgba(255, 220, 204, 0.14);
+  --exp-surface-b: rgba(255, 138, 116, 0.06);
+}
+
+.route-loader-exp--ember .route-loader-exp-stack__tag {
+  left: 28px;
+  top: 24px;
+  width: 74px;
+  height: 16px;
+  border-radius: 999px;
+  animation: route-loader-exp-breathe 2.4s ease-in-out infinite;
+}
+
+.route-loader-exp--ember .route-loader-exp-stack__card {
+  border-radius: 28px;
+}
+
+.route-loader-exp--ember .route-loader-exp-stack__card--back {
+  inset: 54px 120px 176px 42px;
+  transform: rotate(-12deg);
+  animation: route-loader-exp-drift-left 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--ember .route-loader-exp-stack__card--mid {
+  inset: 98px 72px 110px 86px;
+  transform: rotate(-4deg);
+  animation: route-loader-exp-float-up 3s ease-in-out infinite;
+}
+
+.route-loader-exp--ember .route-loader-exp-stack__card--front {
+  inset: 144px 28px 42px 132px;
+  transform: rotate(7deg);
+  animation: route-loader-exp-drift-right 3.1s ease-in-out infinite;
+}
+
+.route-loader-exp--signal {
+  --exp-bg-a: rgba(15, 33, 43, 0.96);
+  --exp-bg-b: rgba(10, 18, 28, 0.99);
+  --exp-bg-c: rgba(7, 11, 18, 1);
+  --exp-glow-a: rgba(108, 221, 255, 0.16);
+  --exp-surface-a: rgba(225, 251, 255, 0.12);
+  --exp-surface-b: rgba(126, 220, 255, 0.06);
+}
+
+.route-loader-exp--signal .route-loader-exp-console__rail {
+  inset: 32px auto 32px 24px;
+  width: 54px;
+  border-radius: 20px;
+}
+
+.route-loader-exp--signal .route-loader-exp-console__panel {
+  inset: 24px 24px 24px 98px;
+  border-radius: 24px;
+  animation: route-loader-exp-float-up 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--signal .route-loader-exp-console__pip,
+.route-loader-exp--signal .route-loader-exp-console__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--signal .route-loader-exp-console__line {
+  position: static;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--signal .route-loader-exp-console__line--long {
+  width: 100%;
+}
+
+.route-loader-exp--signal .route-loader-exp-console__line--short {
+  width: 46px;
+}
+
+.route-loader-exp--nova {
+  --exp-bg-a: rgba(31, 23, 44, 0.96);
+  --exp-bg-b: rgba(18, 16, 30, 0.99);
+  --exp-bg-c: rgba(10, 11, 19, 1);
+  --exp-glow-a: rgba(255, 188, 144, 0.14);
+  --exp-glow-b: rgba(194, 160, 255, 0.16);
+  --exp-surface-a: rgba(255, 236, 216, 0.12);
+  --exp-surface-b: rgba(255, 174, 182, 0.06);
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile {
+  border-radius: 22px;
+  clip-path: polygon(0 18%, 82% 0, 100% 82%, 18% 100%);
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile:nth-child(1) {
+  inset: auto auto 36px 26px;
+  width: 72px;
+  height: 96px;
+  animation: route-loader-exp-rise 2.8s ease-in-out infinite;
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile:nth-child(2) {
+  inset: auto auto 88px 98px;
+  width: 74px;
+  height: 106px;
+  animation: route-loader-exp-rise 2.8s ease-in-out infinite 0.2s;
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile:nth-child(3) {
+  inset: auto auto 136px 170px;
+  width: 78px;
+  height: 118px;
+  animation: route-loader-exp-rise 2.8s ease-in-out infinite 0.4s;
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile:nth-child(4) {
+  inset: auto auto 188px 242px;
+  width: 62px;
+  height: 96px;
+  animation: route-loader-exp-rise 2.8s ease-in-out infinite 0.6s;
+}
+
+.route-loader-exp--nova .route-loader-exp-trail__tile:nth-child(5) {
+  inset: 26px 26px auto auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  animation: route-loader-exp-pulse 2.4s ease-in-out infinite;
+}
+
+.route-loader-exp--helix {
+  --exp-bg-a: rgba(18, 32, 35, 0.96);
+  --exp-bg-b: rgba(11, 18, 27, 0.99);
+  --exp-bg-c: rgba(7, 11, 18, 1);
+  --exp-glow-a: rgba(120, 244, 220, 0.14);
+  --exp-glow-b: rgba(116, 202, 255, 0.12);
+  --exp-surface-a: rgba(226, 255, 246, 0.11);
+  --exp-surface-b: rgba(115, 221, 255, 0.05);
+}
+
+.route-loader-exp--helix .route-loader-exp-ribbons__lane {
+  border-radius: 999px;
+}
+
+.route-loader-exp--helix .route-loader-exp-ribbons__lane:nth-child(1) {
+  inset: 34px 38px auto 22px;
+  height: 34px;
+  animation: route-loader-exp-slide-x 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--helix .route-loader-exp-ribbons__lane:nth-child(2) {
+  inset: 102px 84px auto 54px;
+  height: 30px;
+  animation: route-loader-exp-slide-x-reverse 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--helix .route-loader-exp-ribbons__lane:nth-child(3) {
+  inset: 174px 26px auto 108px;
+  height: 28px;
+  animation: route-loader-exp-slide-x 3s ease-in-out infinite 0.2s;
+}
+
+.route-loader-exp--helix .route-loader-exp-ribbons__lane:nth-child(4) {
+  inset: auto 70px 42px 28px;
+  height: 32px;
+  animation: route-loader-exp-slide-x-reverse 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--glyph {
+  --exp-bg-a: rgba(45, 34, 22, 0.96);
+  --exp-bg-b: rgba(21, 17, 14, 0.99);
+  --exp-bg-c: rgba(11, 10, 9, 1);
+  --exp-glow-a: rgba(255, 204, 132, 0.12);
+  --exp-surface-a: rgba(255, 236, 210, 0.12);
+  --exp-surface-b: rgba(255, 196, 132, 0.05);
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__sidebar-chip {
+  left: 18px;
+  right: 18px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__sidebar-chip:first-child {
+  top: 20px;
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__sidebar-chip--short {
+  top: 48px;
+  right: 32px;
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__headline {
+  left: 18px;
+  right: 70px;
+  top: 18px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__body {
+  left: 18px;
+  right: 18px;
+  top: 50px;
+  bottom: 74px;
+  border-radius: 18px;
+}
+
+.route-loader-exp--glyph .route-loader-exp-shell__module {
+  position: static;
+  height: 50px;
+  border-radius: 16px;
+}
+
+.route-loader-exp--monolith {
+  --exp-bg-a: rgba(18, 24, 37, 0.96);
+  --exp-bg-b: rgba(12, 17, 27, 0.99);
+  --exp-bg-c: rgba(8, 11, 18, 1);
+  --exp-glow-a: rgba(142, 184, 255, 0.14);
+  --exp-surface-a: rgba(230, 240, 255, 0.11);
+  --exp-surface-b: rgba(137, 164, 255, 0.05);
+}
+
+.route-loader-exp--monolith .route-loader-exp-gateway__tower {
+  border-radius: 22px;
+}
+
+.route-loader-exp--monolith .route-loader-exp-gateway__tower--left {
+  inset: 28px auto 56px 72px;
+  width: 72px;
+  animation: route-loader-exp-float-up 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--monolith .route-loader-exp-gateway__tower--right {
+  inset: 28px 72px 56px auto;
+  width: 72px;
+  animation: route-loader-exp-float-down 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--monolith .route-loader-exp-gateway__dock {
+  left: 98px;
+  right: 98px;
+  bottom: 28px;
+  height: 26px;
+  border-radius: 16px;
+}
+
+.route-loader-exp--bloom {
+  --exp-bg-a: rgba(40, 26, 39, 0.96);
+  --exp-bg-b: rgba(21, 16, 27, 0.99);
+  --exp-bg-c: rgba(11, 10, 18, 1);
+  --exp-glow-a: rgba(255, 206, 226, 0.16);
+  --exp-glow-b: rgba(220, 190, 255, 0.12);
+  --exp-surface-a: rgba(255, 235, 244, 0.12);
+  --exp-surface-b: rgba(255, 184, 209, 0.06);
+}
+
+.route-loader-exp--bloom .route-loader-exp-cluster__bubble {
+  border-radius: 34px;
+}
+
+.route-loader-exp--bloom .route-loader-exp-cluster__bubble:nth-child(1) {
+  inset: 36px 66px 186px 142px;
+  animation: route-loader-exp-float-up 3.3s ease-in-out infinite;
+}
+
+.route-loader-exp--bloom .route-loader-exp-cluster__bubble:nth-child(2) {
+  inset: 92px 22px 92px 202px;
+  animation: route-loader-exp-drift-right 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--bloom .route-loader-exp-cluster__bubble:nth-child(3) {
+  inset: 148px 138px 34px 28px;
+  animation: route-loader-exp-breathe 3s ease-in-out infinite;
+}
+
+.route-loader-exp--bloom .route-loader-exp-cluster__bubble:nth-child(4) {
+  inset: 52px 202px 172px 36px;
+  border-radius: 20px;
+  animation: route-loader-exp-float-down 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--relay {
+  --exp-bg-a: rgba(17, 33, 28, 0.96);
+  --exp-bg-b: rgba(11, 21, 20, 0.99);
+  --exp-bg-c: rgba(8, 14, 14, 1);
+  --exp-glow-a: rgba(138, 255, 215, 0.12);
+  --exp-surface-a: rgba(230, 255, 246, 0.11);
+  --exp-surface-b: rgba(111, 240, 214, 0.05);
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__track {
+  left: 24px;
+  right: 24px;
+  bottom: 42px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__block {
+  bottom: 76px;
+  width: 56px;
+  height: 58px;
+  border-radius: 16px;
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__block:nth-child(2) {
+  left: 28px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite;
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__block:nth-child(3) {
+  left: 104px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.2s;
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__block:nth-child(4) {
+  left: 180px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.4s;
+}
+
+.route-loader-exp--relay .route-loader-exp-conveyor__block:nth-child(5) {
+  left: 256px;
+  width: 44px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.6s;
+}
+
+.route-loader-exp--shard {
+  --exp-bg-a: rgba(15, 25, 40, 0.96);
+  --exp-bg-b: rgba(11, 17, 28, 0.99);
+  --exp-bg-c: rgba(8, 11, 18, 1);
+  --exp-glow-a: rgba(165, 222, 255, 0.12);
+  --exp-glow-b: rgba(138, 160, 255, 0.1);
+  --exp-surface-a: rgba(232, 247, 255, 0.11);
+  --exp-surface-b: rgba(137, 194, 255, 0.05);
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece {
+  border-radius: 0;
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece:nth-child(1) {
+  inset: 24px 176px 146px 26px;
+  clip-path: polygon(0 14%, 100% 0, 82% 100%, 8% 86%);
+  animation: route-loader-exp-drift-left 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece:nth-child(2) {
+  inset: 42px 24px 164px 192px;
+  clip-path: polygon(14% 0, 100% 18%, 84% 100%, 0 78%);
+  animation: route-loader-exp-drift-right 3.1s ease-in-out infinite;
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece:nth-child(3) {
+  inset: 146px 144px 42px 34px;
+  clip-path: polygon(0 22%, 78% 0, 100% 78%, 24% 100%);
+  animation: route-loader-exp-pulse 2.6s ease-in-out infinite;
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece:nth-child(4) {
+  inset: 152px 24px 58px 220px;
+  clip-path: polygon(24% 0, 100% 22%, 70% 100%, 0 74%);
+}
+
+.route-loader-exp--shard .route-loader-exp-mosaic__piece:nth-child(5) {
+  inset: auto auto 24px 30px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.route-loader-exp--eclipse {
+  --exp-bg-a: rgba(17, 20, 31, 0.98);
+  --exp-bg-b: rgba(10, 13, 22, 1);
+  --exp-bg-c: rgba(7, 10, 18, 1);
+  --exp-glow-a: rgba(156, 180, 255, 0.1);
+  --exp-surface-a: rgba(255, 255, 255, 0.09);
+  --exp-surface-b: rgba(132, 152, 216, 0.04);
+}
+
+.route-loader-exp--eclipse .route-loader-exp-portal__window {
+  inset: 26px 22px 54px 138px;
+  border-radius: 999px 28px 28px 999px;
+  animation: route-loader-exp-slide-x 4s ease-in-out infinite;
+}
+
+.route-loader-exp--eclipse .route-loader-exp-portal__shelf {
+  left: 34px;
+  right: 160px;
+  bottom: 34px;
+  height: 20px;
+  border-radius: 999px;
+}
+
+.route-loader-exp--aurora {
+  --exp-bg-a: rgba(17, 33, 36, 0.96);
+  --exp-bg-b: rgba(12, 20, 28, 0.99);
+  --exp-bg-c: rgba(8, 12, 18, 1);
+  --exp-glow-a: rgba(132, 246, 231, 0.12);
+  --exp-glow-b: rgba(169, 166, 255, 0.1);
+  --exp-surface-a: rgba(228, 255, 248, 0.1);
+  --exp-surface-b: rgba(118, 220, 255, 0.05);
+}
+
+.route-loader-exp--aurora .route-loader-exp-horizon__band {
+  border-radius: 999px;
+}
+
+.route-loader-exp--aurora .route-loader-exp-horizon__band:nth-child(1) {
+  left: 20px;
+  right: 20px;
+  bottom: 30px;
+  height: 54px;
+  animation: route-loader-exp-slide-x 4s ease-in-out infinite;
+}
+
+.route-loader-exp--aurora .route-loader-exp-horizon__band:nth-child(2) {
+  left: 54px;
+  right: 68px;
+  bottom: 100px;
+  height: 34px;
+  animation: route-loader-exp-slide-x-reverse 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--aurora .route-loader-exp-horizon__band:nth-child(3) {
+  left: 88px;
+  right: 132px;
+  bottom: 146px;
+  height: 20px;
+}
+
+.route-loader-exp--aurora .route-loader-exp-horizon__band:nth-child(4) {
+  left: 34px;
+  width: 28px;
+  bottom: 166px;
+  height: 28px;
+  border-radius: 12px;
+}
+
+.route-loader-exp--tide {
+  --exp-bg-a: rgba(16, 28, 39, 0.98);
+  --exp-bg-b: rgba(11, 17, 27, 1);
+  --exp-bg-c: rgba(8, 11, 18, 1);
+  --exp-glow-a: rgba(142, 214, 255, 0.1);
+  --exp-surface-a: rgba(228, 246, 255, 0.1);
+  --exp-surface-b: rgba(132, 178, 214, 0.05);
+}
+
+.route-loader-exp--tide .route-loader-exp-wavefield__wave {
+  border-radius: 999px;
+}
+
+.route-loader-exp--tide .route-loader-exp-wavefield__wave:nth-child(1) {
+  left: 22px;
+  right: 42px;
+  bottom: 34px;
+  height: 30px;
+  animation: route-loader-exp-wave 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--tide .route-loader-exp-wavefield__wave:nth-child(2) {
+  left: 54px;
+  right: 86px;
+  bottom: 82px;
+  height: 26px;
+  animation: route-loader-exp-wave-reverse 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--tide .route-loader-exp-wavefield__wave:nth-child(3) {
+  left: 86px;
+  right: 132px;
+  bottom: 124px;
+  height: 22px;
+}
+
+.route-loader-exp--tide .route-loader-exp-wavefield__wave:nth-child(4) {
+  left: 118px;
+  right: 176px;
+  bottom: 162px;
+  height: 18px;
+}
+
+.route-loader-exp--forge {
+  --exp-bg-a: rgba(40, 29, 22, 0.98);
+  --exp-bg-b: rgba(21, 17, 15, 1);
+  --exp-bg-c: rgba(11, 10, 9, 1);
+  --exp-glow-a: rgba(255, 194, 146, 0.1);
+  --exp-surface-a: rgba(255, 235, 210, 0.1);
+  --exp-surface-b: rgba(236, 173, 118, 0.05);
+}
+
+.route-loader-exp--forge .route-loader-exp-forge__dock {
+  left: 22px;
+  right: 22px;
+  bottom: 28px;
+  height: 68px;
+  border-radius: 24px;
+}
+
+.route-loader-exp--forge .route-loader-exp-forge__pillar {
+  bottom: 108px;
+  width: 58px;
+  border-radius: 20px;
+}
+
+.route-loader-exp--forge .route-loader-exp-forge__pillar:nth-child(2) {
+  left: 44px;
+  height: 120px;
+  animation: route-loader-exp-rise 2.6s ease-in-out infinite;
+}
+
+.route-loader-exp--forge .route-loader-exp-forge__pillar:nth-child(3) {
+  left: 138px;
+  height: 160px;
+  animation: route-loader-exp-rise 2.6s ease-in-out infinite 0.2s;
+}
+
+.route-loader-exp--forge .route-loader-exp-forge__pillar:nth-child(4) {
+  left: 232px;
+  height: 96px;
+  animation: route-loader-exp-rise 2.6s ease-in-out infinite 0.4s;
+}
+
+.route-loader-exp--kite {
+  --exp-bg-a: rgba(17, 29, 42, 0.98);
+  --exp-bg-b: rgba(11, 18, 28, 1);
+  --exp-bg-c: rgba(8, 11, 18, 1);
+  --exp-glow-a: rgba(160, 223, 255, 0.1);
+  --exp-glow-b: rgba(152, 166, 255, 0.1);
+  --exp-surface-a: rgba(235, 246, 255, 0.1);
+  --exp-surface-b: rgba(146, 203, 255, 0.05);
+}
+
+.route-loader-exp--kite .route-loader-exp-facets__kite {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 42%, 70% 100%, 0 58%);
+}
+
+.route-loader-exp--kite .route-loader-exp-facets__kite:nth-child(1) {
+  inset: 24px 204px 176px 28px;
+  animation: route-loader-exp-drift-left 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--kite .route-loader-exp-facets__kite:nth-child(2) {
+  inset: 94px 126px 106px 108px;
+  animation: route-loader-exp-drift-right 3.5s ease-in-out infinite;
+}
+
+.route-loader-exp--kite .route-loader-exp-facets__kite:nth-child(3) {
+  inset: 158px 42px 36px 204px;
+  animation: route-loader-exp-float-up 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--kite .route-loader-exp-facets__kite:nth-child(4) {
+  inset: 182px 170px 18px 54px;
+  animation: route-loader-exp-float-down 3.1s ease-in-out infinite;
+}
+
+.route-loader-exp--pulse {
+  --exp-bg-a: rgba(16, 33, 30, 0.98);
+  --exp-bg-b: rgba(10, 20, 19, 1);
+  --exp-bg-c: rgba(7, 13, 13, 1);
+  --exp-glow-a: rgba(144, 255, 220, 0.1);
+  --exp-surface-a: rgba(228, 255, 244, 0.1);
+  --exp-surface-b: rgba(120, 245, 206, 0.05);
+}
+
+.route-loader-exp--pulse .route-loader-exp-stairs__step {
+  bottom: 34px;
+  width: 56px;
+  border-radius: 18px;
+}
+
+.route-loader-exp--pulse .route-loader-exp-stairs__step:nth-child(1) {
+  left: 28px;
+  height: 64px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite;
+}
+
+.route-loader-exp--pulse .route-loader-exp-stairs__step:nth-child(2) {
+  left: 98px;
+  height: 104px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.18s;
+}
+
+.route-loader-exp--pulse .route-loader-exp-stairs__step:nth-child(3) {
+  left: 168px;
+  height: 144px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.36s;
+}
+
+.route-loader-exp--pulse .route-loader-exp-stairs__step:nth-child(4) {
+  left: 238px;
+  height: 186px;
+  animation: route-loader-exp-rise 2.2s ease-in-out infinite 0.54s;
+}
+
+.route-loader-exp--weave {
+  --exp-bg-a: rgba(15, 30, 31, 0.98);
+  --exp-bg-b: rgba(10, 19, 21, 1);
+  --exp-bg-c: rgba(7, 12, 15, 1);
+  --exp-glow-a: rgba(148, 246, 225, 0.1);
+  --exp-glow-b: rgba(115, 199, 255, 0.08);
+  --exp-surface-a: rgba(229, 255, 248, 0.1);
+  --exp-surface-b: rgba(112, 226, 233, 0.05);
+}
+
+.route-loader-exp--weave .route-loader-exp-planes__strip {
+  border-radius: 22px;
+}
+
+.route-loader-exp--weave .route-loader-exp-planes__strip--one {
+  inset: 72px 70px 156px 20px;
+  transform: rotate(-14deg);
+  animation: route-loader-exp-slide-x 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--weave .route-loader-exp-planes__strip--two {
+  inset: 136px 20px 92px 90px;
+  transform: rotate(12deg);
+  animation: route-loader-exp-slide-x-reverse 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--weave .route-loader-exp-planes__card {
+  inset: 180px 112px 34px 40px;
+  border-radius: 24px;
+  animation: route-loader-exp-pulse 2.8s ease-in-out infinite;
+}
+
+.route-loader-exp--zenith {
+  --exp-bg-a: rgba(39, 28, 25, 0.98);
+  --exp-bg-b: rgba(22, 17, 17, 1);
+  --exp-bg-c: rgba(12, 10, 11, 1);
+  --exp-glow-a: rgba(255, 212, 141, 0.1);
+  --exp-glow-b: rgba(255, 174, 154, 0.08);
+  --exp-surface-a: rgba(255, 236, 210, 0.1);
+  --exp-surface-b: rgba(255, 176, 154, 0.05);
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak {
+  bottom: 34px;
+  border-radius: 0;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak:nth-child(1) {
+  left: 24px;
+  width: 74px;
+  height: 110px;
+  animation: route-loader-exp-float-up 3.4s ease-in-out infinite;
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak:nth-child(2) {
+  left: 82px;
+  width: 86px;
+  height: 156px;
+  animation: route-loader-exp-float-down 3.1s ease-in-out infinite;
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak:nth-child(3) {
+  left: 146px;
+  width: 76px;
+  height: 124px;
+  animation: route-loader-exp-float-up 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak:nth-child(4) {
+  left: 206px;
+  width: 92px;
+  height: 184px;
+  animation: route-loader-exp-float-down 3.3s ease-in-out infinite;
+}
+
+.route-loader-exp--zenith .route-loader-exp-skyline__peak:nth-child(5) {
+  right: 18px;
+  width: 44px;
+  height: 72px;
+}
+
+.route-loader-exp--harbor {
+  --exp-bg-a: rgba(18, 26, 37, 0.98);
+  --exp-bg-b: rgba(11, 17, 26, 1);
+  --exp-bg-c: rgba(7, 11, 17, 1);
+  --exp-glow-a: rgba(154, 214, 255, 0.1);
+  --exp-surface-a: rgba(232, 246, 255, 0.1);
+  --exp-surface-b: rgba(132, 189, 236, 0.05);
+}
+
+.route-loader-exp--harbor .route-loader-exp-harbor__tower {
+  inset: 32px auto 40px 28px;
+  width: 82px;
+  border-radius: 24px;
+  animation: route-loader-exp-float-up 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--harbor .route-loader-exp-harbor__bays {
+  inset: auto 22px 34px 128px;
+  height: 106px;
+}
+
+.route-loader-exp--harbor .route-loader-exp-harbor__bay {
+  position: static;
+  border-radius: 16px;
+}
+
+.route-loader-exp--mirage {
+  --exp-bg-a: rgba(18, 29, 39, 0.98);
+  --exp-bg-b: rgba(12, 18, 29, 1);
+  --exp-bg-c: rgba(8, 12, 20, 1);
+  --exp-glow-a: rgba(198, 239, 255, 0.1);
+  --exp-glow-b: rgba(188, 180, 255, 0.08);
+  --exp-surface-a: rgba(245, 250, 255, 0.1);
+  --exp-surface-b: rgba(181, 212, 255, 0.05);
+}
+
+.route-loader-exp--mirage .route-loader-exp-panes__pane {
+  border-radius: 26px;
+  backdrop-filter: blur(20px);
+}
+
+.route-loader-exp--mirage .route-loader-exp-panes__pane:nth-child(1) {
+  inset: 26px 136px 124px 28px;
+  animation: route-loader-exp-slide-x 3.6s ease-in-out infinite;
+}
+
+.route-loader-exp--mirage .route-loader-exp-panes__pane:nth-child(2) {
+  inset: 80px 32px 88px 164px;
+  animation: route-loader-exp-slide-x-reverse 3.8s ease-in-out infinite;
+}
+
+.route-loader-exp--mirage .route-loader-exp-panes__pane:nth-child(3) {
+  inset: 148px 98px 28px 70px;
+  animation: route-loader-exp-float-up 3.2s ease-in-out infinite;
+}
+
+.route-loader-exp--lucid {
+  --exp-bg-a: rgba(20, 26, 36, 0.95);
+  --exp-bg-b: rgba(13, 18, 28, 0.98);
+  --exp-bg-c: rgba(9, 12, 20, 1);
+  --exp-glow-a: rgba(201, 238, 255, 0.08);
+  --exp-glow-b: rgba(184, 204, 255, 0.06);
+  --exp-surface-a: rgba(248, 252, 255, 0.08);
+  --exp-surface-b: rgba(196, 219, 255, 0.04);
+}
+
+.route-loader-exp--lucid .route-loader-exp-sheets__sheet {
+  border-radius: 26px;
+}
+
+.route-loader-exp--lucid .route-loader-exp-sheets__sheet--back {
+  inset: 38px 122px 132px 34px;
+  animation: route-loader-exp-float-down 4.2s ease-in-out infinite;
+}
+
+.route-loader-exp--lucid .route-loader-exp-sheets__sheet--front {
+  inset: 112px 34px 52px 150px;
+  animation: route-loader-exp-float-up 4.4s ease-in-out infinite;
+}
+
+.route-loader-exp--lucid .route-loader-exp-sheets__tag {
+  left: 52px;
+  right: 86px;
+  bottom: 30px;
+  height: 20px;
+  border-radius: 999px;
+}
+
+@keyframes route-loader-exp-float-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes route-loader-exp-float-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+@keyframes route-loader-exp-slide-x {
+  0%,
+  100% {
+    transform: translateX(-8px);
+  }
+
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes route-loader-exp-slide-x-reverse {
+  0%,
+  100% {
+    transform: translateX(10px);
+  }
+
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes route-loader-exp-drift-left {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-8deg);
+  }
+
+  50% {
+    transform: translate(-10px, -8px) rotate(-12deg);
+  }
+}
+
+@keyframes route-loader-exp-drift-right {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(6deg);
+  }
+
+  50% {
+    transform: translate(10px, -8px) rotate(10deg);
+  }
+}
+
+@keyframes route-loader-exp-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes route-loader-exp-rise {
+  0%,
+  100% {
+    transform: translateY(12px);
+    opacity: 0.64;
+  }
+
+  50% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-exp-pulse {
+  0%,
+  100% {
+    transform: scale(0.95);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes route-loader-exp-wave {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(0.97);
+  }
+
+  50% {
+    transform: translateX(10px) scaleX(1.03);
+  }
+}
+
+@keyframes route-loader-exp-wave-reverse {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1.03);
+  }
+
+  50% {
+    transform: translateX(-10px) scaleX(0.97);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .route-loader-frame,
   .route-loader-beam,
   .route-loader-core-shell,
-  .route-loader-core {
+  .route-loader-core,
+  .route-loader-exp span,
+  .route-loader-exp div,
+  .route-loader-scene-glow,
+  .route-loader-scene-surface,
+  .route-loader-scene-chip {
     animation: none !important;
   }
 }
@@ -3843,6 +7073,33 @@ p {
   gap: 18px;
 }
 
+.loader-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.loader-lab-family {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.loader-lab-panel {
+  min-height: 100%;
+}
+
+.loader-lab-preview {
+  display: grid;
+  place-items: center;
+  min-height: 340px;
+  padding: 8px 0 2px;
+}
+
+.loader-lab-note {
+  color: var(--color-text-soft);
+  line-height: 1.65;
+}
+
 .placeholder-copy,
 .placeholder-list {
   color: var(--color-text-soft);
@@ -3905,6 +7162,10 @@ p {
 
   .overview-grid--dynamic {
     grid-template-columns: 1fr;
+  }
+
+  .loader-lab-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .overview-widget--hero,
@@ -3978,6 +7239,12 @@ p {
     position: static;
     width: 100%;
     margin-top: 10px;
+  }
+}
+
+@media (max-width: 820px) {
+  .loader-lab-grid {
+    grid-template-columns: 1fr;
   }
 }
 

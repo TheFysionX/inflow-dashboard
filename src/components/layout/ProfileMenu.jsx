@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import packageMeta from '../../../package.json'
 import { brandConfig } from '../../config/navigation'
 import { useDashboard } from '../../context/AppContext'
 import useDashboardNavigate from '../../lib/useDashboardNavigate'
@@ -87,6 +88,10 @@ export default function ProfileMenu() {
               </span>
               <ChevronIcon direction="right" size={14} />
             </motion.button>
+            <div className="profile-dropdown-version">
+              <span>Version</span>
+              <strong>v{packageMeta.version}</strong>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>

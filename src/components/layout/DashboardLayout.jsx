@@ -12,9 +12,12 @@ export default function DashboardLayout() {
     clients,
     activeClientId,
     completeRouteTransition,
+    routeTransitionLabel,
     routeTransitionActive,
+    routeTransitionMode,
     routeTransitionStartedAt,
     routeTransitionTargetPath,
+    routeTransitionTitle,
   } = useDashboard()
   const location = useLocation()
   const contentRef = useRef(null)
@@ -43,6 +46,10 @@ export default function DashboardLayout() {
       return undefined
     }
 
+    if (routeTransitionMode !== 'route') {
+      return undefined
+    }
+
     if (
       routeTransitionTargetPath &&
       routeTransitionTargetPath !== location.pathname
@@ -61,6 +68,7 @@ export default function DashboardLayout() {
     return () => window.clearTimeout(timeoutId)
   }, [
     completeRouteTransition,
+    routeTransitionMode,
     location.pathname,
     routeTransitionActive,
     routeTransitionStartedAt,
@@ -85,7 +93,8 @@ export default function DashboardLayout() {
             <div className="dashboard-route-overlay">
               <RouteLoader
                 className="route-loader-shell--overlay"
-                title="Syncing the next view"
+                label={routeTransitionLabel}
+                title={routeTransitionTitle}
               />
             </div>
           ) : null}

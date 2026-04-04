@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -60,6 +61,27 @@ function matchesLegacyDefaults(currentSlots = [], legacySlots = []) {
   return (
     currentSlots.length === legacySlots.length &&
     currentSlots.every((slot, index) => slot === legacySlots[index])
+  )
+}
+
+function buildIdleTransitionState() {
+  return {
+    active: false,
+    label: 'Loading dashboard',
+    mode: 'idle',
+    startedAt: 0,
+    targetPath: '',
+    title: 'Syncing the next view',
+    token: 0,
+  }
+}
+
+function isSameRangeSelection(left, right) {
+  return (
+    left?.mode === right?.mode &&
+    left?.preset === right?.preset &&
+    left?.startDate === right?.startDate &&
+    left?.endDate === right?.endDate
   )
 }
 
@@ -144,11 +166,18 @@ function getInitialSession(initialDataset) {
 export function AppProvider({ children, initialDataset = null }) {
   const [dataset, setDataset] = useState(initialDataset)
   const [session, setSession] = useState(() => getInitialSession(initialDataset))
-  const [routeTransition, setRouteTransition] = useState({
-    active: false,
-    startedAt: 0,
-    targetPath: '',
-  })
+  const [routeTransition, setRouteTransition] = useState(() => buildIdleTransitionState())
+  const transitionTimeoutRef = useRef(null)
+  const transitionTokenRef = useRef(0)
+
+  useEffect(
+    () => () => {
+      if (transitionTimeoutRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(transitionTimeoutRef.current)
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -194,6 +223,97 @@ export function AppProvider({ children, initialDataset = null }) {
   }, [session])
 
   const value = useMemo(() => {
+    const clearTransitionTimeout = () => {
+      if (transitionTimeoutRef.current && typeof window !== 'undefined') {
+        window.clearTimeout(transitionTimeoutRef.current)
+        transitionTimeoutRef.current = null
+      }
+    }
+
+    const beginUiTransition = ({
+      label = 'Loading dashboard',
+      mode = 'view',
+      targetPath = '',
+      title = 'Refreshing dashboard data',
+    } = {}) => {
+      const nextTransition = {
+        active: true,
+        label,
+        mode,
+        startedAt: Date.now(),
+        targetPath,
+        title,
+        token: transitionTokenRef.current + 1,
+      }
+
+      transitionTokenRef.current = nextTransition.token
+      clearTransitionTimeout()
+      setRouteTransition(nextTransition)
+
+      return nextTransition
+    }
+
+    const completeUiTransition = (token = routeTransition.token, minDuration = 0, startedAt = Date.now()) => {
+      const finish = () => {
+        setRouteTransition((current) => {
+          if (!current.active || current.token !== token) {
+            return current
+          }
+
+          return buildIdleTransitionState()
+        })
+      }
+
+      clearTransitionTimeout()
+      const remainingDelay = Math.max(0, minDuration - (Date.now() - startedAt))
+
+      if (remainingDelay === 0 || typeof window === 'undefined') {
+        finish()
+        return
+      }
+
+      transitionTimeoutRef.current = window.setTimeout(() => {
+        transitionTimeoutRef.current = null
+        finish()
+      }, remainingDelay)
+    }
+
+    const runViewTransition = (
+      updateSession,
+      {
+        label = 'Loading dashboard',
+        minDuration = 320,
+        title = 'Refreshing dashboard data',
+      } = {},
+    ) => {
+      const nextTransition = beginUiTransition({
+        label,
+        mode: 'view',
+        title,
+      })
+
+      const commitUpdate = () => {
+        startTransition(() => {
+          updateSession()
+        })
+
+        completeUiTransition(
+          nextTransition.token,
+          minDuration,
+          nextTransition.startedAt,
+        )
+      }
+
+      if (typeof window === 'undefined') {
+        commitUpdate()
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(commitUpdate)
+      })
+    }
+
     const useCompactNumbers = session.numberFormat !== 'full'
     const currentAccount = getDemoAccessAccountById(session.activeAccountId)
 
@@ -221,30 +341,61 @@ export function AppProvider({ children, initialDataset = null }) {
     }
 
     const setActiveClientId = (clientId) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          activeClientId: clientId,
-        }))
-      })
+      if (clientId === session.activeClientId) {
+        return
+      }
+
+      runViewTransition(
+        () => {
+          setSession((current) => ({
+            ...current,
+            activeClientId: clientId,
+          }))
+        },
+        {
+          title: 'Switching client workspace',
+        },
+      )
     }
 
     const setRangePreset = (preset) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          rangeSelection: buildPresetRangeSelection(preset),
-        }))
-      })
+      const nextRangeSelection = buildPresetRangeSelection(preset)
+
+      if (isSameRangeSelection(session.rangeSelection, nextRangeSelection)) {
+        return
+      }
+
+      runViewTransition(
+        () => {
+          setSession((current) => ({
+            ...current,
+            rangeSelection: nextRangeSelection,
+          }))
+        },
+        {
+          title: 'Updating date range',
+        },
+      )
     }
 
     const setCustomRange = (from, to) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          rangeSelection: buildCustomRangeSelection(from, to),
-        }))
-      })
+      const nextRangeSelection = buildCustomRangeSelection(from, to)
+
+      if (isSameRangeSelection(session.rangeSelection, nextRangeSelection)) {
+        return
+      }
+
+      runViewTransition(
+        () => {
+          setSession((current) => ({
+            ...current,
+            rangeSelection: nextRangeSelection,
+          }))
+        },
+        {
+          title: 'Applying custom range',
+        },
+      )
     }
 
     const setDefaultLandingPath = (defaultLandingPath) => {
@@ -257,13 +408,27 @@ export function AppProvider({ children, initialDataset = null }) {
     }
 
     const setDefaultRangePreset = (defaultRangePreset) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          defaultRangePreset,
-          rangeSelection: buildPresetRangeSelection(defaultRangePreset),
-        }))
-      })
+      const nextRangeSelection = buildPresetRangeSelection(defaultRangePreset)
+
+      if (
+        defaultRangePreset === session.defaultRangePreset &&
+        isSameRangeSelection(session.rangeSelection, nextRangeSelection)
+      ) {
+        return
+      }
+
+      runViewTransition(
+        () => {
+          setSession((current) => ({
+            ...current,
+            defaultRangePreset,
+            rangeSelection: nextRangeSelection,
+          }))
+        },
+        {
+          title: 'Updating date range',
+        },
+      )
     }
 
     const setNumberFormat = (numberFormat) => {
@@ -363,23 +528,16 @@ export function AppProvider({ children, initialDataset = null }) {
     }
 
     const startRouteTransition = (targetPath = '') => {
-      setRouteTransition({
-        active: true,
-        startedAt: Date.now(),
+      return beginUiTransition({
+        label: 'Loading dashboard',
+        mode: 'route',
         targetPath,
+        title: 'Syncing the next view',
       })
     }
 
     const completeRouteTransition = () => {
-      setRouteTransition((current) =>
-        current.active
-          ? {
-              active: false,
-              startedAt: 0,
-              targetPath: '',
-            }
-          : current,
-      )
+      completeUiTransition(routeTransition.token, 260, routeTransition.startedAt)
     }
 
     return {
@@ -409,8 +567,11 @@ export function AppProvider({ children, initialDataset = null }) {
       resetOverviewMetricSlots,
       resetOverviewWidgetSlots,
       routeTransitionActive: routeTransition.active,
+      routeTransitionLabel: routeTransition.label,
+      routeTransitionMode: routeTransition.mode,
       routeTransitionStartedAt: routeTransition.startedAt,
       routeTransitionTargetPath: routeTransition.targetPath,
+      routeTransitionTitle: routeTransition.title,
       startRouteTransition,
       toggleSidebar,
       useCompactNumbers,

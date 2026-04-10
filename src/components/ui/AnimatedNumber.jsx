@@ -1,21 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { animate } from 'framer-motion'
+import { useEffect, useMemo, useRef } from 'react'
 
-function formatValue(value, {
-  prefix = '',
-  suffix = '',
-  decimals = 0,
-  compact = false,
-} = {}) {
-  const formatter = new Intl.NumberFormat('en-US', compact ? {
-    notation: 'compact',
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: decimals,
-  } : {
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: decimals,
-  })
-
-  return `${prefix}${formatter.format(value)}${suffix}`
+function buildFormatter(decimals, compact) {
+  return new Intl.NumberFormat(
+    'en-US',
+    compact
+      ? {
+          notation: 'compact',
+          maximumFractionDigits: decimals,
+          minimumFractionDigits: decimals,
+        }
+      : {
+          maximumFractionDigits: decimals,
+          minimumFractionDigits: decimals,
+        },
+  )
 }
 
 export default function AnimatedNumber({
@@ -27,37 +26,44 @@ export default function AnimatedNumber({
   compact = false,
   duration = 1100,
 }) {
-  const [displayValue, setDisplayValue] = useState(0)
+  const textRef = useRef(null)
+  const formatter = useMemo(
+    () => buildFormatter(decimals, compact),
+    [compact, decimals],
+  )
+  const formatValue = useMemo(
+    () => (nextValue) => `${prefix}${formatter.format(nextValue)}${suffix}`,
+    [formatter, prefix, suffix],
+  )
+  const initialText = useMemo(() => formatValue(0), [formatValue])
 
   useEffect(() => {
-    let animationFrame = 0
-    const startedAt = performance.now()
+    if (textRef.current) {
+      textRef.current.textContent = initialText
+    }
+  }, [initialText])
 
-    const step = (now) => {
-      const progress = Math.min((now - startedAt) / duration, 1)
-      const eased = 1 - ((1 - progress) ** 3)
-      setDisplayValue(value * eased)
+  useEffect(() => {
+    const element = textRef.current
 
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(step)
-      }
+    if (!element) {
+      return undefined
     }
 
-    animationFrame = requestAnimationFrame(step)
+    const controls = animate(0, value, {
+      duration: duration / 1000,
+      ease: (progress) => 1 - ((1 - progress) ** 3),
+      onUpdate: (latestValue) => {
+        element.textContent = formatValue(latestValue)
+      },
+    })
 
-    return () => cancelAnimationFrame(animationFrame)
-  }, [duration, value])
+    return () => controls.stop()
+  }, [duration, formatValue, value])
 
-  const text = useMemo(
-    () =>
-      formatValue(displayValue, {
-        prefix,
-        suffix,
-        decimals,
-        compact,
-      }),
-    [compact, decimals, displayValue, prefix, suffix],
+  return (
+    <span className={className} ref={textRef}>
+      {initialText}
+    </span>
   )
-
-  return <span className={className}>{text}</span>
 }

@@ -16,7 +16,10 @@ import ChartPanel from '../components/ui/ChartPanel'
 import FilterChips from '../components/ui/FilterChips'
 import StageBadge from '../components/ui/StageBadge'
 import StatusPill from '../components/ui/StatusPill'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getPipelineModel } from '../data/selectors'
 
 const funnelColors = ['#876dff', '#7c87ff', '#73a1ff', '#b993ff', '#f49be3']
@@ -280,7 +283,8 @@ function buildFilteredResponseGap(rows) {
 }
 
 export default function PipelinePage() {
-  const { dataset, activeClientId, rangeSelection } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const [currentFilters, setCurrentFilters] = useState({
     stage: 'all',
     qualification: 'all',

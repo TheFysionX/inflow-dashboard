@@ -8,7 +8,10 @@ import KpiCard from '../components/ui/KpiCard'
 import LeadDetailDrawer from '../components/ui/LeadDetailDrawer'
 import StatusPill from '../components/ui/StatusPill'
 import TraceLineChart from '../components/ui/TraceLineChart'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getBookingsModel, getLeadDetailModel } from '../data/selectors'
 
 const funnelColors = ['#74c7ff', '#8f6dff', '#f49be3']
@@ -193,7 +196,8 @@ function BookingFunnel({ items, activeIndex, onActiveChange, rangeKey }) {
 }
 
 export default function BookingsPage() {
-  const { dataset, activeClientId, rangeSelection } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const [activeAttendanceIndex, setActiveAttendanceIndex] = useState(null)
   const [activeFunnelIndex, setActiveFunnelIndex] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState('')

@@ -2,7 +2,12 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import DashboardLayout from './components/layout/DashboardLayout'
 import RouteLoader from './components/ui/RouteLoader'
-import { AppProvider, useDashboard } from './context/AppContext'
+import {
+  AppProvider,
+  useDashboardAuth,
+  useDashboardDataset,
+  useDashboardPreferences,
+} from './context/AppContext'
 import { navigationItems } from './config/navigation'
 
 const BookingsPage = lazy(() => import('./pages/BookingsPage'))
@@ -35,7 +40,8 @@ function getProtectedLandingPath(defaultLandingPath) {
 }
 
 function ProtectedApp() {
-  const { datasetReady, isAuthenticated } = useDashboard()
+  const { isAuthenticated } = useDashboardAuth()
+  const { datasetReady } = useDashboardDataset()
 
   if (!isAuthenticated) {
     return <Navigate replace to="/login" />
@@ -49,7 +55,8 @@ function ProtectedApp() {
 }
 
 function LoginRoute() {
-  const { defaultLandingPath, isAuthenticated } = useDashboard()
+  const { isAuthenticated } = useDashboardAuth()
+  const { defaultLandingPath } = useDashboardPreferences()
 
   if (isAuthenticated) {
     return <Navigate replace to={getProtectedLandingPath(defaultLandingPath)} />
@@ -59,7 +66,8 @@ function LoginRoute() {
 }
 
 function RootRedirect() {
-  const { defaultLandingPath, isAuthenticated } = useDashboard()
+  const { isAuthenticated } = useDashboardAuth()
+  const { defaultLandingPath } = useDashboardPreferences()
 
   return <Navigate replace to={isAuthenticated ? getProtectedLandingPath(defaultLandingPath) : '/login'} />
 }

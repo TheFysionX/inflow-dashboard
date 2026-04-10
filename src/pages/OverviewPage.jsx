@@ -27,7 +27,11 @@ import {
   buildOverviewWidgetLayout,
   getOverviewWidgetConfig,
 } from '../config/overviewLayout'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardPreferences,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getOverviewModel } from '../data/selectors'
 import useDashboardNavigate from '../lib/useDashboardNavigate'
 
@@ -182,14 +186,13 @@ function TrendSettingsPanel({
 
 export default function OverviewPage() {
   const navigate = useDashboardNavigate()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const {
-    dataset,
-    activeClientId,
-    rangeSelection,
     overviewMetricSlots,
     overviewUseCompactNumbers,
     overviewWidgetSlots,
-  } = useDashboard()
+  } = useDashboardPreferences()
   const [activePieIndex, setActivePieIndex] = useState(null)
   const [activeFunnelIndex, setActiveFunnelIndex] = useState(null)
   const [trendSettingsOpen, setTrendSettingsOpen] = useState({
@@ -772,6 +775,21 @@ export default function OverviewPage() {
           )}
         </motion.section>
       ) : null}
+
+      <div className="kpi-section-header">
+        <div>
+          <p className="sidebar-caption">Homepage defaults</p>
+          <h3>Overview KPIs</h3>
+        </div>
+        <button
+          className="ghost-button button-small kpi-section-action"
+          onClick={() => navigate('/settings#settings-overview-defaults')}
+          type="button"
+        >
+          <SettingsIcon size={15} />
+          <span>Customize KPIs</span>
+        </button>
+      </div>
 
       <motion.section className="kpi-grid search-jump-target" id="overview-kpis" layout>
         {overview.kpis.map((kpi, index) => (

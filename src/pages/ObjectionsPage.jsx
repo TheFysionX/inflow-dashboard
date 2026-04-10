@@ -19,7 +19,10 @@ import KpiCard from '../components/ui/KpiCard'
 import LeadDetailDrawer from '../components/ui/LeadDetailDrawer'
 import StatusPill from '../components/ui/StatusPill'
 import TraceLineChart from '../components/ui/TraceLineChart'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getLeadDetailModel, getObjectionsModel } from '../data/selectors'
 
 const EMPTY_OBJECTIONS_MODEL = {
@@ -123,7 +126,8 @@ function MixLegend({ items }) {
 }
 
 export default function ObjectionsPage() {
-  const { dataset, activeClientId, rangeSelection } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const [activeDistributionIndex, setActiveDistributionIndex] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState('')
 

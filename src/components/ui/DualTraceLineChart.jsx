@@ -3,6 +3,23 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRightIcon } from './Icons'
 import { getChartKeyboardState } from '../../lib/chartNavigation'
 
+const axisCompactFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+const axisStandardFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+})
+const integerFormatter = new Intl.NumberFormat('en-US')
+const TRACE_LINE_EASE = [0.34, 0.04, 0.16, 1]
+const TRACE_LINE_INTRO_DELAY = 0.24
+const TRACE_LINE_DURATION = 3.15
+const TRACE_END_PULSE_DELAY = 3.02
+const TRACE_ACTIVE_DOT_RADIUS = 3.2
+const TRACE_ACTIVE_DOT_STROKE_WIDTH = 1.05
+const TRACE_END_PULSE_RADIUS = 8.5
+const TRACE_MIN_HIT_WIDTH = 18
+
 function buildSmoothPath(points) {
   if (!points.length) {
     return ''
@@ -26,14 +43,25 @@ function buildSmoothPath(points) {
 }
 
 function formatAxisValue(value) {
-  return new Intl.NumberFormat('en-US', {
-    notation: value >= 1000 ? 'compact' : 'standard',
-    maximumFractionDigits: value >= 1000 ? 1 : 0,
-  }).format(value)
+  return (
+    value >= 1000
+      ? axisCompactFormatter
+      : axisStandardFormatter
+  ).format(value)
 }
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
+}
+
+function normalizeChartValue(value) {
+  const numericValue = Number(value)
+
+  if (!Number.isFinite(numericValue)) {
+    return 0
+  }
+
+  return Math.max(0, numericValue)
 }
 
 function getNiceStep(value) {
@@ -51,8 +79,7 @@ function getNiceStep(value) {
 
 function buildAxisScale(values, tickCount) {
   const numericValues = values
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value))
+    .map((value) => normalizeChartValue(value))
 
   if (!numericValues.length) {
     return {
@@ -76,9 +103,7 @@ function buildAxisScale(values, tickCount) {
     targetMin = 0
   }
 
-  if (rawMin >= 0) {
-    targetMin = Math.max(0, targetMin)
-  }
+  targetMin = Math.max(0, targetMin)
 
   const intervalCount = Math.max(tickCount - 1, 1)
   let step = getNiceStep((targetMax - targetMin) / intervalCount)
@@ -142,6 +167,35 @@ function buildPlotGeometry(pointCount, padding, width) {
     },
     getX: (index) => padding.left + (step * index),
     step,
+  }
+}
+
+function buildLabelIndexes(pointCount, targetCount) {
+  if (pointCount <= 0) {
+    return new Set()
+  }
+
+  const desiredCount = Math.min(pointCount, Math.max(targetCount, 1) + 1)
+
+  return new Set(
+    Array.from({ length: desiredCount }, (_, index) => (
+      desiredCount === 1
+        ? pointCount - 1
+        : Math.round((index * (pointCount - 1)) / (desiredCount - 1))
+    )),
+  )
+}
+
+function resolveHitAreaBounds(bounds, centerX, leftBoundary, rightBoundary) {
+  const width = Math.min(
+    Math.max(bounds.width, TRACE_MIN_HIT_WIDTH),
+    rightBoundary - leftBoundary,
+  )
+  const maxX = rightBoundary - width
+
+  return {
+    x: clamp(centerX - (width / 2), leftBoundary, maxX),
+    width,
   }
 }
 
@@ -421,7 +475,7 @@ export default function DualTraceLineChart({
   const padding = { top: 18, right: 34, bottom: 34, left: 42 }
   const axisScale = useMemo(
     () => buildAxisScale(
-      data.flatMap((item) => series.map((entry) => Number(item[entry.key] ?? 0))),
+      data.flatMap((item) => series.map((entry) => normalizeChartValue(item[entry.key]))),
       yTickCount,
     ),
     [data, series, yTickCount],
@@ -459,15 +513,16 @@ export default function DualTraceLineChart({
         ...entry,
         points: data.map((item, index) => {
           const x = plotGeometry.getX(index)
+          const value = normalizeChartValue(item[entry.key])
           const y =
             padding.top +
-            ((max - Number(item[entry.key] ?? 0)) * (chartHeight - padding.top - padding.bottom)) / yRange
+            ((max - value) * (chartHeight - padding.top - padding.bottom)) / yRange
 
           return {
             x,
             y,
             label: item.label,
-            value: Number(item[entry.key] ?? 0),
+            value,
           }
         }),
       })),
@@ -482,12 +537,25 @@ export default function DualTraceLineChart({
       yRange,
     ],
   )
-
-  const labelEvery = Math.max(1, Math.ceil(data.length / Math.max(labelTargetCount, 1)))
+  const hitAreas = useMemo(
+    () =>
+      data.map((_, index) => resolveHitAreaBounds(
+        plotGeometry.getBounds(index),
+        plotGeometry.getX(index),
+        padding.left,
+        width - padding.right,
+      )),
+    [data, padding.left, padding.right, plotGeometry, width],
+  )
+  const labelIndexes = useMemo(
+    () => buildLabelIndexes(data.length, labelTargetCount),
+    [data.length, labelTargetCount],
+  )
   const displayedLabel = activeIndex === null ? data.at(-1)?.label : data[activeIndex]?.label
   const activePoints = activeIndex === null
     ? pointMap.map((entry) => entry.points.at(-1))
     : pointMap.map((entry) => entry.points[activeIndex])
+  const activePointCount = activePoints.filter(Boolean).length
   const effectiveSelection = dragStartIndex === null
     ? null
     : {
@@ -550,10 +618,10 @@ export default function DualTraceLineChart({
 
   const selectionBand = effectiveSelection && pointMap[0]?.points.length
     ? (() => {
-      const startBounds = plotGeometry.getBounds(effectiveSelection.start)
-      const endBounds = plotGeometry.getBounds(effectiveSelection.end)
-      const x = startBounds.x
-      const rightEdge = endBounds.x + endBounds.width
+      const startBounds = hitAreas[effectiveSelection.start]
+      const endBounds = hitAreas[effectiveSelection.end]
+      const x = startBounds?.x ?? padding.left
+      const rightEdge = (endBounds?.x ?? padding.left) + (endBounds?.width ?? 0)
 
       return {
         x,
@@ -633,14 +701,14 @@ export default function DualTraceLineChart({
                 <span>{entry.label}</span>
                 {selectionSummary ? (
                   <span className={`trace-chart-delta trace-chart-delta--${entry.tone}`}>
-                    {`${entry.delta > 0 ? '+' : ''}${new Intl.NumberFormat('en-US').format(entry.delta)}`}
+                    {`${entry.delta > 0 ? '+' : ''}${integerFormatter.format(entry.delta)}`}
                     {' '}
                     <small>
                       ({`${entry.percent > 0 ? '+' : ''}${Math.round(entry.percent * 10) / 10}%`})
                     </small>
                   </span>
                 ) : (
-                  <strong>{new Intl.NumberFormat('en-US').format(entry.value ?? 0)}</strong>
+                  <strong>{integerFormatter.format(entry.value ?? 0)}</strong>
                 )}
               </span>
             ))}
@@ -744,16 +812,16 @@ export default function DualTraceLineChart({
               strokeLinecap="round"
               strokeWidth={entryIndex === 0 ? 2.35 : 2.1}
               transition={{
-                duration: 2.4,
-                delay: entryIndex * 0.08,
-                ease: [0.18, 0.82, 0.3, 1],
+                duration: TRACE_LINE_DURATION,
+                delay: TRACE_LINE_INTRO_DELAY + (entryIndex * 0.08),
+                ease: TRACE_LINE_EASE,
               }}
             />
           )
         })}
 
         {data.map((item, index) => {
-          const bounds = plotGeometry.getBounds(index)
+          const bounds = hitAreas[index]
 
           return (
             <rect
@@ -781,22 +849,21 @@ export default function DualTraceLineChart({
                   setDragCurrentIndex(index)
                 }
               }}
-              width={Math.max(bounds.width, 18)}
+              width={bounds.width}
               x={bounds.x}
               y={padding.top}
             />
           )
         })}
 
-        {activeIndex !== null && activePoints.every(Boolean) ? (
-          <polyline
+        {activeIndex !== null && activePointCount > 1 && activePoints.every(Boolean) ? (
+          <line
             className="trace-chart-connector"
             fill="none"
-            points={activePoints
-              .filter(Boolean)
-              .sort((left, right) => left.y - right.y)
-              .map((point) => `${point.x},${point.y}`)
-              .join(' ')}
+            x1={activePoints[0].x}
+            x2={activePoints[0].x}
+            y1={padding.top}
+            y2={chartHeight - padding.bottom}
             pointerEvents="none"
           />
         ) : null}
@@ -817,9 +884,9 @@ export default function DualTraceLineChart({
                 fill={`url(#${hoverGradientId})`}
                 key={`hover-${entry.key}`}
                 pointerEvents="none"
-                r="4.2"
+                r={TRACE_ACTIVE_DOT_RADIUS}
                 stroke={hoverStroke}
-                strokeWidth="1.2"
+                strokeWidth={TRACE_ACTIVE_DOT_STROKE_WIDTH}
               />
             ) : null
           })
@@ -834,14 +901,18 @@ export default function DualTraceLineChart({
               initial={{ opacity: 0, scale: 0.4 }}
               key={`pulse-${lineKey}-${entry.key}`}
               pointerEvents="none"
-              transition={{ duration: 1.02, delay: 1.95, ease: 'easeOut' }}
+              transition={{
+                duration: 1.04,
+                delay: TRACE_END_PULSE_DELAY,
+                ease: 'easeOut',
+              }}
             >
               <circle
                 cx={endPoint.x}
                 cy={endPoint.y}
                 fill={entry.color}
                 fillOpacity="0.08"
-                r="11"
+                r={TRACE_END_PULSE_RADIUS}
                 stroke={entry.color}
                 strokeOpacity="0.4"
               />
@@ -850,7 +921,7 @@ export default function DualTraceLineChart({
         })}
 
         {pointMap[0]?.points.map((point, index) =>
-          index % labelEvery === 0 || index === pointMap[0].points.length - 1 ? (
+          labelIndexes.has(index) ? (
             <text
               className="trace-chart-label"
               key={point.label}

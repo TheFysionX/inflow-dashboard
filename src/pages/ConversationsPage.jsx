@@ -10,7 +10,10 @@ import KpiCard from '../components/ui/KpiCard'
 import StageBadge from '../components/ui/StageBadge'
 import StatusPill from '../components/ui/StatusPill'
 import TimelineList from '../components/ui/TimelineList'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getConversationDetailModel, getConversationsModel } from '../data/selectors'
 
 function StandardTooltip({ active, payload, label }) {
@@ -197,7 +200,8 @@ function ConversationDetail({ conversation }) {
 const THREAD_PAGE_SIZE = 8
 
 export default function ConversationsPage() {
-  const { dataset, activeClientId, rangeSelection } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const [filters, setFilters] = useState({
     outcome: 'all',
     health: 'all',

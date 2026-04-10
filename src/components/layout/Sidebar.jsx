@@ -3,12 +3,16 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import inflowLogo from '../../assets/inflow-logo.png'
 import { navigationItems } from '../../config/navigation'
-import { useDashboard } from '../../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardLayoutState,
+} from '../../context/AppContext'
 import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ChevronIcon, NavIcon } from '../ui/Icons'
 
 export default function Sidebar() {
-  const { sidebarExpanded, toggleSidebar } = useDashboard()
+  const { sidebarExpanded } = useDashboardLayoutState()
+  const { toggleSidebar } = useDashboardActions()
   const navigate = useDashboardNavigate()
   const prefersReducedMotion = useReducedMotion()
   const [labelsVisible, setLabelsVisible] = useState(sidebarExpanded)

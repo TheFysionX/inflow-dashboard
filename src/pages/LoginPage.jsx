@@ -3,12 +3,16 @@ import { useState } from 'react'
 import Lottie from 'lottie-react'
 import inflowHeaderAnimation from '../assets/inflowai_header_cropped_720.json'
 import { resolveDemoAccessAccount } from '../config/demoAccess'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardPreferences,
+} from '../context/AppContext'
 import useDashboardNavigate from '../lib/useDashboardNavigate'
 
 export default function LoginPage() {
   const navigate = useDashboardNavigate()
-  const { defaultLandingPath, login } = useDashboard()
+  const { defaultLandingPath } = useDashboardPreferences()
+  const { login } = useDashboardActions()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')

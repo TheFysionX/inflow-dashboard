@@ -4,23 +4,29 @@ import ChartPanel from '../components/ui/ChartPanel'
 import OptionSelect from '../components/ui/OptionSelect'
 import SignOutConfirmModal from '../components/ui/SignOutConfirmModal'
 import StatusPill from '../components/ui/StatusPill'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardAuth,
+  useDashboardDataset,
+  useDashboardPreferences,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getOverviewModel, getSettingsModel } from '../data/selectors'
 
 export default function SettingsPage() {
+  const { currentAccount } = useDashboardAuth()
+  const { dataset, clients } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const {
-    activeClientId,
-    clients,
-    currentAccount,
-    dataset,
     defaultLandingPath,
     defaultRangePreset,
-    logout,
     numberFormat,
     overviewMetricSlots,
     overviewUseCompactNumbers,
     overviewWidgetSlots,
-    rangeSelection,
+  } = useDashboardPreferences()
+  const {
+    logout,
     resetOverviewMetricSlots,
     resetOverviewWidgetSlots,
     setDefaultLandingPath,
@@ -28,7 +34,7 @@ export default function SettingsPage() {
     setOverviewMetricSlot,
     setOverviewUseCompactNumbers,
     setOverviewWidgetSlot,
-  } = useDashboard()
+  } = useDashboardActions()
   const [confirmingSignOut, setConfirmingSignOut] = useState(false)
 
   const overview = useMemo(
@@ -230,6 +236,21 @@ export default function SettingsPage() {
                     <div className="detail-card" key={metric.key ?? metric.value}>
                       <span>{metric.label}</span>
                       <strong>{metric.detail ?? 'Available as a configurable dashboard metric.'}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {overview.overviewTrendMetricGroups?.map((group) => (
+              <div className="settings-definition-group" key={`overview-graph-${group.key}`}>
+                <div className="settings-definition-header">
+                  <h4>{group.label}</h4>
+                </div>
+                <div className="detail-card-grid settings-definition-grid">
+                  {group.metrics.map((metric) => (
+                    <div className="detail-card" key={metric.key}>
+                      <span>{metric.label}</span>
+                      <strong>{metric.detail ?? 'Available as a configurable homepage graph value.'}</strong>
                     </div>
                   ))}
                 </div>

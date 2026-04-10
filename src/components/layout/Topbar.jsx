@@ -7,7 +7,10 @@ import {
   navigationItems,
   overviewRangeOptions,
 } from '../../config/navigation'
-import { useDashboard } from '../../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardSelection,
+} from '../../context/AppContext'
 import { scrollToSearchTarget } from '../../lib/searchNavigation'
 import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ArrowRightIcon, CloseIcon, NavIcon, SearchIcon } from '../ui/Icons'
@@ -17,11 +20,8 @@ import ProfileMenu from './ProfileMenu'
 export default function Topbar() {
   const navigate = useDashboardNavigate()
   const location = useLocation()
-  const {
-    rangeSelection,
-    setCustomRange,
-    setRangePreset,
-  } = useDashboard()
+  const { rangeSelection } = useDashboardSelection()
+  const { setCustomRange, setRangePreset } = useDashboardActions()
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeResultIndex, setActiveResultIndex] = useState(0)

@@ -1,24 +1,31 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import RouteLoader from '../ui/RouteLoader'
-import { useDashboard } from '../../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardDataset,
+  useDashboardRouteTransition,
+  useDashboardSelection,
+} from '../../context/AppContext'
 import { scrollToSearchTarget } from '../../lib/searchNavigation'
 import useScrollbarGradients from '../../lib/useScrollbarGradients'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 export default function DashboardLayout() {
+  const { clients } = useDashboardDataset()
+  const { activeClientId } = useDashboardSelection()
   const {
-    clients,
-    activeClientId,
     completeRouteTransition,
+  } = useDashboardActions()
+  const {
     routeTransitionLabel,
     routeTransitionActive,
     routeTransitionMode,
     routeTransitionStartedAt,
     routeTransitionTargetPath,
     routeTransitionTitle,
-  } = useDashboard()
+  } = useDashboardRouteTransition()
   const location = useLocation()
   const contentRef = useRef(null)
   const activeClient =

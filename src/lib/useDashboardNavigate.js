@@ -1,7 +1,7 @@
 import { startTransition } from 'react'
 import { flushSync } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useDashboard } from '../context/AppContext'
+import { useDashboardActions } from '../context/AppContext'
 
 function buildTargetPath(to, location) {
   if (typeof to === 'string') {
@@ -22,7 +22,7 @@ function stripSearchAndHash(pathname = '') {
 export default function useDashboardNavigate() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { startRouteTransition } = useDashboard()
+  const { startRouteTransition } = useDashboardActions()
 
   return (to, options) => {
     const currentTarget = `${location.pathname}${location.search}${location.hash}`

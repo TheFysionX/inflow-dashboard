@@ -17,7 +17,10 @@ import FilterChips from '../components/ui/FilterChips'
 import LeadDetailDrawer from '../components/ui/LeadDetailDrawer'
 import StageBadge from '../components/ui/StageBadge'
 import StatusPill from '../components/ui/StatusPill'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getLeadDetailModel, getLeadsModel } from '../data/selectors'
 
 function ChartTooltip({ active, payload, label }) {
@@ -87,7 +90,8 @@ function RadialMix({ items }) {
 }
 
 export default function LeadsPage() {
-  const { dataset, activeClientId, rangeSelection } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
   const [sorting, setSorting] = useState([
     { id: 'lastActivityAt', desc: true },
   ])

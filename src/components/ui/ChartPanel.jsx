@@ -13,6 +13,7 @@ export default function ChartPanel({
   children,
   className = '',
   index = 0,
+  layout = false,
   style,
 }) {
   const prefersReducedMotion = useReducedMotion()
@@ -24,7 +25,7 @@ export default function ChartPanel({
       data-search-section={sectionId || undefined}
       id={sectionId}
       initial={prefersReducedMotion ? false : { opacity: 0, y: 24 }}
-      layout
+      layout={layout}
       style={style}
       transition={{
         duration: 0.4,

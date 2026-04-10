@@ -20,8 +20,14 @@ import LeadDetailDrawer from '../components/ui/LeadDetailDrawer'
 import StageBadge from '../components/ui/StageBadge'
 import StatusPill from '../components/ui/StatusPill'
 import TraceLineChart from '../components/ui/TraceLineChart'
-import { useDashboard } from '../context/AppContext'
+import {
+  useDashboardDataset,
+  useDashboardPreferences,
+  useDashboardSelection,
+} from '../context/AppContext'
 import { getLeadDetailModel, getPerformanceModel } from '../data/selectors'
+
+const integerFormatter = new Intl.NumberFormat('en-US')
 
 function StandardTooltip({ active, payload, label }) {
   if (!active || !payload?.length) {
@@ -101,12 +107,9 @@ function MixLegend({ items }) {
 }
 
 export default function PerformancePage() {
-  const {
-    dataset,
-    activeClientId,
-    rangeSelection,
-    overviewUseCompactNumbers,
-  } = useDashboard()
+  const { dataset } = useDashboardDataset()
+  const { activeClientId, rangeSelection } = useDashboardSelection()
+  const { overviewUseCompactNumbers } = useDashboardPreferences()
   const [activeVerdictIndex, setActiveVerdictIndex] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState('')
 
@@ -296,11 +299,11 @@ export default function PerformancePage() {
           <div className="detail-card-grid performance-pressure-grid">
             <div className="detail-card">
               <span>Reviewed replies</span>
-              <strong>{new Intl.NumberFormat('en-US').format(pressureSummary.reviewed)}</strong>
+              <strong>{integerFormatter.format(pressureSummary.reviewed)}</strong>
             </div>
             <div className="detail-card">
               <span>Guardrail touches</span>
-              <strong>{new Intl.NumberFormat('en-US').format(pressureSummary.guardrail)}</strong>
+              <strong>{integerFormatter.format(pressureSummary.guardrail)}</strong>
             </div>
             <div className="detail-card">
               <span>Average touch rate</span>

@@ -2,14 +2,18 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import packageMeta from '../../../package.json'
 import { brandConfig } from '../../config/navigation'
-import { useDashboard } from '../../context/AppContext'
+import {
+  useDashboardActions,
+  useDashboardAuth,
+} from '../../context/AppContext'
 import useDashboardNavigate from '../../lib/useDashboardNavigate'
 import { ChevronIcon, SettingsIcon } from '../ui/Icons'
 import SignOutConfirmModal from '../ui/SignOutConfirmModal'
 
 export default function ProfileMenu() {
   const navigate = useDashboardNavigate()
-  const { currentAccount, logout } = useDashboard()
+  const { currentAccount } = useDashboardAuth()
+  const { logout } = useDashboardActions()
   const [open, setOpen] = useState(false)
   const [confirmingSignOut, setConfirmingSignOut] = useState(false)
   const menuRef = useRef(null)

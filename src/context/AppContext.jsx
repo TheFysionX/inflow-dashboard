@@ -1,6 +1,7 @@
 import {
   createContext,
   startTransition,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -24,7 +25,14 @@ import {
   primaryDemoAccess,
 } from '../config/demoAccess'
 
-const DashboardContext = createContext(null)
+const DashboardAuthContext = createContext(null)
+const DashboardDatasetContext = createContext(null)
+const DashboardSelectionContext = createContext(null)
+const DashboardPreferencesContext = createContext(null)
+const DashboardLayoutContext = createContext(null)
+const DashboardRouteTransitionContext = createContext(null)
+const DashboardActionsContext = createContext(null)
+
 const SESSION_KEY = 'inflow.dashboard.session.v7'
 const LEGACY_OVERVIEW_METRIC_SLOTS = [
   'totalLeads',
@@ -150,8 +158,8 @@ function getInitialSession(initialDataset) {
       overviewWidgetSlots: matchesLegacyDefaults(
         parsedSession?.overviewWidgetSlots ?? [],
         LEGACY_OVERVIEW_WIDGET_SLOTS,
-      )
-        || matchesLegacyDefaults(
+      ) ||
+        matchesLegacyDefaults(
           parsedSession?.overviewWidgetSlots ?? [],
           PREVIOUS_OPERATOR_OVERVIEW_WIDGET_SLOTS,
         )
@@ -163,12 +171,32 @@ function getInitialSession(initialDataset) {
   }
 }
 
+function useRequiredContext(context, hookName) {
+  const value = useContext(context)
+
+  if (!value) {
+    throw new Error(`${hookName} must be used inside AppProvider`)
+  }
+
+  return value
+}
+
 export function AppProvider({ children, initialDataset = null }) {
   const [dataset, setDataset] = useState(initialDataset)
   const [session, setSession] = useState(() => getInitialSession(initialDataset))
   const [routeTransition, setRouteTransition] = useState(() => buildIdleTransitionState())
   const transitionTimeoutRef = useRef(null)
   const transitionTokenRef = useRef(0)
+  const sessionRef = useRef(session)
+  const routeTransitionRef = useRef(routeTransition)
+
+  useEffect(() => {
+    sessionRef.current = session
+  }, [session])
+
+  useEffect(() => {
+    routeTransitionRef.current = routeTransition
+  }, [routeTransition])
 
   useEffect(
     () => () => {
@@ -181,23 +209,65 @@ export function AppProvider({ children, initialDataset = null }) {
 
   useEffect(() => {
     let cancelled = false
+    let worker = null
 
     if (dataset || !session.isAuthenticated) {
+      return () => {
+        cancelled = true
+        worker?.terminate?.()
+      }
+    }
+
+    const commitDataset = (nextDataset) => {
+      if (!cancelled) {
+        setDataset(nextDataset)
+      }
+    }
+
+    const loadOnMainThread = async () => {
+      const response = await fetch('/demo-data.json')
+
+      if (!response.ok) {
+        throw new Error('Unable to load demo dataset.')
+      }
+
+      commitDataset(await response.json())
+    }
+
+    if (typeof window === 'undefined' || typeof Worker === 'undefined') {
+      loadOnMainThread().catch(() => {})
+
       return () => {
         cancelled = true
       }
     }
 
-    import('../data/demoData').then((module) => {
-      if (cancelled) {
+    worker = new Worker(
+      new URL('../workers/demoDataset.worker.js', import.meta.url),
+      { type: 'module' },
+    )
+
+    worker.addEventListener('message', (event) => {
+      if (event.data?.type !== 'loaded') {
         return
       }
 
-      setDataset(module.demoDataset)
+      worker?.terminate?.()
+      worker = null
+      commitDataset(event.data.dataset)
     })
+
+    worker.addEventListener('error', () => {
+      worker?.terminate?.()
+      worker = null
+      loadOnMainThread().catch(() => {})
+    })
+
+    worker.postMessage({ type: 'load' })
 
     return () => {
       cancelled = true
+      worker?.terminate?.()
     }
   }, [dataset, session.isAuthenticated])
 
@@ -222,15 +292,15 @@ export function AppProvider({ children, initialDataset = null }) {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   }, [session])
 
-  const value = useMemo(() => {
-    const clearTransitionTimeout = () => {
-      if (transitionTimeoutRef.current && typeof window !== 'undefined') {
-        window.clearTimeout(transitionTimeoutRef.current)
-        transitionTimeoutRef.current = null
-      }
+  const clearTransitionTimeout = useCallback(() => {
+    if (transitionTimeoutRef.current && typeof window !== 'undefined') {
+      window.clearTimeout(transitionTimeoutRef.current)
+      transitionTimeoutRef.current = null
     }
+  }, [])
 
-    const beginUiTransition = ({
+  const beginUiTransition = useCallback(
+    ({
       label = 'Loading dashboard',
       mode = 'view',
       targetPath = '',
@@ -251,9 +321,16 @@ export function AppProvider({ children, initialDataset = null }) {
       setRouteTransition(nextTransition)
 
       return nextTransition
-    }
+    },
+    [clearTransitionTimeout],
+  )
 
-    const completeUiTransition = (token = routeTransition.token, minDuration = 0, startedAt = Date.now()) => {
+  const completeUiTransition = useCallback(
+    (
+      token = routeTransitionRef.current.token,
+      minDuration = 0,
+      startedAt = Date.now(),
+    ) => {
       const finish = () => {
         setRouteTransition((current) => {
           if (!current.active || current.token !== token) {
@@ -276,9 +353,12 @@ export function AppProvider({ children, initialDataset = null }) {
         transitionTimeoutRef.current = null
         finish()
       }, remainingDelay)
-    }
+    },
+    [clearTransitionTimeout],
+  )
 
-    const runViewTransition = (
+  const runViewTransition = useCallback(
+    (
       updateSession,
       {
         label = 'Loading dashboard',
@@ -312,14 +392,14 @@ export function AppProvider({ children, initialDataset = null }) {
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(commitUpdate)
       })
-    }
+    },
+    [beginUiTransition, completeUiTransition],
+  )
 
-    const useCompactNumbers = session.numberFormat !== 'full'
-    const currentAccount = getDemoAccessAccountById(session.activeAccountId)
-
-    const login = ({
-      accountId = session.activeAccountId,
-      clientId = session.activeClientId,
+  const login = useCallback(
+    ({
+      accountId = sessionRef.current.activeAccountId,
+      clientId = sessionRef.current.activeClientId,
     } = {}) => {
       startTransition(() => {
         setSession((current) => ({
@@ -329,225 +409,378 @@ export function AppProvider({ children, initialDataset = null }) {
           activeClientId: clientId || current.activeClientId,
         }))
       })
-    }
+    },
+    [],
+  )
 
-    const logout = () => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          isAuthenticated: false,
-        }))
-      })
-    }
+  const logout = useCallback(() => {
+    startTransition(() => {
+      setSession((current) => (
+        current.isAuthenticated
+          ? {
+              ...current,
+              isAuthenticated: false,
+            }
+          : current
+      ))
+    })
+  }, [])
 
-    const setActiveClientId = (clientId) => {
-      if (clientId === session.activeClientId) {
+  const setActiveClientId = useCallback(
+    (clientId) => {
+      if (clientId === sessionRef.current.activeClientId) {
         return
       }
 
       runViewTransition(
         () => {
-          setSession((current) => ({
-            ...current,
-            activeClientId: clientId,
-          }))
+          setSession((current) => (
+            current.activeClientId === clientId
+              ? current
+              : {
+                  ...current,
+                  activeClientId: clientId,
+                }
+          ))
         },
         {
           title: 'Switching client workspace',
         },
       )
-    }
+    },
+    [runViewTransition],
+  )
 
-    const setRangePreset = (preset) => {
+  const setRangePreset = useCallback(
+    (preset) => {
       const nextRangeSelection = buildPresetRangeSelection(preset)
 
-      if (isSameRangeSelection(session.rangeSelection, nextRangeSelection)) {
+      if (isSameRangeSelection(sessionRef.current.rangeSelection, nextRangeSelection)) {
         return
       }
 
       runViewTransition(
         () => {
-          setSession((current) => ({
-            ...current,
-            rangeSelection: nextRangeSelection,
-          }))
+          setSession((current) => (
+            isSameRangeSelection(current.rangeSelection, nextRangeSelection)
+              ? current
+              : {
+                  ...current,
+                  rangeSelection: nextRangeSelection,
+                }
+          ))
         },
         {
           title: 'Updating date range',
         },
       )
-    }
+    },
+    [runViewTransition],
+  )
 
-    const setCustomRange = (from, to) => {
+  const setCustomRange = useCallback(
+    (from, to) => {
       const nextRangeSelection = buildCustomRangeSelection(from, to)
 
-      if (isSameRangeSelection(session.rangeSelection, nextRangeSelection)) {
+      if (isSameRangeSelection(sessionRef.current.rangeSelection, nextRangeSelection)) {
         return
       }
 
       runViewTransition(
         () => {
-          setSession((current) => ({
-            ...current,
-            rangeSelection: nextRangeSelection,
-          }))
+          setSession((current) => (
+            isSameRangeSelection(current.rangeSelection, nextRangeSelection)
+              ? current
+              : {
+                  ...current,
+                  rangeSelection: nextRangeSelection,
+                }
+          ))
         },
         {
           title: 'Applying custom range',
         },
       )
-    }
+    },
+    [runViewTransition],
+  )
 
-    const setDefaultLandingPath = (defaultLandingPath) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          defaultLandingPath,
-        }))
-      })
-    }
+  const setDefaultLandingPath = useCallback((defaultLandingPath) => {
+    startTransition(() => {
+      setSession((current) => (
+        current.defaultLandingPath === defaultLandingPath
+          ? current
+          : {
+              ...current,
+              defaultLandingPath,
+            }
+      ))
+    })
+  }, [])
 
-    const setDefaultRangePreset = (defaultRangePreset) => {
+  const setDefaultRangePreset = useCallback(
+    (defaultRangePreset) => {
       const nextRangeSelection = buildPresetRangeSelection(defaultRangePreset)
 
       if (
-        defaultRangePreset === session.defaultRangePreset &&
-        isSameRangeSelection(session.rangeSelection, nextRangeSelection)
+        defaultRangePreset === sessionRef.current.defaultRangePreset &&
+        isSameRangeSelection(sessionRef.current.rangeSelection, nextRangeSelection)
       ) {
         return
       }
 
       runViewTransition(
         () => {
-          setSession((current) => ({
-            ...current,
-            defaultRangePreset,
-            rangeSelection: nextRangeSelection,
-          }))
+          setSession((current) => (
+            current.defaultRangePreset === defaultRangePreset &&
+            isSameRangeSelection(current.rangeSelection, nextRangeSelection)
+              ? current
+              : {
+                  ...current,
+                  defaultRangePreset,
+                  rangeSelection: nextRangeSelection,
+                }
+          ))
         },
         {
           title: 'Updating date range',
         },
       )
-    }
+    },
+    [runViewTransition],
+  )
 
-    const setNumberFormat = (numberFormat) => {
-      startTransition(() => {
-        setSession((current) => ({
+  const setNumberFormat = useCallback((numberFormat) => {
+    startTransition(() => {
+      setSession((current) => (
+        current.numberFormat === numberFormat
+          ? current
+          : {
+              ...current,
+              numberFormat,
+            }
+      ))
+    })
+  }, [])
+
+  const setSidebarExpanded = useCallback((sidebarExpanded) => {
+    startTransition(() => {
+      setSession((current) => (
+        current.sidebarExpanded === sidebarExpanded
+          ? current
+          : {
+              ...current,
+              sidebarExpanded,
+            }
+      ))
+    })
+  }, [])
+
+  const toggleSidebar = useCallback(() => {
+    startTransition(() => {
+      setSession((current) => ({
+        ...current,
+        sidebarExpanded: !current.sidebarExpanded,
+      }))
+    })
+  }, [])
+
+  const setOverviewMetricSlot = useCallback((slotIndex, metricKey) => {
+    startTransition(() => {
+      setSession((current) => {
+        const nextSlots = normalizeOverviewMetricSlots(current.overviewMetricSlots)
+
+        if (nextSlots[slotIndex] === metricKey) {
+          return current
+        }
+
+        nextSlots[slotIndex] = metricKey
+
+        return {
           ...current,
-          numberFormat,
-        }))
+          overviewMetricSlots: normalizeOverviewMetricSlots(nextSlots),
+        }
       })
-    }
+    })
+  }, [])
 
-    const setSidebarExpanded = (sidebarExpanded) => {
-      startTransition(() => {
-        setSession((current) => ({
+  const resetOverviewMetricSlots = useCallback(() => {
+    startTransition(() => {
+      setSession((current) => (
+        current.overviewMetricSlots.every(
+          (slot, index) => slot === DEFAULT_OVERVIEW_METRIC_SLOTS[index],
+        )
+          ? current
+          : {
+              ...current,
+              overviewMetricSlots: [...DEFAULT_OVERVIEW_METRIC_SLOTS],
+            }
+      ))
+    })
+  }, [])
+
+  const setOverviewCustomizerOpen = useCallback((overviewCustomizerOpen) => {
+    startTransition(() => {
+      setSession((current) => (
+        current.overviewCustomizerOpen === overviewCustomizerOpen
+          ? current
+          : {
+              ...current,
+              overviewCustomizerOpen,
+            }
+      ))
+    })
+  }, [])
+
+  const setOverviewUseCompactNumbers = useCallback((overviewUseCompactNumbers) => {
+    const nextNumberFormat = overviewUseCompactNumbers ? 'compact' : 'full'
+
+    startTransition(() => {
+      setSession((current) => (
+        current.numberFormat === nextNumberFormat
+          ? current
+          : {
+              ...current,
+              numberFormat: nextNumberFormat,
+            }
+      ))
+    })
+  }, [])
+
+  const setOverviewWidgetSlot = useCallback((slotIndex, widgetKey) => {
+    startTransition(() => {
+      setSession((current) => {
+        const nextSlots = [...normalizeOverviewWidgetSlots(current.overviewWidgetSlots)]
+
+        if (nextSlots.includes(widgetKey) && nextSlots[slotIndex] !== widgetKey) {
+          return current
+        }
+
+        if (nextSlots[slotIndex] === widgetKey) {
+          return current
+        }
+
+        nextSlots[slotIndex] = widgetKey
+
+        return {
           ...current,
-          sidebarExpanded,
-        }))
+          overviewWidgetSlots: normalizeOverviewWidgetSlots(nextSlots),
+        }
       })
-    }
+    })
+  }, [])
 
-    const toggleSidebar = () => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          sidebarExpanded: !current.sidebarExpanded,
-        }))
-      })
-    }
+  const resetOverviewWidgetSlots = useCallback(() => {
+    startTransition(() => {
+      setSession((current) => (
+        current.overviewWidgetSlots.every(
+          (slot, index) => slot === DEFAULT_OVERVIEW_WIDGET_SLOTS[index],
+        )
+          ? current
+          : {
+              ...current,
+              overviewWidgetSlots: [...DEFAULT_OVERVIEW_WIDGET_SLOTS],
+            }
+      ))
+    })
+  }, [])
 
-    const setOverviewMetricSlot = (slotIndex, metricKey) => {
-      startTransition(() => {
-        setSession((current) => {
-          const nextSlots = normalizeOverviewMetricSlots(current.overviewMetricSlots)
-          nextSlots[slotIndex] = metricKey
-
-          return {
-            ...current,
-            overviewMetricSlots: normalizeOverviewMetricSlots(nextSlots),
-          }
-        })
-      })
-    }
-
-    const resetOverviewMetricSlots = () => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          overviewMetricSlots: [...DEFAULT_OVERVIEW_METRIC_SLOTS],
-        }))
-      })
-    }
-
-    const setOverviewCustomizerOpen = (overviewCustomizerOpen) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          overviewCustomizerOpen,
-        }))
-      })
-    }
-
-    const setOverviewUseCompactNumbers = (overviewUseCompactNumbers) => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          numberFormat: overviewUseCompactNumbers ? 'compact' : 'full',
-        }))
-      })
-    }
-
-    const setOverviewWidgetSlot = (slotIndex, widgetKey) => {
-      startTransition(() => {
-        setSession((current) => {
-          const nextSlots = [...normalizeOverviewWidgetSlots(current.overviewWidgetSlots)]
-
-          if (nextSlots.includes(widgetKey) && nextSlots[slotIndex] !== widgetKey) {
-            return current
-          }
-
-          nextSlots[slotIndex] = widgetKey
-
-          return {
-            ...current,
-            overviewWidgetSlots: normalizeOverviewWidgetSlots(nextSlots),
-          }
-        })
-      })
-    }
-
-    const resetOverviewWidgetSlots = () => {
-      startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          overviewWidgetSlots: [...DEFAULT_OVERVIEW_WIDGET_SLOTS],
-        }))
-      })
-    }
-
-    const startRouteTransition = (targetPath = '') => {
-      return beginUiTransition({
+  const startRouteTransition = useCallback(
+    (targetPath = '') =>
+      beginUiTransition({
         label: 'Loading dashboard',
         mode: 'route',
         targetPath,
         title: 'Syncing the next view',
-      })
-    }
+      }),
+    [beginUiTransition],
+  )
 
-    const completeRouteTransition = () => {
-      completeUiTransition(routeTransition.token, 260, routeTransition.startedAt)
-    }
+  const completeRouteTransition = useCallback(() => {
+    const currentTransition = routeTransitionRef.current
 
-    return {
-      ...session,
-      clients: dataset?.clients ?? [],
+    completeUiTransition(
+      currentTransition.token,
+      260,
+      currentTransition.startedAt,
+    )
+  }, [completeUiTransition])
+
+  const currentAccount = useMemo(
+    () => getDemoAccessAccountById(session.activeAccountId),
+    [session.activeAccountId],
+  )
+  const overviewUseCompactNumbers = session.numberFormat !== 'full'
+
+  const authValue = useMemo(
+    () => ({
+      activeAccountId: session.activeAccountId,
       currentAccount,
+      isAuthenticated: session.isAuthenticated,
+    }),
+    [currentAccount, session.activeAccountId, session.isAuthenticated],
+  )
+
+  const datasetValue = useMemo(
+    () => ({
+      clients: dataset?.clients ?? [],
       dataset,
       datasetReady: Boolean(dataset),
+    }),
+    [dataset],
+  )
+
+  const selectionValue = useMemo(
+    () => ({
+      activeClientId: session.activeClientId,
+      rangeSelection: session.rangeSelection,
+    }),
+    [session.activeClientId, session.rangeSelection],
+  )
+
+  const preferencesValue = useMemo(
+    () => ({
       defaultLandingPath: session.defaultLandingPath,
       defaultRangePreset: session.defaultRangePreset,
+      numberFormat: session.numberFormat,
+      overviewCustomizerOpen: session.overviewCustomizerOpen,
+      overviewMetricSlots: session.overviewMetricSlots,
+      overviewUseCompactNumbers,
+      overviewWidgetSlots: session.overviewWidgetSlots,
+      useCompactNumbers: overviewUseCompactNumbers,
+    }),
+    [
+      overviewUseCompactNumbers,
+      session.defaultLandingPath,
+      session.defaultRangePreset,
+      session.numberFormat,
+      session.overviewCustomizerOpen,
+      session.overviewMetricSlots,
+      session.overviewWidgetSlots,
+    ],
+  )
+
+  const layoutValue = useMemo(
+    () => ({
+      sidebarExpanded: session.sidebarExpanded,
+    }),
+    [session.sidebarExpanded],
+  )
+
+  const routeTransitionValue = useMemo(
+    () => ({
+      routeTransitionActive: routeTransition.active,
+      routeTransitionLabel: routeTransition.label,
+      routeTransitionMode: routeTransition.mode,
+      routeTransitionStartedAt: routeTransition.startedAt,
+      routeTransitionTargetPath: routeTransition.targetPath,
+      routeTransitionTitle: routeTransition.title,
+    }),
+    [routeTransition],
+  )
+
+  const actionsValue = useMemo(
+    () => ({
       completeRouteTransition,
       login,
       logout,
@@ -562,35 +795,91 @@ export function AppProvider({ children, initialDataset = null }) {
       setOverviewWidgetSlot,
       setRangePreset,
       setSidebarExpanded,
-      numberFormat: session.numberFormat,
-      overviewUseCompactNumbers: useCompactNumbers,
       resetOverviewMetricSlots,
       resetOverviewWidgetSlots,
-      routeTransitionActive: routeTransition.active,
-      routeTransitionLabel: routeTransition.label,
-      routeTransitionMode: routeTransition.mode,
-      routeTransitionStartedAt: routeTransition.startedAt,
-      routeTransitionTargetPath: routeTransition.targetPath,
-      routeTransitionTitle: routeTransition.title,
       startRouteTransition,
       toggleSidebar,
-      useCompactNumbers,
-    }
-  }, [dataset, routeTransition, session])
+    }),
+    [
+      completeRouteTransition,
+      login,
+      logout,
+      setActiveClientId,
+      setCustomRange,
+      setDefaultLandingPath,
+      setDefaultRangePreset,
+      setNumberFormat,
+      setOverviewCustomizerOpen,
+      setOverviewMetricSlot,
+      setOverviewUseCompactNumbers,
+      setOverviewWidgetSlot,
+      setRangePreset,
+      setSidebarExpanded,
+      resetOverviewMetricSlots,
+      resetOverviewWidgetSlots,
+      startRouteTransition,
+      toggleSidebar,
+    ],
+  )
 
   return (
-    <DashboardContext.Provider value={value}>
-      {children}
-    </DashboardContext.Provider>
+    <DashboardAuthContext.Provider value={authValue}>
+      <DashboardDatasetContext.Provider value={datasetValue}>
+        <DashboardSelectionContext.Provider value={selectionValue}>
+          <DashboardPreferencesContext.Provider value={preferencesValue}>
+            <DashboardLayoutContext.Provider value={layoutValue}>
+              <DashboardRouteTransitionContext.Provider value={routeTransitionValue}>
+                <DashboardActionsContext.Provider value={actionsValue}>
+                  {children}
+                </DashboardActionsContext.Provider>
+              </DashboardRouteTransitionContext.Provider>
+            </DashboardLayoutContext.Provider>
+          </DashboardPreferencesContext.Provider>
+        </DashboardSelectionContext.Provider>
+      </DashboardDatasetContext.Provider>
+    </DashboardAuthContext.Provider>
   )
 }
 
+export function useDashboardAuth() {
+  return useRequiredContext(DashboardAuthContext, 'useDashboardAuth')
+}
+
+export function useDashboardDataset() {
+  return useRequiredContext(DashboardDatasetContext, 'useDashboardDataset')
+}
+
+export function useDashboardSelection() {
+  return useRequiredContext(DashboardSelectionContext, 'useDashboardSelection')
+}
+
+export function useDashboardPreferences() {
+  return useRequiredContext(DashboardPreferencesContext, 'useDashboardPreferences')
+}
+
+export function useDashboardLayoutState() {
+  return useRequiredContext(DashboardLayoutContext, 'useDashboardLayoutState')
+}
+
+export function useDashboardRouteTransition() {
+  return useRequiredContext(
+    DashboardRouteTransitionContext,
+    'useDashboardRouteTransition',
+  )
+}
+
+export function useDashboardActions() {
+  return useRequiredContext(DashboardActionsContext, 'useDashboardActions')
+}
+
 export function useDashboard() {
-  const context = useContext(DashboardContext)
-
-  if (!context) {
-    throw new Error('useDashboard must be used inside AppProvider')
+  return {
+    ...useDashboardAuth(),
+    ...useDashboardDataset(),
+    ...useDashboardSelection(),
+    ...useDashboardPreferences(),
+    ...useDashboardLayoutState(),
+    ...useDashboardRouteTransition(),
+    ...useDashboardActions(),
   }
-
-  return context
 }

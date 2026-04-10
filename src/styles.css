@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
 :root {
   --font-body: 'Poppins', 'Segoe UI', sans-serif;
   --color-bg: #0a0f18;
@@ -184,11 +182,11 @@ p {
 .surface-card {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   border: 1px solid var(--color-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
-    var(--color-surface);
-  backdrop-filter: blur(20px);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    linear-gradient(180deg, rgba(18, 21, 38, 0.92), rgba(13, 16, 31, 0.9));
   box-shadow: var(--shadow-panel);
 }
 
@@ -4956,6 +4954,24 @@ p {
   gap: 18px;
 }
 
+.kpi-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin: 4px 0 16px;
+}
+
+.kpi-section-header h3 {
+  font-size: 1.08rem;
+}
+
+.kpi-section-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .kpi-grid--five {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
@@ -7149,6 +7165,15 @@ p {
 
   .conversation-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .kpi-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .kpi-section-action {
+    justify-content: center;
   }
 
   .conversation-detail-column {

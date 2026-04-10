@@ -32,6 +32,8 @@ describe('getOverviewModel', () => {
     const overview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '30D')
     const openThreads = overview.kpis.find((item) => item.key === 'activeConversations')
     const availableMetricKeys = overview.availableMetrics.map((item) => item.key)
+    const leadTrendKeys = overview.leadTrendCatalog.map((item) => item.key)
+    const bookingTrendKeys = overview.bookingTrendCatalog.map((item) => item.key)
 
     expect(overview.kpis).toHaveLength(8)
     expect(overview.summary.primaryMetric.numericValue).toBeGreaterThan(0)
@@ -56,6 +58,23 @@ describe('getOverviewModel', () => {
     expect(availableMetricKeys).toContain('atRiskBookings')
     expect(availableMetricKeys).toContain('showRate')
     expect(availableMetricKeys).toContain('noShowRate')
+    expect(leadTrendKeys).toEqual(expect.arrayContaining([
+      'total_new_leads',
+      'new_leads_qualified',
+      'unqualified_decisions',
+      'active_threads_eod',
+      'stalled_threads',
+    ]))
+    expect(bookingTrendKeys).toEqual(expect.arrayContaining([
+      'booking_intent_yes',
+      'booking_intent_maybe',
+      'proposed_calls',
+      'confirmed_calls',
+      'at_risk_bookings',
+      'attended',
+      'no_show',
+    ]))
+    expect(overview.overviewTrendMetricGroups).toHaveLength(2)
   })
 
   it('keeps client-facing metrics free of internal routing keys', () => {
@@ -95,6 +114,19 @@ describe('getOverviewModel', () => {
     expect(allTimeBookings).toBeGreaterThan(recentBookings)
   })
 
+  it('keeps extended windows dense enough for chart rendering', () => {
+    const weekOverview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '7D')
+    const quarterOverview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '3M')
+    const yearOverview = getOverviewModel(demoDataset, demoDataset.clients[0].id, '12M')
+    const allTimeOverview = getOverviewModel(demoDataset, demoDataset.clients[0].id, 'All Time')
+
+    expect(weekOverview.bookingTrend).toHaveLength(7)
+    expect(quarterOverview.bookingTrend.length).toBeGreaterThanOrEqual(28)
+    expect(yearOverview.bookingTrend.length).toBeGreaterThanOrEqual(35)
+    expect(allTimeOverview.bookingTrend.length).toBeGreaterThanOrEqual(35)
+    expect(allTimeOverview.bookingTrend.at(0)?.label).toMatch(/\d{2}$/)
+  })
+
   it('applies custom ranges consistently across KPI and trend outputs', () => {
     const overview = getOverviewModel(
       demoDataset,
@@ -108,6 +140,21 @@ describe('getOverviewModel', () => {
     expect(overview.rangeLabel).toContain('Mar')
     expect(overview.leadTrend.reduce((sum, item) => sum + item.value, 0)).toBeGreaterThan(0)
     expect(overview.bookingTrend.reduce((sum, item) => sum + item.value, 0)).toBeGreaterThan(0)
+  })
+
+  it('keeps long custom ranges more granular than monthly snapshots', () => {
+    const overview = getOverviewModel(
+      demoDataset,
+      demoDataset.clients[0].id,
+      buildCustomRangeSelection(
+        new Date('2025-08-06T00:00:00'),
+        new Date('2026-03-31T00:00:00'),
+      ),
+    )
+
+    expect(overview.bookingTrend.at(0)?.label).toBe('Aug 6')
+    expect(overview.bookingTrend.at(-1)?.label).toBe('Mar 31')
+    expect(overview.bookingTrend.length).toBeGreaterThanOrEqual(30)
   })
 
   it('keeps attention items recent and upcoming calls distributed', () => {

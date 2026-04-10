@@ -3,7 +3,7 @@ import {
   REFERENCE_NOW,
   STAGE_LABELS,
   STAGE_ORDER,
-} from './demoData'
+} from './demoDataMeta'
 import {
   OVERVIEW_DATA_CUTOFF,
   getOverviewLeadOverride,
@@ -64,6 +64,117 @@ const objectionLabels = {
   cost: 'Cost',
   other: 'Other',
 }
+
+const OVERVIEW_TREND_GROUP_DEFINITIONS = [
+  {
+    key: 'leadTrend',
+    label: 'Lead volume trend',
+    metrics: [
+      {
+        key: 'total_new_leads',
+        label: 'New leads',
+        field: 'total_new_leads',
+        color: 'var(--accent-blue)',
+        detail: 'Daily lead intake in the selected window.',
+        routePath: '/leads',
+      },
+      {
+        key: 'new_leads_qualified',
+        label: 'Qualified leads',
+        field: 'new_leads_qualified',
+        color: 'var(--accent-pink)',
+        detail: 'New leads that qualified during that period.',
+        routePath: '/leads',
+      },
+      {
+        key: 'unqualified_decisions',
+        label: 'Unqualified decisions',
+        field: 'unqualified_decisions',
+        color: 'var(--color-danger)',
+        detail: 'Leads screened out for fit or readiness.',
+        routePath: '/leads',
+      },
+      {
+        key: 'active_threads_eod',
+        label: 'Open threads',
+        field: 'active_threads_eod',
+        color: 'var(--accent-violet)',
+        detail: 'Conversations still open at the end of each day.',
+        routePath: '/conversations',
+      },
+      {
+        key: 'stalled_threads',
+        label: 'Needs attention',
+        field: 'stalled_threads',
+        color: '#8be7c2',
+        detail: 'Threads flagged as stalled at end of day.',
+        routePath: '/pipeline',
+      },
+    ],
+  },
+  {
+    key: 'bookingTrend',
+    label: 'Booking trend',
+    metrics: [
+      {
+        key: 'booking_intent_yes',
+        label: 'Intent yes',
+        field: 'booking_intent_yes',
+        color: 'var(--accent-violet)',
+        detail: 'Leads explicitly ready to book a call.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'booking_intent_maybe',
+        label: 'Intent maybe',
+        field: 'booking_intent_maybe',
+        color: '#b6a1ff',
+        detail: 'Leads showing tentative booking intent.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'proposed_calls',
+        label: 'Proposed calls',
+        field: 'proposed_calls',
+        color: 'var(--accent-pink)',
+        detail: 'Calendar slots proposed to leads.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'confirmed_calls',
+        label: 'Confirmed calls',
+        field: 'confirmed_calls',
+        color: 'var(--accent-blue)',
+        detail: 'Calls locked into the calendar.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'at_risk_bookings',
+        label: 'At-risk bookings',
+        field: 'at_risk_bookings',
+        color: '#8be7c2',
+        detail: 'Scheduled or proposed calls needing intervention.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'attended',
+        label: 'Attended calls',
+        field: 'attended',
+        color: 'var(--color-success)',
+        detail: 'Calls that were actually held.',
+        routePath: '/bookings',
+      },
+      {
+        key: 'no_show',
+        label: 'No-shows',
+        field: 'no_show',
+        color: 'var(--color-danger)',
+        detail: 'Confirmed calls that the lead missed.',
+        routePath: '/bookings',
+      },
+    ],
+  },
+]
 
 const conversationOutcomeColors = {
   active: '#74c7ff',
@@ -182,26 +293,23 @@ function addHours(value, hours) {
   return new Date(toDateTime(value).getTime() + (hours * HOUR))
 }
 
-function startOfMonth(value) {
-  const date = toDateTime(value)
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
-}
-
-function endOfMonth(value) {
-  const date = toDateTime(value)
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 23, 59, 59, 999),
-  )
-}
-
 function countInclusiveDays(start, end) {
-  return Math.round((endOfDay(end).getTime() - startOfDay(start).getTime()) / DAY) + 1
+  return Math.floor((endOfDay(end).getTime() - startOfDay(start).getTime()) / DAY) + 1
 }
 
 function formatDayLabel(value) {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
+  }).format(toDateTime(value))
+}
+
+function formatExtendedDayLabel(value) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: '2-digit',
     timeZone: 'UTC',
   }).format(toDateTime(value))
 }
@@ -332,43 +440,73 @@ function previousWindow(window) {
   }
 }
 
-function getBucketStrategy(range) {
+function getTargetBucketCount(range) {
   if (range.selection.mode === 'custom') {
-    if (range.days <= 1) {
-      return 'hourly'
+    if (range.days <= 14) {
+      return range.days
     }
 
     if (range.days <= 31) {
-      return 'daily'
+      return 31
+    }
+
+    if (range.days <= 92) {
+      return 30
     }
 
     if (range.days <= 184) {
-      return 'weekly'
+      return 36
     }
 
-    return 'monthly'
+    return 42
   }
 
-  const presetStrategy = {
-    '24H': 'hourly',
-    '7D': 'daily',
-    '30D': 'daily',
-    '3M': 'weekly',
-    '6M': 'weekly',
-    '90D': 'weekly',
-    YTD: 'weekly',
-    '12M': 'monthly',
-    'All Time': 'monthly',
+  const presetTargets = {
+    '24H': 24,
+    '7D': 7,
+    '30D': 30,
+    '3M': 30,
+    '6M': 36,
+    '90D': 30,
+    YTD: 36,
+    '12M': 40,
+    'All Time': 42,
   }
 
-  return presetStrategy[range.selection.preset] ?? 'daily'
+  return presetTargets[range.selection.preset] ?? Math.min(range.days, 30)
+}
+
+function getBucketLabel(bucketEnd, range, bucketSizeInDays) {
+  if (bucketSizeInDays >= 28) {
+    return formatMonthLabel(bucketEnd)
+  }
+
+  if (range.days > 365) {
+    return formatExtendedDayLabel(bucketEnd)
+  }
+
+  return formatDayLabel(bucketEnd)
+}
+
+function getBucketStrategy(range) {
+  if (range.days <= 1) {
+    return {
+      kind: 'hourly',
+      bucketCount: 24,
+    }
+  }
+
+  return {
+    kind: 'day-span',
+    bucketCount: Math.max(1, Math.min(range.days, getTargetBucketCount(range))),
+  }
 }
 
 function createBuckets(range) {
   const strategy = getBucketStrategy(range)
   const buckets = []
 
-  if (strategy === 'hourly') {
+  if (strategy.kind === 'hourly') {
     const hourlyEnd = new Date(
       Math.min(REFERENCE_NOW.getTime(), range.end.getTime()),
     )
@@ -388,73 +526,37 @@ function createBuckets(range) {
       })
     }
 
-    return { strategy, buckets }
+    return { strategy: strategy.kind, buckets }
   }
 
-  if (strategy === 'weekly') {
-    let cursor = startOfDay(range.start)
+  const totalDays = Math.max(range.days, 1)
+  const bucketCount = Math.max(1, strategy.bucketCount)
 
-    while (cursor <= range.end) {
-      const bucketStart = cursor
-      const bucketEnd = new Date(
-        Math.min(endOfDay(addDays(bucketStart, 6)).getTime(), range.end.getTime()),
-      )
-
-      buckets.push({
-        key: bucketEnd.toISOString(),
-        label: formatDayLabel(bucketEnd),
-        start: bucketStart,
-        end: bucketEnd,
-      })
-
-      cursor = addDays(bucketStart, 7)
-    }
-
-    return { strategy, buckets }
-  }
-
-  if (strategy === 'monthly') {
-    let cursor = startOfMonth(range.start)
-    const finalMonth = startOfMonth(range.end)
-
-    while (cursor <= finalMonth) {
-      const bucketStart = cursor < range.start ? range.start : cursor
-      const bucketEnd = new Date(
-        Math.min(endOfMonth(cursor).getTime(), range.end.getTime()),
-      )
-
-      buckets.push({
-        key: bucketEnd.toISOString(),
-        label: formatMonthLabel(bucketEnd),
-        start: bucketStart,
-        end: bucketEnd,
-      })
-
-      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1))
-    }
-
-    return { strategy, buckets }
-  }
-
-  let cursor = startOfDay(range.start)
-
-  while (cursor <= range.end) {
-    const bucketStart = cursor
+  for (let index = 0; index < bucketCount; index += 1) {
+    const startOffset = Math.floor((index * totalDays) / bucketCount)
+    const endOffset = Math.floor(((index + 1) * totalDays) / bucketCount) - 1
+    const labelOffset = bucketCount === 1
+      ? totalDays - 1
+      : Math.round((index * Math.max(totalDays - 1, 0)) / (bucketCount - 1))
+    const bucketStart = addDays(range.start, startOffset)
     const bucketEnd = new Date(
-      Math.min(endOfDay(bucketStart).getTime(), range.end.getTime()),
+      Math.min(endOfDay(addDays(range.start, endOffset)).getTime(), range.end.getTime()),
     )
+    const bucketSizeInDays = Math.max(1, endOffset - startOffset + 1)
+    const labelDate = addDays(range.start, labelOffset)
 
     buckets.push({
       key: bucketEnd.toISOString(),
-      label: formatDayLabel(bucketEnd),
+      label: getBucketLabel(labelDate, range, bucketSizeInDays),
       start: bucketStart,
       end: bucketEnd,
     })
-
-    cursor = addDays(bucketStart, 1)
   }
 
-  return { strategy, buckets }
+  return {
+    strategy: bucketCount === range.days ? 'daily' : `day-span-${bucketCount}`,
+    buckets,
+  }
 }
 
 function average(values) {
@@ -1791,58 +1893,13 @@ export function getOverviewModel(
       routePath: '/objections',
     }))
     .sort((left, right) => right.value - left.value)
-  const leadTrendCatalog = buildTrendSeriesCatalog(dailyFacts, window, [
-    {
-      key: 'total_new_leads',
-      label: 'New leads',
-      field: 'total_new_leads',
-      color: 'var(--accent-blue)',
-    },
-    {
-      key: 'new_leads_qualified',
-      label: 'Qualified',
-      field: 'new_leads_qualified',
-      color: 'var(--accent-pink)',
-    },
-    {
-      key: 'stalled_threads',
-      label: 'Needs attention',
-      field: 'stalled_threads',
-      color: '#8be7c2',
-    },
-    {
-      key: 'active_threads_eod',
-      label: 'Open threads',
-      field: 'active_threads_eod',
-      color: 'var(--accent-violet)',
-    },
-  ])
-  const bookingTrendCatalog = buildTrendSeriesCatalog(dailyFacts, window, [
-    {
-      key: 'confirmed_calls',
-      label: 'Confirmed calls',
-      field: 'confirmed_calls',
-      color: 'var(--accent-blue)',
-    },
-    {
-      key: 'proposed_calls',
-      label: 'Proposed calls',
-      field: 'proposed_calls',
-      color: 'var(--accent-pink)',
-    },
-    {
-      key: 'at_risk_bookings',
-      label: 'At-risk',
-      field: 'at_risk_bookings',
-      color: '#8be7c2',
-    },
-    {
-      key: 'booking_intent_yes',
-      label: 'Intent yes',
-      field: 'booking_intent_yes',
-      color: 'var(--accent-violet)',
-    },
-  ])
+  const overviewTrendMetricGroups = OVERVIEW_TREND_GROUP_DEFINITIONS.map((group) => ({
+    key: group.key,
+    label: group.label,
+    metrics: buildTrendSeriesCatalog(dailyFacts, window, group.metrics),
+  }))
+  const leadTrendCatalog = overviewTrendMetricGroups.find((group) => group.key === 'leadTrend')?.metrics ?? []
+  const bookingTrendCatalog = overviewTrendMetricGroups.find((group) => group.key === 'bookingTrend')?.metrics ?? []
 
   return {
     availableMetrics: Object.values(metricCatalog).map((metric) => ({
@@ -1868,6 +1925,7 @@ export function getOverviewModel(
     leadTrendCatalog,
     bookingTrend,
     bookingTrendCatalog,
+    overviewTrendMetricGroups,
     qualificationSeries,
     objectionSeries,
     needsAttention,
@@ -2592,6 +2650,9 @@ function buildTrendSeriesCatalog(dailyFacts, range, definitions) {
     key: definition.key,
     label: definition.label,
     color: definition.color,
+    detail: definition.detail,
+    routePath: definition.routePath,
+    pageLabel: pageLabelByPath[definition.routePath] ?? 'Dashboard',
     data: createTrendSeries(dailyFacts, range, definition.field),
   }))
 }

@@ -3,6 +3,29 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRightIcon } from './Icons'
 import { getChartKeyboardState } from '../../lib/chartNavigation'
 
+const axisCompactFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+const axisStandardFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+})
+const TRACE_LINE_EASE = [0.34, 0.04, 0.16, 1]
+const TRACE_LINE_TRANSITION = {
+  delay: 0.24,
+  duration: 3.15,
+  ease: TRACE_LINE_EASE,
+}
+const TRACE_END_PULSE_TRANSITION = {
+  duration: 1.08,
+  delay: 3.02,
+  ease: 'easeOut',
+}
+const TRACE_ACTIVE_DOT_RADIUS = 3.2
+const TRACE_ACTIVE_DOT_STROKE_WIDTH = 1.05
+const TRACE_END_PULSE_RADIUS = 9
+const TRACE_MIN_HIT_WIDTH = 18
+
 function buildSmoothPath(points) {
   if (!points.length) {
     return ''
@@ -26,14 +49,25 @@ function buildSmoothPath(points) {
 }
 
 function formatAxisValue(value) {
-  return new Intl.NumberFormat('en-US', {
-    notation: value >= 1000 ? 'compact' : 'standard',
-    maximumFractionDigits: value >= 1000 ? 1 : 0,
-  }).format(value)
+  return (
+    value >= 1000
+      ? axisCompactFormatter
+      : axisStandardFormatter
+  ).format(value)
 }
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
+}
+
+function normalizeChartValue(value) {
+  const numericValue = Number(value)
+
+  if (!Number.isFinite(numericValue)) {
+    return 0
+  }
+
+  return Math.max(0, numericValue)
 }
 
 function getNiceStep(value) {
@@ -51,8 +85,7 @@ function getNiceStep(value) {
 
 function buildAxisScale(values, tickCount) {
   const numericValues = values
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value))
+    .map((value) => normalizeChartValue(value))
 
   if (!numericValues.length) {
     return {
@@ -76,9 +109,7 @@ function buildAxisScale(values, tickCount) {
     targetMin = 0
   }
 
-  if (rawMin >= 0) {
-    targetMin = Math.max(0, targetMin)
-  }
+  targetMin = Math.max(0, targetMin)
 
   const intervalCount = Math.max(tickCount - 1, 1)
   let step = getNiceStep((targetMax - targetMin) / intervalCount)
@@ -142,6 +173,35 @@ function buildPlotGeometry(pointCount, padding, width) {
     },
     getX: (index) => padding.left + (step * index),
     step,
+  }
+}
+
+function buildLabelIndexes(pointCount, targetCount) {
+  if (pointCount <= 0) {
+    return new Set()
+  }
+
+  const desiredCount = Math.min(pointCount, Math.max(targetCount, 1) + 1)
+
+  return new Set(
+    Array.from({ length: desiredCount }, (_, index) => (
+      desiredCount === 1
+        ? pointCount - 1
+        : Math.round((index * (pointCount - 1)) / (desiredCount - 1))
+    )),
+  )
+}
+
+function resolveHitAreaBounds(bounds, centerX, leftBoundary, rightBoundary) {
+  const width = Math.min(
+    Math.max(bounds.width, TRACE_MIN_HIT_WIDTH),
+    rightBoundary - leftBoundary,
+  )
+  const maxX = rightBoundary - width
+
+  return {
+    x: clamp(centerX - (width / 2), leftBoundary, maxX),
+    width,
   }
 }
 
@@ -495,11 +555,12 @@ export default function TraceLineChart({
     () =>
       data.map((item, index) => {
         const x = plotGeometry.getX(index)
+        const value = normalizeChartValue(item.value)
         const y =
           padding.top +
-          ((max - Number(item.value ?? 0)) * (chartHeight - padding.top - padding.bottom)) / yRange
+          ((max - value) * (chartHeight - padding.top - padding.bottom)) / yRange
 
-        return { ...item, x, y }
+        return { ...item, value, x, y }
       }),
     [
       chartHeight,
@@ -511,7 +572,20 @@ export default function TraceLineChart({
       yRange,
     ],
   )
-  const labelEvery = Math.max(1, Math.ceil(points.length / Math.max(labelTargetCount, 1)))
+  const hitAreas = useMemo(
+    () =>
+      points.map((point, index) => resolveHitAreaBounds(
+        plotGeometry.getBounds(index),
+        point.x,
+        padding.left,
+        width - padding.right,
+      )),
+    [padding.left, padding.right, plotGeometry, points, width],
+  )
+  const labelIndexes = useMemo(
+    () => buildLabelIndexes(points.length, labelTargetCount),
+    [labelTargetCount, points.length],
+  )
 
   const path = buildSmoothPath(points)
   const displayedPoint =
@@ -586,10 +660,10 @@ export default function TraceLineChart({
   )
   const selectionBand = effectiveSelection && points.length
     ? (() => {
-      const startBounds = plotGeometry.getBounds(effectiveSelection.start)
-      const endBounds = plotGeometry.getBounds(effectiveSelection.end)
-      const x = startBounds.x
-      const rightEdge = endBounds.x + endBounds.width
+      const startBounds = hitAreas[effectiveSelection.start]
+      const endBounds = hitAreas[effectiveSelection.end]
+      const x = startBounds?.x ?? padding.left
+      const rightEdge = (endBounds?.x ?? padding.left) + (endBounds?.width ?? 0)
 
       return {
         x,
@@ -736,11 +810,11 @@ export default function TraceLineChart({
           stroke={`url(#${gradientId})`}
           strokeLinecap="round"
           strokeWidth="3"
-          transition={{ duration: 2.55, ease: [0.18, 0.82, 0.3, 1] }}
+          transition={TRACE_LINE_TRANSITION}
         />
 
         {points.map((point, index) => {
-          const bounds = plotGeometry.getBounds(index)
+          const bounds = hitAreas[index]
 
           return (
             <rect
@@ -769,7 +843,7 @@ export default function TraceLineChart({
                   setDragCurrentIndex(index)
                 }
               }}
-              width={Math.max(bounds.width, 18)}
+              width={bounds.width}
               x={bounds.x}
               y={padding.top}
             />
@@ -783,9 +857,9 @@ export default function TraceLineChart({
             cy={displayedPoint.y}
             fill={`url(#${hoverGradientId})`}
             pointerEvents="none"
-            r="4.2"
+            r={TRACE_ACTIVE_DOT_RADIUS}
             stroke={hoverDotStroke}
-            strokeWidth="1.2"
+            strokeWidth={TRACE_ACTIVE_DOT_STROKE_WIDTH}
           />
         ) : null}
 
@@ -795,14 +869,14 @@ export default function TraceLineChart({
             initial={{ opacity: 0, scale: 0.4 }}
             key={`pulse-${lineKey}`}
             pointerEvents="none"
-            transition={{ duration: 1.05, delay: 2.08, ease: 'easeOut' }}
+            transition={TRACE_END_PULSE_TRANSITION}
           >
             <circle
               cx={endPoint.x}
               cy={endPoint.y}
               fill={color}
               fillOpacity="0.08"
-              r="12"
+              r={TRACE_END_PULSE_RADIUS}
               stroke={color}
               strokeOpacity="0.46"
             />
@@ -810,7 +884,7 @@ export default function TraceLineChart({
         ) : null}
 
         {points.map((point, index) =>
-          index % labelEvery === 0 || index === points.length - 1 ? (
+          labelIndexes.has(index) ? (
             <text
               className="trace-chart-label"
               key={point.label}
